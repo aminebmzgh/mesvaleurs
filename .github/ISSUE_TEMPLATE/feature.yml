@@ -1,0 +1,28 @@
+name: Proposer une fonctionnalité
+description: Une nouvelle fonctionnalité ou une amélioration
+labels: [amélioration]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin
+      description: Quel problème cette fonctionnalité résout-elle, et pour qui ?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposition
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation
+      placeholder: |
+        - [ ] …
+  - type: input
+    id: spec
+    attributes:
+      label: Section de SPEC.md concernée
+      placeholder: ex. 6.1 Assistant de paiement

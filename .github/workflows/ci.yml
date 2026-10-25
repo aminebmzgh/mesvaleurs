@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: Lint, types, tests unitaires, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+        env:
+          # Valeurs factices : le build ne contacte pas Supabase
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder
+
+  database:
+    name: Migrations, RLS et isolation multi-tenant
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Démarrer Supabase en local (migrations + seed)
+        run: pnpm exec supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit
+      - name: Lint SQL
+        run: pnpm db:lint
+      - name: Tests pgTAP (RLS, rôles, isolation)
+        run: pnpm db:test
+      - name: Types TypeScript à jour avec le schéma
+        run: |
+          pnpm db:types
+          git diff --exit-code src/types/database.ts || {
+            echo "::error::src/types/database.ts n'est pas à jour : lancez pnpm db:types et commitez le résultat."
+            exit 1
+          }
