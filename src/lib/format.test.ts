@@ -48,10 +48,16 @@ describe("formatDate", () => {
     expect(formatDate("2026-12-31")).toBe("31/12/2026");
   });
 
-  it("convertit un instant dans le fuseau de Casablanca", () => {
-    // 23 h 30 UTC le 31/12 : déjà le 01/01 à Casablanca (UTC+1)
-    expect(formatDate("2026-12-31T23:30:00Z")).toBe("01/01/2027");
+  it("convertit un instant dans le fuseau demandé", () => {
+    // Fuseau à décalage fixe (UTC+9) : 23 h 30 UTC le 31/12 est déjà le 01/01
+    expect(formatDate("2026-12-31T23:30:00Z", "Asia/Tokyo")).toBe("01/01/2027");
+  });
+
+  it("utilise Africa/Casablanca par défaut", () => {
+    // Milieu de journée : même date que Casablanca soit à UTC+0 ou UTC+1
+    // (le décalage du Maroc change selon le Ramadan et les décisions officielles)
     expect(formatDate(new Date("2026-06-15T10:00:00Z"))).toBe("15/06/2026");
+    expect(formatDate("2026-12-31T12:00:00Z")).toBe("31/12/2026");
   });
 
   it("refuse une date invalide", () => {
