@@ -30,6 +30,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Montant en lettres en français (accords de cent et vingt, « et un », mille invariable,
   millions et milliards, « de dirhams »), option orthographe rectifiée de 1990 dans les
   paramètres de l'entreprise ; 85 cas testés.
+- Assistant de paiement : chèque ou LCN, chéquier avec prochain numéro, fournisseur et
+  factures (création à la volée), montant par défaut = reste dû, répartition en parts
+  égales (écart d'arrondi sur la dernière) ou personnalisée, échéancier de LCN
+  (30/60/90 jours, modifiable), montant en lettres, aperçu des formules, alertes de
+  dépassement (à confirmer) et de provision insuffisante.
+- Émission atomique en base (`issue_payments`) : carnet verrouillé, numéros à la suite,
+  affectations recalculées côté serveur, lot d'impression, journal d'audit.
+- Chèques et LCN : liste filtrée (statut, type, numéro) avec ancienneté, remise au
+  fournisseur, annulation avec motif (le numéro reste dans l'historique) ; page du lot.
+- Base : cycle de vie des paiements contrôlé (transitions autorisées), montant, numéro et
+  bénéficiaire figés après émission.
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.
