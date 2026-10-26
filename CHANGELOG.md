@@ -41,6 +41,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   fournisseur, annulation avec motif (le numéro reste dans l'historique) ; page du lot.
 - Base : cycle de vie des paiements contrôlé (transitions autorisées), montant, numéro et
   bénéficiaire figés après émission.
+- Impression des chèques et LCN : PDF au millimètre (une page par formule, pdf-lib),
+  montant encadré (#…#), montant en lettres réparti sur 2 ou 3 lignes selon la largeur
+  réelle du texte, police réduite puis signalée si un texte déborde, décalage imprimante.
+- Modèles par défaut relevés sur des formules réelles : chèques Attijariwafa bank, Banque
+  Populaire, Crédit Agricole du Maroc, CIH Bank (175 × 80 mm) ; LCN Attijariwafa bank et
+  Crédit Agricole du Maroc (200 × 105 mm) ; modèles génériques.
+- Éditeur visuel de modèle : scan de la formule en fond, zones déplaçables à la souris ou
+  au clavier (0,5 / 0,1 mm), largeur, police, alignement, options ; aperçu avec les mêmes
+  métriques de police que le PDF ; impression test sur papier blanc avec le scan en fond.
+- Modèle d'impression par carnet (sinon modèle par défaut de la banque) ; impression et
+  réimpression d'un lot tracées dans le journal d'audit.
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.
