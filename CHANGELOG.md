@@ -10,6 +10,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Déploiement : projets Supabase de préproduction et de production (Paris), projet Vercel
   relié au dépôt (production sur `main`, prévisualisations reliées à la préproduction).
 - Surcharges de configuration Auth par environnement (`[remotes.*]` dans `config.toml`).
+- Comptes bancaires : création, modification, archivage ; RIB vérifié (clé), unique par
+  entreprise ; solde courant initialisé et recalé sur le solde d'ouverture.
+- Chéquiers et carnets de LCN : plage de numéros (zéros initiaux conservés), formules
+  restantes et annulées, alerte « presque épuisé » (5 formules), archivage.
+- Base : aucun chevauchement de numéros entre carnets d'un même compte, plage figée dès
+  qu'un numéro est utilisé, prochain numéro qui ne peut pas reculer.
+- Saisie des montants au format marocain (« 1 234,56 ») et calculs en centimes.
 
 ### Modifié
 

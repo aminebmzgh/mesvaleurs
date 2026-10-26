@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { parseAmount } from "./amount";
+import { isValidRib, normalizeRib } from "./rib";
 
 /** Schémas Zod partagés entre formulaires et Server Actions, messages en français. */
 
@@ -39,6 +41,52 @@ export const iceSchema = z
   .refine((value) => value === "" || /^\d{15}$/.test(value), {
     error: "L'ICE doit comporter 15 chiffres.",
   })
+  .transform((value) => (value === "" ? null : value))
+  .nullable()
+  .optional();
+
+/** RIB marocain : 24 chiffres avec clé valide (espaces et tirets ignorés). Vide → null. */
+export const ribSchema = z
+  .string()
+  .trim()
+  .transform((value) => normalizeRib(value))
+  .refine((value) => value === "" || /^\d{24}$/.test(value), {
+    error: "Le RIB doit comporter 24 chiffres.",
+  })
+  .refine((value) => value === "" || isValidRib(value), {
+    error: "Clé RIB invalide : vérifiez les chiffres saisis.",
+  })
+  .transform((value) => (value === "" ? null : value))
+  .nullable()
+  .optional();
+
+/** Montant saisi au format marocain (« 1 234,56 »), converti en nombre. */
+export const amountSchema = (label: string, { allowNegative = false, required = true } = {}) =>
+  z
+    .string({ error: `${label} est obligatoire.` })
+    .trim()
+    .refine((value) => !required || value !== "", { error: `${label} est obligatoire.` })
+    .refine((value) => value === "" || parseAmount(value, { allowNegative }) !== null, {
+      error: `${label} : montant invalide (exemple : 1 234,56).`,
+    })
+    .transform((value) => (value === "" ? 0 : (parseAmount(value, { allowNegative }) as number)));
+
+/** Nombre entier positif saisi (numéros de chèques, quantités). */
+export const integerSchema = (label: string, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) =>
+  z
+    .string({ error: `${label} est obligatoire.` })
+    .trim()
+    .regex(/^\d+$/, { error: `${label} doit être un nombre entier.` })
+    .transform(Number)
+    .refine((value) => value >= min && value <= max, {
+      error: `${label} doit être compris entre ${min} et ${max}.`,
+    });
+
+/** Date au format ISO (champ <input type="date">). Vide → null. */
+export const optionalDateSchema = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value), { error: "Date invalide." })
   .transform((value) => (value === "" ? null : value))
   .nullable()
   .optional();
