@@ -18,6 +18,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   qu'un numéro est utilisé, prochain numéro qui ne peut pas reculer.
 - Saisie des montants au format marocain (« 1 234,56 ») et calculs en centimes.
 
+- Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
+  seule du comptable), exécutés dans la CI contre une base Supabase locale.
+
+### Corrigé
+
+- Les formulaires ne se vident plus quand la validation échoue (réinitialisation
+  automatique des formulaires par React 19) : composant `ActionForm`.
+
 ### Modifié
 
 - L'URL des liens envoyés par e-mail est déduite des variables système Vercel.

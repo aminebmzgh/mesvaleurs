@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { FormSelect } from "@/components/form-select";
 import { Field, FieldDescription, FieldLabel, FieldSet, FieldLegend } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { createCheckbook } from "../actions";
 const TYPE_OPTIONS = Object.entries(INSTRUMENT_LABELS).map(([value, label]) => ({ value, label }));
 
 export function CheckbookForm({ accountId }: { accountId: string }) {
-  const [state, action] = useActionState(createCheckbook.bind(null, accountId), initialFormState);
+  const [state, action, pending] = useActionState(createCheckbook.bind(null, accountId), initialFormState);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Formulaire vidé après un enregistrement réussi
@@ -23,7 +23,7 @@ export function CheckbookForm({ accountId }: { accountId: string }) {
   }, [state]);
 
   return (
-    <form ref={formRef} action={action} noValidate className="rounded-lg border p-4">
+    <ActionForm ref={formRef} action={action} pending={pending} noValidate className="rounded-lg border p-4">
       <FieldSet>
         <FieldLegend>Ajouter un carnet</FieldLegend>
         <FormMessage state={state} />
@@ -66,6 +66,6 @@ export function CheckbookForm({ accountId }: { accountId: string }) {
           <SubmitButton className="lg:mt-6">Ajouter</SubmitButton>
         </div>
       </FieldSet>
-    </form>
+    </ActionForm>
   );
 }

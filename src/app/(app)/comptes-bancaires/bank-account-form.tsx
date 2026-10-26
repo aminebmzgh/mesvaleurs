@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { FormSelect, type SelectOption } from "@/components/form-select";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -31,10 +31,10 @@ export function BankAccountForm({
   submitLabel: string;
   readOnly?: boolean;
 }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
 
   return (
-    <form action={formAction} noValidate>
+    <ActionForm action={formAction} pending={pending} noValidate>
       <fieldset disabled={readOnly}>
         <FieldGroup>
           <FormMessage state={state} />
@@ -116,6 +116,6 @@ export function BankAccountForm({
           )}
         </FieldGroup>
       </fieldset>
-    </form>
+    </ActionForm>
   );
 }
