@@ -55,9 +55,16 @@ select results_eq(
   $$ values (0.00::numeric(14, 2), 'unpaid') $$,
   'Chèque annulé : la facture redevient non payée');
 
-update public.payments set status = 'issued', cancellation_reason = null where id = '10000000-0000-4000-8000-000000000006';
-update public.payments set type = 'guarantee_check' where id = '10000000-0000-4000-8000-000000000006';
-select is((select amount_paid from public.invoices where id = 'f0000000-0000-4000-8000-000000000006'),
+-- Chèque de garantie rattaché à ATL-7845 (non payée) : il ne la règle pas
+insert into public.payments (id, organization_id, type, status, bank_account_id, checkbook_id, number,
+  supplier_id, payee_name, amount)
+values ('10000000-0000-4000-8000-0000000000a1', 'b0000000-0000-4000-8000-000000000001', 'guarantee_check', 'issued',
+  'c0000000-0000-4000-8000-000000000001', 'd0000000-0000-4000-8000-000000000001', 1040,
+  'e0000000-0000-4000-8000-000000000003', 'ATLAS TRANSPORT ET LOGISTIQUE', 6200);
+insert into public.payment_allocations (organization_id, payment_id, invoice_id, amount)
+values ('b0000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000a1',
+  'f0000000-0000-4000-8000-000000000005', 6200);
+select is((select amount_paid from public.invoices where id = 'f0000000-0000-4000-8000-000000000005'),
   0.00::numeric(14, 2), 'Un chèque de garantie ne règle pas la facture');
 
 -- Statut : seule la contestation est manuelle --------------------------------

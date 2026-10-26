@@ -499,6 +499,9 @@ isOneToOne: false
 "create_organization":
 { Args: { "p_city"?: string,"p_name": string }; Returns: string
                            },
+"issue_payments":
+{ Args: { "p_allocations"?: Json,"p_checkbook_id": string,"p_instruments": Json,"p_issue_date": string,"p_issue_place": string,"p_organization_id": string,"p_payee_name": string,"p_supplier_id": string }; Returns: string
+                           },
 "log_audit_event":
 { Args: { "p_action": string,"p_details"?: Json,"p_organization_id": string,"p_record_id"?: string,"p_table_name"?: string }; Returns: undefined
                            },
