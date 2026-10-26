@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+### Ajouté
+
+- Déploiement : projets Supabase de préproduction et de production (Paris), projet Vercel
+  relié au dépôt (production sur `main`, prévisualisations reliées à la préproduction).
+- Surcharges de configuration Auth par environnement (`[remotes.*]` dans `config.toml`).
+
+### Modifié
+
+- L'URL des liens envoyés par e-mail est déduite des variables système Vercel.
+- Stockage vectoriel désactivé dans `config.toml` (fonction payante, inutilisée).
+
 ## [0.1.0] — Phase 0 : fondations
 
 ### Ajouté

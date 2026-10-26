@@ -72,37 +72,47 @@ Nouvelle migration : `pnpm exec supabase migration new <nom>`, puis `pnpm db:res
 
 ## Déploiement
 
-Deux projets Supabase en région **Paris (eu-west-3)** : préproduction et production.
+| Environnement | Branche Git | Application | Supabase (Paris, eu-west-3) |
+|---|---|---|---|
+| Production | `main` | https://mesvaleurs.vercel.app | `mesvaleurs-prod` (`yqqovspjdsccfscmbeel`), sans données de démo |
+| Préproduction | `develop` et toute autre branche / PR | URL de prévisualisation Vercel (protégée par l'authentification Vercel) | `mesvaleurs-preprod` (`dnaadluvwvxmzzipbrxz`), avec données de démo |
 
-### Supabase (pour chaque projet)
+Chaque push est déployé automatiquement par Vercel. Les variables d'environnement
+(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` = clé *publishable*,
+`SUPABASE_SERVICE_ROLE_KEY` = clé *secret*, marquée sensible) sont définies dans Vercel
+par environnement. L'URL des liens envoyés par e-mail est déduite des variables système
+Vercel (URL de la branche en prévisualisation), sauf si `NEXT_PUBLIC_SITE_URL` est définie.
 
-1. Créer le projet en région `eu-west-3`.
-2. Lier et appliquer les migrations :
-   ```bash
-   pnpm exec supabase link --project-ref <ref>
-   pnpm exec supabase db push
-   ```
-   Le seed de démonstration n'est **pas** appliqué par `db push` ; ne pas le charger en production.
-3. Authentication > URL Configuration : `Site URL` = URL Vercel, ajouter `<URL>/**` aux redirections.
-4. Authentication > Email Templates : reprendre les modèles de `supabase/templates/`
-   (ou `pnpm exec supabase config push`).
-5. Authentication > Providers > Email : confirmation obligatoire, mot de passe de 8 caractères
-   minimum avec lettres et chiffres ; activer MFA TOTP.
-6. Authentication > SMTP : configurer Resend comme serveur SMTP personnalisé.
-7. Database > Backups : vérifier les sauvegardes quotidiennes (et le PITR en production).
+### Appliquer une migration sur les projets distants
 
-### Vercel
+```bash
+pnpm exec supabase link --project-ref dnaadluvwvxmzzipbrxz   # préproduction
+pnpm exec supabase db push --linked
+pnpm exec supabase link --project-ref yqqovspjdsccfscmbeel   # production
+pnpm exec supabase db push --linked
+```
 
-1. Importer le dépôt GitHub dans Vercel (framework Next.js détecté automatiquement).
-2. Variables d'environnement :
-   - **Production** : clés du projet Supabase de production, `NEXT_PUBLIC_SITE_URL` = domaine de production.
-   - **Preview** : clés du projet Supabase de préproduction.
-3. La branche `main` est déployée en production ; chaque branche et PR obtient un
-   déploiement de prévisualisation relié à la préproduction.
+Le mot de passe de chaque base est demandé (conservé hors du dépôt, dans un gestionnaire
+de mots de passe). Ne jamais utiliser `--include-seed` sur la production.
+
+### Configuration Auth et stockage
+
+`supabase/config.toml` est la source de vérité ; les blocs `[remotes.preprod]` et
+`[remotes.prod]` y surchargent l'URL du site et les redirections autorisées :
+
+```bash
+pnpm exec supabase config push --project-ref <ref>
+```
+
+Tant qu'aucun SMTP personnalisé (Resend) n'est configuré, le plan gratuit de Supabase
+refuse les modèles d'e-mails personnalisés et n'envoie des e-mails qu'aux membres de
+l'équipe Supabase, limités à quelques envois par heure : les inscriptions et invitations
+de vrais utilisateurs nécessitent donc Resend (issue « Configurer Resend comme SMTP de
+Supabase Auth »).
 
 ## Branches et contributions
 
-- `main` : production (protégée) · `develop` : préproduction · `feat/…`, `fix/…` : une branche par sujet.
+- `main` : production (aucun push direct, uniquement des PR à CI verte) · `develop` : préproduction · `feat/…`, `fix/…` : une branche par sujet.
 - Commits au format Conventional Commits, en français (`feat: assistant de paiement`).
 - Une Pull Request par fonctionnalité ; fusion uniquement si la CI est verte.
 - Mettre à jour `CHANGELOG.md` à chaque PR.
