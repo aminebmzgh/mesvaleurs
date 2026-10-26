@@ -8,7 +8,7 @@
 
 begin;
 
-select plan(33);
+select plan(34);
 
 -- Toutes les tables du schéma public ont la RLS activée
 select is_empty(
@@ -43,6 +43,8 @@ select is_empty($$ select id from public.payments $$, 'B ne voit aucun paiement 
 select is_empty($$ select id from public.bank_accounts where organization_id = 'b0000000-0000-4000-8000-000000000001' $$,
   'B ne voit aucun compte bancaire de A');
 select is_empty($$ select id from public.statement_lines $$, 'B ne voit aucune ligne de relevé de A');
+select is_empty($$ select id from public.checkbook_summaries where organization_id = 'b0000000-0000-4000-8000-000000000001' $$,
+  'B ne voit pas la synthèse des chéquiers de A (vue security_invoker)');
 select is_empty($$ select id from public.memberships where organization_id = 'b0000000-0000-4000-8000-000000000001' $$,
   'B ne voit pas les membres de A');
 select is_empty($$ select id from public.profiles where id = 'a0000000-0000-4000-8000-000000000001' $$,

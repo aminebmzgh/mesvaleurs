@@ -243,6 +243,12 @@ isOneToOne: false
       foreignKeyName: "payments_organization_id_checkbook_id_fkey"
       columns: ["organization_id","checkbook_id"]
 isOneToOne: false
+      referencedRelation: "checkbook_summaries"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_checkbook_id_fkey"
+      columns: ["organization_id","checkbook_id"]
+isOneToOne: false
       referencedRelation: "checkbooks"
       referencedColumns: ["organization_id","id"]
     },{
@@ -418,7 +424,33 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "checkbook_summaries": {
+                  Row: {
+                    "bank_account_id": string,"cancelled_count": number | null,"created_at": string,"first_number": number,"id": string,"last_number": number,"next_number": number,"number_width": number,"organization_id": string,"received_at": string | null,"remaining_count": number | null,"status": Database["public"]['Enums']["checkbook_status"],"total_count": number | null,"type": Database["public"]['Enums']["instrument_type"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
+                         }
+                        Update: {
+                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
+                         }
+                        Relationships: [
+                    {
+      foreignKeyName: "checkbooks_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "checkbooks_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             "accept_invitation":
