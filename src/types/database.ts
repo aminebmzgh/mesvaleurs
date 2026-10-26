@@ -155,6 +155,20 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     }
                   ]
+                },"legal_settings": {
+                  Row: {
+                    "description": string,"key": string,"updated_at": string,"value": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description": string,"key": string,"updated_at"?: string,"value": number
+                  }
+                  Update: {
+                    "description"?: string,"key"?: string,"updated_at"?: string,"value"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
