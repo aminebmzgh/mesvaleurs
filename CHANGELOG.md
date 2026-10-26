@@ -27,6 +27,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Base : date limite légale calculée (délai de la facture, sinon du fournisseur, sinon
   délai légal par défaut, plafonné), montants « réglé » / « encaissé » et statut maintenus
   par triggers ; paramètres légaux dans la table `legal_settings` (jamais codés en dur).
+- Montant en lettres en français (accords de cent et vingt, « et un », mille invariable,
+  millions et milliards, « de dirhams »), option orthographe rectifiée de 1990 dans les
+  paramètres de l'entreprise ; 85 cas testés.
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.

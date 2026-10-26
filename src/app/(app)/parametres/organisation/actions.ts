@@ -5,7 +5,8 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
-import { emailSchema, iceSchema, optionalText, requiredText } from "@/lib/validation";
+import { parseOrganizationSettings } from "@/lib/organizations/settings";
+import { emailSchema, iceSchema, optionalAmountSchema, optionalText, requiredText } from "@/lib/validation";
 
 const organizationSchema = z.object({
   name: requiredText("La raison sociale"),
@@ -18,16 +19,9 @@ const organizationSchema = z.object({
   city: optionalText(120),
   phone: optionalText(30),
   email: z.union([z.literal("").transform(() => null), emailSchema]).optional(),
-  annual_revenue: z
-    .string()
-    .trim()
-    .transform((value) => value.replace(/[\s ]/g, "").replace(",", "."))
-    .refine((value) => value === "" || (/^\d+(\.\d{1,2})?$/.test(value) && Number(value) >= 0), {
-      error: "Montant invalide (exemple : 1 250 000,00).",
-    })
-    .transform((value) => (value === "" ? null : Number(value)))
-    .optional(),
+  annual_revenue: optionalAmountSchema("Le chiffre d'affaires"),
   require_mfa: z.literal("on").optional(),
+  amount_words_rectified: z.literal("on").optional(),
 });
 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -37,7 +31,7 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
-  const { require_mfa, ...fields } = parsed.data;
+  const { require_mfa, amount_words_rectified, ...fields } = parsed.data;
   const supabase = await createClient();
 
   const { data: current } = await supabase
@@ -45,7 +39,11 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     .select("settings")
     .eq("id", organization.organizationId)
     .single();
-  const settings = { ...((current?.settings as Record<string, unknown>) ?? {}), require_mfa: require_mfa === "on" };
+  const settings = {
+    ...parseOrganizationSettings(current?.settings),
+    require_mfa: require_mfa === "on",
+    amount_words_rectified: amount_words_rectified === "on",
+  };
 
   const { error } = await supabase
     .from("organizations")
