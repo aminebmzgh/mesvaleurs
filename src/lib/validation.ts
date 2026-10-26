@@ -90,3 +90,21 @@ export const optionalDateSchema = z
   .transform((value) => (value === "" ? null : value))
   .nullable()
   .optional();
+
+/** Montant facultatif : vide → null, sinon montant positif au format marocain. */
+export const optionalAmountSchema = (label: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => value === "" || parseAmount(value) !== null, {
+      error: `${label} : montant invalide (exemple : 1 234,56).`,
+    })
+    .transform((value) => (value === "" ? null : (parseAmount(value) as number)))
+    .optional();
+
+/** Date obligatoire au format ISO (champ <input type="date">). */
+export const dateSchema = (label: string) =>
+  z
+    .string({ error: `${label} est obligatoire.` })
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: `${label} est obligatoire.` });

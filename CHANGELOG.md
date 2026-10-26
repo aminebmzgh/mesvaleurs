@@ -20,6 +20,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Fournisseurs : liste avec recherche (raison sociale, nom imprimé, ICE), création,
   modification, archivage ; ICE unique par entreprise ; fiche avec reste à payer, montants
   en circulation, encaissés et contestés, factures (réglé / encaissé) et paiements.
+- Factures : saisie (HT + TVA = TTC vérifié), doublon refusé, liste filtrée (statut,
+  fournisseur, numéro) avec totaux, fiche avec paiements rattachés, contestation,
+  suppression ; pièce jointe envoyée directement du navigateur vers Supabase Storage et
+  consultée par lien temporaire.
+- Base : date limite légale calculée (délai de la facture, sinon du fournisseur, sinon
+  délai légal par défaut, plafonné), montants « réglé » / « encaissé » et statut maintenus
+  par triggers ; paramètres légaux dans la table `legal_settings` (jamais codés en dur).
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.
