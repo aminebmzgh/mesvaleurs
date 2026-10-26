@@ -146,7 +146,7 @@ max_catalogs = 2
 
 # Store vector embeddings in S3 for large and durable datasets
 [storage.vector]
-enabled = true
+enabled = false
 max_buckets = 10
 max_indexes = 5
 
@@ -434,3 +434,23 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# -----------------------------------------------------------------------------
+# Projets distants : surcharges appliquées par `supabase config push --project-ref <ref>`
+# -----------------------------------------------------------------------------
+
+# Préproduction (déploiements de prévisualisation Vercel)
+[remotes.preprod]
+project_id = "dnaadluvwvxmzzipbrxz"
+
+[remotes.preprod.auth]
+site_url = "https://mesvaleurs-git-develop-amine-boumazzoughes-projects.vercel.app"
+additional_redirect_urls = ["https://mesvaleurs-*-amine-boumazzoughes-projects.vercel.app/**"]
+
+# Production
+[remotes.prod]
+project_id = "yqqovspjdsccfscmbeel"
+
+[remotes.prod.auth]
+site_url = "https://mesvaleurs.vercel.app"
+additional_redirect_urls = ["https://mesvaleurs.vercel.app/**"]
