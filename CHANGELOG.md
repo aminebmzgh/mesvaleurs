@@ -17,6 +17,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Base : aucun chevauchement de numéros entre carnets d'un même compte, plage figée dès
   qu'un numéro est utilisé, prochain numéro qui ne peut pas reculer.
 - Saisie des montants au format marocain (« 1 234,56 ») et calculs en centimes.
+- Fournisseurs : liste avec recherche (raison sociale, nom imprimé, ICE), création,
+  modification, archivage ; ICE unique par entreprise ; fiche avec reste à payer, montants
+  en circulation, encaissés et contestés, factures (réglé / encaissé) et paiements.
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.
