@@ -1,259 +1,559 @@
-// Types de la base de données.
-// PROVISOIRE : rédigé à la main au format de la CLI Supabase, en attendant la
-// première génération. À régénérer avec `pnpm db:types` (ne pas modifier à la main ensuite).
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
-
-type Timestamps = { created_at: string; updated_at: string };
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  public: {
-    Tables: {
-      organizations: {
-        Row: {
-          id: string;
-          name: string;
-          ice: string | null;
-          tax_id: string | null;
-          trade_register: string | null;
-          patente: string | null;
-          cnss: string | null;
-          address: string | null;
-          city: string | null;
-          phone: string | null;
-          email: string | null;
-          logo_path: string | null;
-          annual_revenue: number | null;
-          timezone: string;
-          settings: Json;
-        } & Timestamps;
-        Insert: {
-          id?: string;
-          name: string;
-          ice?: string | null;
-          tax_id?: string | null;
-          trade_register?: string | null;
-          patente?: string | null;
-          cnss?: string | null;
-          address?: string | null;
-          city?: string | null;
-          phone?: string | null;
-          email?: string | null;
-          logo_path?: string | null;
-          annual_revenue?: number | null;
-          timezone?: string;
-          settings?: Json;
-        };
-        Update: Partial<Database["public"]["Tables"]["organizations"]["Insert"]>;
-        Relationships: [];
-      };
-      profiles: {
-        Row: {
-          id: string;
-          email: string;
-          full_name: string | null;
-          job_title: string | null;
-          phone: string | null;
-          locale: string;
-          last_organization_id: string | null;
-        } & Timestamps;
-        Insert: {
-          id: string;
-          email: string;
-          full_name?: string | null;
-          job_title?: string | null;
-          phone?: string | null;
-          locale?: string;
-          last_organization_id?: string | null;
-        };
-        Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
-        Relationships: [
-          {
-            foreignKeyName: "profiles_last_organization_id_fkey";
-            columns: ["last_organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      memberships: {
-        Row: {
-          id: string;
-          organization_id: string;
-          user_id: string;
-          role: Database["public"]["Enums"]["app_role"];
-        } & Timestamps;
-        Insert: {
-          id?: string;
-          organization_id: string;
-          user_id: string;
-          role: Database["public"]["Enums"]["app_role"];
-        };
-        Update: Partial<Database["public"]["Tables"]["memberships"]["Insert"]>;
-        Relationships: [
-          {
-            foreignKeyName: "memberships_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "memberships_user_id_profiles_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      invitations: {
-        Row: {
-          id: string;
-          organization_id: string;
-          email: string;
-          role: Database["public"]["Enums"]["app_role"];
-          invited_by: string | null;
-          accepted_at: string | null;
-          expires_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          organization_id: string;
-          email: string;
-          role: Database["public"]["Enums"]["app_role"];
-          invited_by?: string | null;
-          accepted_at?: string | null;
-          expires_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["invitations"]["Insert"]>;
-        Relationships: [];
-      };
-      suppliers: {
-        Row: {
-          id: string;
-          organization_id: string;
-          name: string;
-          payee_name: string | null;
-          ice: string | null;
-          city: string | null;
-          is_active: boolean;
-        } & Timestamps;
-        Insert: { id?: string; organization_id: string; name: string; payee_name?: string | null };
-        Update: Partial<Database["public"]["Tables"]["suppliers"]["Insert"]>;
-        Relationships: [];
-      };
-      invoices: {
-        Row: {
-          id: string;
-          organization_id: string;
-          supplier_id: string;
-          number: string;
-          issue_date: string;
-          amount_incl_tax: number;
-          amount_paid: number;
-          legal_due_date: string | null;
-          status: Database["public"]["Enums"]["invoice_status"];
-        } & Timestamps;
-        Insert: {
-          id?: string;
-          organization_id: string;
-          supplier_id: string;
-          number: string;
-          issue_date: string;
-          amount_incl_tax: number;
-        };
-        Update: Partial<Database["public"]["Tables"]["invoices"]["Insert"]>;
-        Relationships: [];
-      };
-      payments: {
-        Row: {
-          id: string;
-          organization_id: string;
-          type: Database["public"]["Enums"]["payment_type"];
-          status: Database["public"]["Enums"]["payment_status"];
-          number: number | null;
-          supplier_id: string;
-          payee_name: string;
-          amount: number;
-          issue_date: string;
-          due_date: string | null;
-        } & Timestamps;
-        Insert: {
-          id?: string;
-          organization_id: string;
-          type: Database["public"]["Enums"]["payment_type"];
-          bank_account_id: string;
-          supplier_id: string;
-          payee_name: string;
-          amount: number;
-        };
-        Update: Partial<Database["public"]["Tables"]["payments"]["Insert"]>;
-        Relationships: [];
-      };
-      bank_accounts: {
-        Row: {
-          id: string;
-          organization_id: string;
-          bank_id: string;
-          label: string;
-          current_balance: number;
-          is_active: boolean;
-        } & Timestamps;
-        Insert: { id?: string; organization_id: string; bank_id: string; label: string };
-        Update: Partial<Database["public"]["Tables"]["bank_accounts"]["Insert"]>;
-        Relationships: [];
-      };
-    };
-    Views: { [_ in never]: never };
-    Functions: {
-      create_organization: {
-        Args: { p_name: string; p_city?: string | null };
-        Returns: string;
-      };
-      accept_invitation: {
-        Args: { p_invitation_id: string };
-        Returns: string;
-      };
-      my_pending_invitations: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          id: string;
-          organization_id: string;
-          organization_name: string;
-          role: Database["public"]["Enums"]["app_role"];
-          expires_at: string;
-        }[];
-      };
-      log_audit_event: {
-        Args: {
-          p_organization_id: string;
-          p_action: string;
-          p_table_name?: string | null;
-          p_record_id?: string | null;
-          p_details?: Json | null;
-        };
-        Returns: undefined;
-      };
-    };
-    Enums: {
-      app_role: "admin" | "manager" | "preparer" | "accountant" | "external_accountant";
-      invoice_status: "unpaid" | "partially_paid" | "paid" | "disputed";
-      payment_type: "check" | "lcn" | "guarantee_check";
-      payment_status:
-        | "draft"
-        | "issued"
-        | "delivered"
-        | "paid"
-        | "rejected"
-        | "cancelled"
-        | "lost"
-        | "stopped";
-    };
-    CompositeTypes: { [_ in never]: never };
-  };
-};
+  
+  "public": {
+          Tables: {
+            "audit_log": {
+                  Row: {
+                    "action": string,"actor_id": string | null,"after": Json | null,"before": Json | null,"created_at": string,"details": Json | null,"id": number,"organization_id": string,"record_id": string | null,"table_name": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"actor_id"?: string | null,"after"?: Json | null,"before"?: Json | null,"created_at"?: string,"details"?: Json | null,"id"?: never,"organization_id": string,"record_id"?: string | null,"table_name"?: string | null
+                  }
+                  Update: {
+                    "action"?: string,"actor_id"?: string | null,"after"?: Json | null,"before"?: Json | null,"created_at"?: string,"details"?: Json | null,"id"?: never,"organization_id"?: string,"record_id"?: string | null,"table_name"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "audit_log_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"bank_accounts": {
+                  Row: {
+                    "bank_id": string,"branch": string | null,"created_at": string,"currency": string,"current_balance": number,"id": string,"is_active": boolean,"label": string,"opening_balance": number,"opening_balance_date": string,"organization_id": string,"rib": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_id": string,"branch"?: string | null,"created_at"?: string,"currency"?: string,"current_balance"?: number,"id"?: string,"is_active"?: boolean,"label": string,"opening_balance"?: number,"opening_balance_date"?: string,"organization_id": string,"rib"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "bank_id"?: string,"branch"?: string | null,"created_at"?: string,"currency"?: string,"current_balance"?: number,"id"?: string,"is_active"?: boolean,"label"?: string,"opening_balance"?: number,"opening_balance_date"?: string,"organization_id"?: string,"rib"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bank_accounts_bank_id_fkey"
+      columns: ["bank_id"]
+isOneToOne: false
+      referencedRelation: "banks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "bank_accounts_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"banks": {
+                  Row: {
+                    "created_at": string,"id": string,"is_active": boolean,"name": string,"organization_id": string | null,"rib_bank_codes": (string)[],"short_name": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"is_active"?: boolean,"name": string,"organization_id"?: string | null,"rib_bank_codes"?: (string)[],"short_name"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string | null,"rib_bank_codes"?: (string)[],"short_name"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "banks_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"checkbooks": {
+                  Row: {
+                    "bank_account_id": string,"created_at": string,"first_number": number,"id": string,"last_number": number,"next_number": number,"number_width": number,"organization_id": string,"print_template_id": string | null,"received_at": string | null,"status": Database["public"]['Enums']["checkbook_status"],"type": Database["public"]['Enums']["instrument_type"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_account_id": string,"created_at"?: string,"first_number": number,"id"?: string,"last_number": number,"next_number": number,"number_width"?: number,"organization_id": string,"print_template_id"?: string | null,"received_at"?: string | null,"status"?: Database["public"]['Enums']["checkbook_status"],"type": Database["public"]['Enums']["instrument_type"],"updated_at"?: string
+                  }
+                  Update: {
+                    "bank_account_id"?: string,"created_at"?: string,"first_number"?: number,"id"?: string,"last_number"?: number,"next_number"?: number,"number_width"?: number,"organization_id"?: string,"print_template_id"?: string | null,"received_at"?: string | null,"status"?: Database["public"]['Enums']["checkbook_status"],"type"?: Database["public"]['Enums']["instrument_type"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "checkbooks_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "checkbooks_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checkbooks_print_template_id_fkey"
+      columns: ["print_template_id"]
+isOneToOne: false
+      referencedRelation: "print_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invitations": {
+                  Row: {
+                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string,"id": string,"invited_by": string | null,"organization_id": string,"role": Database["public"]['Enums']["app_role"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string,"id"?: string,"invited_by"?: string | null,"organization_id": string,"role": Database["public"]['Enums']["app_role"]
+                  }
+                  Update: {
+                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string,"id"?: string,"invited_by"?: string | null,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invitations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invoices": {
+                  Row: {
+                    "amount_cashed": number,"amount_excl_tax": number | null,"amount_incl_tax": number,"amount_paid": number,"attachment_path": string | null,"created_at": string,"delivery_date": string | null,"id": string,"issue_date": string,"legal_due_date": string | null,"notes": string | null,"number": string,"organization_id": string,"payment_terms_days": number | null,"status": Database["public"]['Enums']["invoice_status"],"supplier_id": string,"updated_at": string,"vat_amount": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cashed"?: number,"amount_excl_tax"?: number | null,"amount_incl_tax": number,"amount_paid"?: number,"attachment_path"?: string | null,"created_at"?: string,"delivery_date"?: string | null,"id"?: string,"issue_date": string,"legal_due_date"?: string | null,"notes"?: string | null,"number": string,"organization_id": string,"payment_terms_days"?: number | null,"status"?: Database["public"]['Enums']["invoice_status"],"supplier_id": string,"updated_at"?: string,"vat_amount"?: number | null
+                  }
+                  Update: {
+                    "amount_cashed"?: number,"amount_excl_tax"?: number | null,"amount_incl_tax"?: number,"amount_paid"?: number,"attachment_path"?: string | null,"created_at"?: string,"delivery_date"?: string | null,"id"?: string,"issue_date"?: string,"legal_due_date"?: string | null,"notes"?: string | null,"number"?: string,"organization_id"?: string,"payment_terms_days"?: number | null,"status"?: Database["public"]['Enums']["invoice_status"],"supplier_id"?: string,"updated_at"?: string,"vat_amount"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoices_organization_id_supplier_id_fkey"
+      columns: ["organization_id","supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
+                },"memberships": {
+                  Row: {
+                    "created_at": string,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "memberships_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "memberships_user_id_profiles_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"organizations": {
+                  Row: {
+                    "address": string | null,"annual_revenue": number | null,"city": string | null,"cnss": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"logo_path": string | null,"name": string,"patente": string | null,"phone": string | null,"settings": NonNullable<Json>,"tax_id": string | null,"timezone": string,"trade_register": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"payment_allocations": {
+                  Row: {
+                    "amount": number,"created_at": string,"id": string,"invoice_id": string,"organization_id": string,"payment_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"id"?: string,"invoice_id": string,"organization_id": string,"payment_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"id"?: string,"invoice_id"?: string,"organization_id"?: string,"payment_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_allocations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_allocations_organization_id_invoice_id_fkey"
+      columns: ["organization_id","invoice_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payment_allocations_organization_id_payment_id_fkey"
+      columns: ["organization_id","payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
+                },"payments": {
+                  Row: {
+                    "amount": number,"bank_account_id": string,"cancellation_reason": string | null,"checkbook_id": string | null,"created_at": string,"created_by": string | null,"debited_at": string | null,"delivered_at": string | null,"due_date": string | null,"id": string,"issue_date": string,"issue_place": string | null,"notes": string | null,"number": number | null,"organization_id": string,"payee_name": string,"print_batch_id": string | null,"rejection_reason": string | null,"scan_path": string | null,"status": Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"bank_account_id": string,"cancellation_reason"?: string | null,"checkbook_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"debited_at"?: string | null,"delivered_at"?: string | null,"due_date"?: string | null,"id"?: string,"issue_date"?: string,"issue_place"?: string | null,"notes"?: string | null,"number"?: number | null,"organization_id": string,"payee_name": string,"print_batch_id"?: string | null,"rejection_reason"?: string | null,"scan_path"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"bank_account_id"?: string,"cancellation_reason"?: string | null,"checkbook_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"debited_at"?: string | null,"delivered_at"?: string | null,"due_date"?: string | null,"id"?: string,"issue_date"?: string,"issue_place"?: string | null,"notes"?: string | null,"number"?: number | null,"organization_id"?: string,"payee_name"?: string,"print_batch_id"?: string | null,"rejection_reason"?: string | null,"scan_path"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"supplier_id"?: string,"type"?: Database["public"]['Enums']["payment_type"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_checkbook_id_fkey"
+      columns: ["organization_id","checkbook_id"]
+isOneToOne: false
+      referencedRelation: "checkbooks"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payments_organization_id_print_batch_id_fkey"
+      columns: ["organization_id","print_batch_id"]
+isOneToOne: false
+      referencedRelation: "print_batches"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_supplier_id_fkey"
+      columns: ["organization_id","supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
+                },"print_batches": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"organization_id": string,"printed_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id": string,"printed_at"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id"?: string,"printed_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "print_batches_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"print_templates": {
+                  Row: {
+                    "background_path": string | null,"bank_id": string | null,"created_at": string,"height_mm": number,"id": string,"name": string,"offset_x_mm": number,"offset_y_mm": number,"organization_id": string | null,"type": Database["public"]['Enums']["instrument_type"],"updated_at": string,"width_mm": number,"zones": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "background_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"height_mm": number,"id"?: string,"name": string,"offset_x_mm"?: number,"offset_y_mm"?: number,"organization_id"?: string | null,"type": Database["public"]['Enums']["instrument_type"],"updated_at"?: string,"width_mm": number,"zones"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "background_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"height_mm"?: number,"id"?: string,"name"?: string,"offset_x_mm"?: number,"offset_y_mm"?: number,"organization_id"?: string | null,"type"?: Database["public"]['Enums']["instrument_type"],"updated_at"?: string,"width_mm"?: number,"zones"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "print_templates_bank_id_fkey"
+      columns: ["bank_id"]
+isOneToOne: false
+      referencedRelation: "banks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "print_templates_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
+                  Row: {
+                    "created_at": string,"email": string,"full_name": string | null,"id": string,"job_title": string | null,"last_organization_id": string | null,"locale": string,"phone": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"email": string,"full_name"?: string | null,"id": string,"job_title"?: string | null,"last_organization_id"?: string | null,"locale"?: string,"phone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string,"full_name"?: string | null,"id"?: string,"job_title"?: string | null,"last_organization_id"?: string | null,"locale"?: string,"phone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profiles_last_organization_id_fkey"
+      columns: ["last_organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"statement_imports": {
+                  Row: {
+                    "bank_account_id": string,"created_at": string,"error_message": string | null,"file_hash": string | null,"file_path": string | null,"format": Database["public"]['Enums']["statement_format"],"id": string,"imported_by": string | null,"line_count": number,"organization_id": string,"period_end": string | null,"period_start": string | null,"status": Database["public"]['Enums']["statement_import_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_account_id": string,"created_at"?: string,"error_message"?: string | null,"file_hash"?: string | null,"file_path"?: string | null,"format": Database["public"]['Enums']["statement_format"],"id"?: string,"imported_by"?: string | null,"line_count"?: number,"organization_id": string,"period_end"?: string | null,"period_start"?: string | null,"status"?: Database["public"]['Enums']["statement_import_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "bank_account_id"?: string,"created_at"?: string,"error_message"?: string | null,"file_hash"?: string | null,"file_path"?: string | null,"format"?: Database["public"]['Enums']["statement_format"],"id"?: string,"imported_by"?: string | null,"line_count"?: number,"organization_id"?: string,"period_end"?: string | null,"period_start"?: string | null,"status"?: Database["public"]['Enums']["statement_import_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "statement_imports_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "statement_imports_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"statement_lines": {
+                  Row: {
+                    "bank_account_id": string,"confidence": number | null,"created_at": string,"credit": number | null,"debit": number | null,"extracted_number": number | null,"id": string,"import_id": string,"label": string,"line_hash": string,"matched_payment_id": string | null,"operation_date": string,"organization_id": string,"reference": string | null,"status": Database["public"]['Enums']["statement_line_status"],"updated_at": string,"value_date": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_account_id": string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_number"?: number | null,"id"?: string,"import_id": string,"label": string,"line_hash": string,"matched_payment_id"?: string | null,"operation_date": string,"organization_id": string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
+                  }
+                  Update: {
+                    "bank_account_id"?: string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_number"?: number | null,"id"?: string,"import_id"?: string,"label"?: string,"line_hash"?: string,"matched_payment_id"?: string | null,"operation_date"?: string,"organization_id"?: string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "statement_lines_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "statement_lines_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "statement_lines_organization_id_import_id_fkey"
+      columns: ["organization_id","import_id"]
+isOneToOne: false
+      referencedRelation: "statement_imports"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "statement_lines_organization_id_matched_payment_id_fkey"
+      columns: ["organization_id","matched_payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
+                },"suppliers": {
+                  Row: {
+                    "address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"notes"?: string | null,"organization_id": string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"notes"?: string | null,"organization_id"?: string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suppliers_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "accept_invitation":
+{ Args: { "p_invitation_id": string }; Returns: string
+                           },
+"create_organization":
+{ Args: { "p_city"?: string,"p_name": string }; Returns: string
+                           },
+"log_audit_event":
+{ Args: { "p_action": string,"p_details"?: Json,"p_organization_id": string,"p_record_id"?: string,"p_table_name"?: string }; Returns: undefined
+                           },
+"my_pending_invitations":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["app_role"]
+            }[]
+                           }
+          }
+          Enums: {
+            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","checkbook_status": "active"|"exhausted"|"archived","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored"
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        }
+}
 
-export type AppRole = Database["public"]["Enums"]["app_role"];
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
+
+export const Constants = {
+  "public": {
+          Enums: {
+            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"checkbook_status": ["active", "exhausted", "archived"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"]
+          }
+        }
+} as const

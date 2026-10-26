@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
-import type { AppRole } from "@/types/database";
+import type { AppRole } from "@/types/app";
 import { MFA_ELIGIBLE_ROLES } from "./roles";
 
 /**
@@ -31,15 +31,21 @@ export type ActiveOrganization = OrganizationMembership & {
   mfaRequired: boolean;
 };
 
-/** Utilisateur connecté, ou null. Mis en cache pour la durée de la requête. */
-export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+/** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
+const getVerifiedClaims = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
+  return data?.claims ?? null;
+});
+
+/** Utilisateur connecté, ou null. Mis en cache pour la durée de la requête. */
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  const claims = await getVerifiedClaims();
   if (!claims?.sub) {
     return null;
   }
 
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name")
@@ -53,11 +59,25 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   };
 });
 
-/** Niveau d'authentification de la session courante (aal1 ou aal2). */
-const getAssuranceLevel = cache(async () => {
+type AssuranceLevel = { currentLevel: "aal1" | "aal2"; nextLevel: "aal1" | "aal2" };
+
+/**
+ * Niveau d'authentification de la session : `currentLevel` vient des claims vérifiés ;
+ * `nextLevel` vaut aal2 si l'utilisateur a un facteur MFA vérifié (lu via getUser,
+ * vérifié par le serveur Auth, et seulement quand la session est encore en aal1).
+ */
+const getAssuranceLevel = cache(async (): Promise<AssuranceLevel | null> => {
+  const claims = await getVerifiedClaims();
+  if (!claims?.sub) {
+    return null;
+  }
+  if (claims.aal === "aal2") {
+    return { currentLevel: "aal2", nextLevel: "aal2" };
+  }
   const supabase = await createClient();
-  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  return data;
+  const { data } = await supabase.auth.mfa.listFactors();
+  const hasVerifiedFactor = Boolean(data?.all.some((factor) => factor.status === "verified"));
+  return { currentLevel: "aal1", nextLevel: hasVerifiedFactor ? "aal2" : "aal1" };
 });
 
 /**

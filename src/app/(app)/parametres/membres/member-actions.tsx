@@ -4,7 +4,7 @@ import { Trash2Icon, XIcon } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import type { AppRole } from "@/types/database";
+import type { AppRole } from "@/types/app";
 import { type ActionResult, changeMemberRole, removeMember, revokeInvitation } from "./actions";
 import { RoleSelect } from "./role-select";
 

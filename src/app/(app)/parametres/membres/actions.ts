@@ -8,7 +8,7 @@ import { publicEnv } from "@/lib/env";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { AppRole } from "@/types/database";
+import type { AppRole } from "@/types/app";
 import { emailSchema } from "@/lib/validation";
 
 const roleSchema = z.enum(ROLES as [AppRole, ...AppRole[]], { error: "Rôle invalide." });

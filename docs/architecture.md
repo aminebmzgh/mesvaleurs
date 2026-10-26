@@ -33,8 +33,9 @@
 │   │   ├── supabase/            Clients navigateur, serveur, proxy, service_role
 │   │   ├── organizations/       Actions : création, invitation, changement d'entreprise
 │   │   ├── format.ts            Montants « 1 234,56 DH », dates jj/mm/aaaa
+│   │   ├── rib.ts               Validation et découpage du RIB marocain
 │   │   └── validation.ts        Schémas Zod partagés
-│   └── types/database.ts        Types générés par la CLI Supabase
+│   └── types/                   database.ts généré par la CLI Supabase, app.ts (alias métier)
 ├── scripts/github-setup.sh      Labels, milestones et issues GitHub
 └── .github/                     CI, modèles d'issue et de PR
 ```
@@ -107,7 +108,7 @@ erDiagram
 | `checkbooks` | Chéquiers et carnets de LCN : plage de numéros, prochain numéro |
 | `print_templates` | Modèles d'impression : dimensions, zones en mm, décalage imprimante |
 | `suppliers` | Fournisseurs, nom à imprimer, délai convenu |
-| `invoices` | Factures fournisseurs, montant réglé, date limite légale, statut |
+| `invoices` | Factures fournisseurs : montant « réglé » (paiements émis) et « encaissé » (débité), date limite légale, statut |
 | `payments` | Chèques, LCN, chèques de garantie : numéro, montant, échéance, statut |
 | `payment_allocations` | Répartition plusieurs-à-plusieurs paiement ↔ facture, avec montant |
 | `print_batches` | Lots d'impression |

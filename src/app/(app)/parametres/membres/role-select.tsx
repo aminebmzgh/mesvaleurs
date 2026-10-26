@@ -2,7 +2,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ROLE_LABELS, ROLES } from "@/lib/auth/roles";
-import type { AppRole } from "@/types/database";
+import type { AppRole } from "@/types/app";
 
 /** Liste déroulante des rôles, utilisable dans un formulaire (champ `name`) ou contrôlée. */
 export function RoleSelect({

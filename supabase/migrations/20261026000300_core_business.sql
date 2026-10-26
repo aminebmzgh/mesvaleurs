@@ -172,8 +172,11 @@ create table public.invoices (
   amount_excl_tax numeric(14, 2) check (amount_excl_tax >= 0),
   vat_amount numeric(14, 2) check (vat_amount >= 0),
   amount_incl_tax numeric(14, 2) not null check (amount_incl_tax > 0),
-  -- Somme des affectations de paiements (hors annulés), maintenue par la base
+  -- Deux niveaux de règlement, maintenus par la base :
+  -- « réglée » : somme des affectations des paiements émis (hors brouillons, annulés, rejetés…)
   amount_paid numeric(14, 2) not null default 0 check (amount_paid >= 0),
+  -- « encaissée » : part de ces paiements effectivement débitée en banque
+  amount_cashed numeric(14, 2) not null default 0 check (amount_cashed >= 0 and amount_cashed <= amount_paid),
   payment_terms_days smallint check (payment_terms_days between 0 and 365),
   -- Date limite légale de paiement (loi 69-21), calculée
   legal_due_date date,

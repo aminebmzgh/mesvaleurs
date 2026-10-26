@@ -1,4 +1,4 @@
-import type { AppRole } from "@/types/database";
+import type { AppRole } from "@/types/app";
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Administrateur",

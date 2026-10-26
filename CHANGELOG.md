@@ -25,5 +25,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   d'e-mails en français.
 - Espace connecté : barre latérale, changement d'entreprise, tableau de bord simple,
   paramètres entreprise, membres et sécurité, mode clair/sombre.
+- Double suivi du règlement des factures : « réglée » (paiements émis, `amount_paid`) et
+  « encaissée » (paiements débités, `amount_cashed`).
+- Validation du RIB marocain (clé modulo 97), testée sur des RIB réels.
 - Données de démonstration et relevé bancaire CSV d'exemple.
 - CI GitHub Actions, modèles d'issue et de PR, script de création des issues et milestones.

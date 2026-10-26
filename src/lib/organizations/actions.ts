@@ -37,7 +37,7 @@ export async function createOrganization(_prev: FormState, formData: FormData): 
   const supabase = await createClient();
   const { data: organizationId, error } = await supabase.rpc("create_organization", {
     p_name: parsed.data.name,
-    p_city: parsed.data.city ?? null,
+    p_city: parsed.data.city ?? undefined,
   });
   if (error || !organizationId) {
     return { error: "Impossible de créer l'entreprise. Veuillez réessayer." };

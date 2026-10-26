@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { publicEnv } from "@/lib/env";
 import type { Database } from "@/types/database";
 
@@ -10,6 +11,8 @@ import type { Database } from "@/types/database";
  * Un nouveau client doit être créé pour chaque requête.
  */
 export async function createClient() {
+  // Données propres à la requête : jamais prérendues (le SDK lit aussi l'heure courante)
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
