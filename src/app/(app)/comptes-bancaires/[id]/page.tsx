@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
 import { getBankAccount, listBanks } from "@/lib/bank-accounts/queries";
+import { defaultTemplateFor } from "@/lib/printing/default-templates";
+import { listTemplates } from "@/lib/printing/queries";
 import {
   CHECKBOOK_STATUS_LABELS,
   formatInstrumentNumber,
@@ -24,6 +26,7 @@ import { updateBankAccount } from "../actions";
 import { BankAccountForm } from "../bank-account-form";
 import { AccountActiveToggle, CheckbookArchiveButton } from "./account-actions";
 import { CheckbookForm } from "./checkbook-form";
+import { CheckbookTemplateSelect } from "./checkbook-template-select";
 
 export const metadata: Metadata = { title: "Compte bancaire" };
 
@@ -46,15 +49,17 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
-  const [organization, account, banks] = await Promise.all([
+  const [organization, account, banks, templates] = await Promise.all([
     requireActiveOrganization(),
     getBankAccount(id),
     listBanks(),
+    listTemplates(),
   ]);
   if (!account) {
     notFound();
   }
   const canManage = ACCOUNT_MANAGER_ROLES.includes(organization.role);
+  const bankShortName = banks.find((bank) => bank.id === account.bank_id)?.short_name ?? null;
   const update = updateBankAccount.bind(null, account.id);
 
   return (
@@ -97,6 +102,7 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
                     <TableHead className="text-end">Annulées</TableHead>
                     <TableHead>Reçu le</TableHead>
                     <TableHead>Statut</TableHead>
+                    <TableHead>Modèle d&apos;impression</TableHead>
                     {canManage && <TableHead className="text-end">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -124,6 +130,30 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
                           <Badge variant={book.status === "active" ? (low ? "destructive" : "secondary") : "outline"}>
                             {low ? "Presque épuisé" : CHECKBOOK_STATUS_LABELS[book.status!]}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const type = book.type ?? "check";
+                            const defaultLabel = `Par défaut : ${defaultTemplateFor(type, bankShortName).name}`;
+                            const options = templates
+                              .filter((template) => template.type === type)
+                              .map((template) => ({ value: template.id, label: template.name }));
+                            if (!canManage) {
+                              return (
+                                <span className="text-xs text-muted-foreground">
+                                  {options.find((o) => o.value === book.print_template_id)?.label ?? defaultLabel}
+                                </span>
+                              );
+                            }
+                            return (
+                              <CheckbookTemplateSelect
+                                checkbookId={book.id!}
+                                value={book.print_template_id}
+                                options={options}
+                                defaultLabel={defaultLabel}
+                              />
+                            );
+                          })()}
                         </TableCell>
                         {canManage && (
                           <TableCell className="text-end">

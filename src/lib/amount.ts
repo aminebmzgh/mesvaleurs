@@ -10,7 +10,7 @@
  * Renvoie null si la saisie n'est pas un montant valide (au plus 2 décimales).
  */
 export function parseAmount(input: string, { allowNegative = false } = {}): number | null {
-  let text = input.trim().replace(/[\s  ]/g, "").replace(/(DH|MAD)$/i, "");
+  let text = input.trim().replace(/[\s\u00A0\u202F]/g, "").replace(/(DH|MAD)$/i, "");
   if (text === "") {
     return null;
   }

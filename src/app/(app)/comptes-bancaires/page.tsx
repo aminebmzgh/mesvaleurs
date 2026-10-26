@@ -1,4 +1,4 @@
-import { LandmarkIcon, PlusIcon } from "lucide-react";
+import { LandmarkIcon, PlusIcon, PrinterIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -42,10 +42,16 @@ async function NewAccountButton() {
     return null;
   }
   return (
-    <Link href="/comptes-bancaires/nouveau" className={buttonVariants()}>
-      <PlusIcon aria-hidden />
-      Nouveau compte
-    </Link>
+    <>
+      <Link href="/comptes-bancaires/modeles" className={buttonVariants({ variant: "outline" })}>
+        <PrinterIcon aria-hidden />
+        Modèles d&apos;impression
+      </Link>
+      <Link href="/comptes-bancaires/nouveau" className={buttonVariants()}>
+        <PlusIcon aria-hidden />
+        Nouveau compte
+      </Link>
+    </>
   );
 }
 

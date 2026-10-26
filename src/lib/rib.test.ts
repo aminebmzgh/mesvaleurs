@@ -71,6 +71,6 @@ describe("parseRib / formatRib", () => {
   });
 
   it("normalise la saisie", () => {
-    expect(normalizeRib(" 150.500 2115 014416910015-83 ")).toBe(REAL_RIBS[0]);
+    expect(normalizeRib(" 150.500 2115\u00A0014416910015-83 ")).toBe(REAL_RIBS[0]);
   });
 });

@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, CircleCheckIcon, PrinterIcon } from "lucide-react";
+import { ArrowLeftIcon, CircleCheckIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,6 +16,8 @@ import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { formatDate, formatMAD } from "@/lib/format";
 import { PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS, paymentStatusVariant } from "@/lib/labels";
 import { getBatch } from "@/lib/payments/list";
+import { WRITER_ROLES } from "@/lib/auth/roles";
+import { PrintButtons } from "./print-buttons";
 
 export const metadata: Metadata = { title: "Lot de paiements" };
 
@@ -67,10 +69,9 @@ async function BatchDetail({ params }: Pick<PageProps<"/paiements/lots/[id]">, "
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-4">
           <CardTitle>Formules du lot</CardTitle>
-          <span className={buttonVariants({ variant: "outline", className: "pointer-events-none opacity-60" })} aria-disabled>
-            <PrinterIcon aria-hidden />
-            Impression PDF (moteur d&apos;impression)
-          </span>
+          {WRITER_ROLES.includes(organization.role) && (
+            <PrintButtons batchId={batch.id} printCount={batch.print_count} printedAt={batch.printed_at} />
+          )}
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <div className="overflow-x-auto">

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { formatAmount, formatDate, formatMAD } from "./format";
 
 // Espace insécable utilisé comme séparateur de milliers
-const S = " ";
+const S = "\u00A0";
 
 describe("formatAmount", () => {
   it.each([

@@ -5,7 +5,7 @@
  */
 
 /** Espace insécable : sépare les milliers sans permettre de retour à la ligne. */
-const THOUSANDS_SEPARATOR = " ";
+const THOUSANDS_SEPARATOR = "\u00A0";
 
 /**
  * Convertit un montant positif en centimes, arrondi au centime le plus proche.

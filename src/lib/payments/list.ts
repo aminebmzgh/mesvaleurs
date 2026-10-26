@@ -56,7 +56,7 @@ export async function getBatch(batchId: string) {
   const supabase = await createClient();
   const orgId = organization.organizationId;
   const [batch, payments] = await Promise.all([
-    supabase.from("print_batches").select("id, created_at, printed_at").eq("organization_id", orgId).eq("id", batchId).maybeSingle(),
+    supabase.from("print_batches").select("id, created_at, printed_at, print_count").eq("organization_id", orgId).eq("id", batchId).maybeSingle(),
     supabase
       .from("payments")
       .select(
