@@ -49,6 +49,7 @@ http://127.0.0.1:54324.
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | Vérification des types TypeScript |
 | `pnpm test` | Tests unitaires (Vitest) |
+| `pnpm test:e2e` | Tests de bout en bout (Playwright) : build + navigateur contre la base locale (`pnpm db:reset` avant pour repartir du seed ; `pnpm exec playwright install chromium` la première fois) |
 | `pnpm db:start` / `db:stop` | Démarre / arrête Supabase en local |
 | `pnpm db:reset` | Recrée la base locale (migrations + seed) |
 | `pnpm db:test` | Tests pgTAP : RLS, rôles, isolation multi-tenant |

@@ -1,17 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { initialFormState } from "@/lib/forms";
 import { updatePassword } from "../actions";
 
 export function ResetPasswordForm() {
-  const [state, action] = useActionState(updatePassword, initialFormState);
+  const [state, action, pending] = useActionState(updatePassword, initialFormState);
 
   return (
-    <form action={action} noValidate>
+    <ActionForm action={action} pending={pending} noValidate>
       <FieldGroup>
         <FormMessage state={state} />
         <Field>
@@ -41,6 +41,6 @@ export function ResetPasswordForm() {
         </Field>
         <SubmitButton className="w-full">Enregistrer</SubmitButton>
       </FieldGroup>
-    </form>
+    </ActionForm>
   );
 }

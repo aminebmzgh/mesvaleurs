@@ -1,17 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { initialFormState } from "@/lib/forms";
 import { requestPasswordReset } from "../actions";
 
 export function ForgotPasswordForm() {
-  const [state, action] = useActionState(requestPasswordReset, initialFormState);
+  const [state, action, pending] = useActionState(requestPasswordReset, initialFormState);
 
   return (
-    <form action={action} noValidate>
+    <ActionForm action={action} pending={pending} noValidate>
       <FieldGroup>
         <FormMessage state={state} />
         <Field>
@@ -21,6 +21,6 @@ export function ForgotPasswordForm() {
         </Field>
         <SubmitButton className="w-full">Envoyer le lien</SubmitButton>
       </FieldGroup>
-    </form>
+    </ActionForm>
   );
 }

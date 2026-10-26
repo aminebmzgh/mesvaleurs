@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -44,10 +44,10 @@ export function OrganizationForm({
   organization: OrganizationValues;
   readOnly: boolean;
 }) {
-  const [state, action] = useActionState(updateOrganization, initialFormState);
+  const [state, action, pending] = useActionState(updateOrganization, initialFormState);
 
   return (
-    <form action={action} noValidate className="max-w-3xl">
+    <ActionForm action={action} pending={pending} noValidate className="max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Identité de l&apos;entreprise</CardTitle>
@@ -112,6 +112,6 @@ export function OrganizationForm({
           </CardFooter>
         )}
       </Card>
-    </form>
+    </ActionForm>
   );
 }

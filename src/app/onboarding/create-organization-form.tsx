@@ -1,17 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { initialFormState } from "@/lib/forms";
 import { createOrganization } from "@/lib/organizations/actions";
 
 export function CreateOrganizationForm() {
-  const [state, action] = useActionState(createOrganization, initialFormState);
+  const [state, action, pending] = useActionState(createOrganization, initialFormState);
 
   return (
-    <form action={action} noValidate>
+    <ActionForm action={action} pending={pending} noValidate>
       <FieldGroup>
         <FormMessage state={state} />
         <Field>
@@ -27,6 +27,6 @@ export function CreateOrganizationForm() {
         </Field>
         <SubmitButton className="w-full">Créer l&apos;entreprise</SubmitButton>
       </FieldGroup>
-    </form>
+    </ActionForm>
   );
 }

@@ -45,3 +45,8 @@ next-env.d.ts
 supabase/.temp
 supabase/.branches
 supabase/signing_keys.json
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
