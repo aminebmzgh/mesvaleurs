@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireActiveOrganization } from "@/lib/auth/dal";
+import { parseOrganizationSettings } from "@/lib/organizations/settings";
 import { createClient } from "@/lib/supabase/server";
 import { OrganizationForm } from "./organization-form";
 
@@ -35,11 +36,11 @@ async function OrganizationSettings() {
     return null;
   }
 
-  const settings = (data.settings ?? {}) as { require_mfa?: boolean };
+  const settings = parseOrganizationSettings(data.settings);
   return (
     <OrganizationForm
       key={organization.organizationId}
-      organization={{ ...data, require_mfa: Boolean(settings.require_mfa) }}
+      organization={{ ...data, ...settings }}
       readOnly={organization.role !== "admin"}
     />
   );
