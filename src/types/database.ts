@@ -145,6 +145,12 @@ isOneToOne: false
       foreignKeyName: "invoices_organization_id_supplier_id_fkey"
       columns: ["organization_id","supplier_id"]
 isOneToOne: false
+      referencedRelation: "supplier_summaries"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "invoices_organization_id_supplier_id_fkey"
+      columns: ["organization_id","supplier_id"]
+isOneToOne: false
       referencedRelation: "suppliers"
       referencedColumns: ["organization_id","id"]
     }
@@ -262,6 +268,12 @@ isOneToOne: false
       columns: ["organization_id","print_batch_id"]
 isOneToOne: false
       referencedRelation: "print_batches"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_supplier_id_fkey"
+      columns: ["organization_id","supplier_id"]
+isOneToOne: false
+      referencedRelation: "supplier_summaries"
       referencedColumns: ["organization_id","id"]
     },{
       foreignKeyName: "payments_organization_id_supplier_id_fkey"
@@ -444,6 +456,20 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     },{
       foreignKeyName: "checkbooks_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"supplier_summaries": {
+                  Row: {
+                    "amount_cashed": number | null,"amount_disputed": number | null,"amount_due": number | null,"amount_in_circulation": number | null,"id": string,"last_payment_date": string | null,"open_invoice_count": number | null,"organization_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "suppliers_organization_id_fkey"
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
