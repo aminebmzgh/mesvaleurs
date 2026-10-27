@@ -476,7 +476,21 @@ isOneToOne: false
                 }
           }
           Views: {
-            "checkbook_summaries": {
+            "audit_entries": {
+                  Row: {
+                    "action": string,"actor_email": string | null,"actor_id": string | null,"actor_name": string | null,"after": Json | null,"before": Json | null,"created_at": string,"details": Json | null,"id": number,"organization_id": string,"record_id": string | null,"table_name": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "audit_log_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"checkbook_summaries": {
                   Row: {
                     "bank_account_id": string,"cancelled_count": number | null,"created_at": string,"first_number": number,"id": string,"last_number": number,"next_number": number,"number_width": number,"organization_id": string,"print_template_id": string | null,"received_at": string | null,"remaining_count": number | null,"status": Database["public"]['Enums']["checkbook_status"],"total_count": number | null,"type": Database["public"]['Enums']["instrument_type"]
                   }

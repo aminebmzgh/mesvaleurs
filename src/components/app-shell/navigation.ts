@@ -6,14 +6,17 @@ import {
   GitCompareArrowsIcon,
   LandmarkIcon,
   LayoutDashboardIcon,
+  ScrollTextIcon,
   type LucideIcon,
   ShieldCheckIcon,
   SquarePenIcon,
   TruckIcon,
   UsersIcon,
 } from "lucide-react";
+import type { AppRole } from "@/types/app";
 
-export type NavItem = { title: string; href: string; icon: LucideIcon };
+/** `roles` : lien réservé à ces rôles (sinon visible de tous). */
+export type NavItem = { title: string; href: string; icon: LucideIcon; roles?: AppRole[] };
 export type NavSection = { label?: string; items: NavItem[] };
 
 export const navigation: NavSection[] = [
@@ -43,9 +46,22 @@ export const navigation: NavSection[] = [
       { title: "Entreprise", href: "/parametres/organisation", icon: BuildingIcon },
       { title: "Membres", href: "/parametres/membres", icon: UsersIcon },
       { title: "Sécurité", href: "/parametres/securite", icon: ShieldCheckIcon },
+      {
+        title: "Journal d'audit",
+        href: "/journal",
+        icon: ScrollTextIcon,
+        roles: ["admin", "manager", "accountant", "external_accountant"],
+      },
     ],
   },
 ];
+
+/** Sections visibles pour un rôle ; sans rôle connu, seuls les liens ouverts à tous. */
+export function navigationFor(role: AppRole | null): NavSection[] {
+  return navigation
+    .map((section) => ({ ...section, items: section.items.filter((item) => !item.roles || (role !== null && item.roles.includes(role))) }))
+    .filter((section) => section.items.length > 0);
+}
 
 /** Lien actif : correspondance exacte, ou sous-page (sauf si un lien plus précis existe). */
 export function isActiveLink(pathname: string, href: string, allHrefs: string[]) {

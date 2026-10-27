@@ -71,3 +71,13 @@ export function formatDate(value: string | Date, timeZone = "Africa/Casablanca")
     parts.find((part) => part.type === type)?.value ?? "";
   return `${get("day")}/${get("month")}/${get("year")}`;
 }
+
+/** Date et heure au format jj/mm/aaaa hh:mm, dans le fuseau Africa/Casablanca. */
+export function formatDateTime(value: string | Date, timeZone = "Africa/Casablanca"): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) {
+    throw new RangeError(`Date invalide : ${String(value)}`);
+  }
+  const time = new Intl.DateTimeFormat("fr-FR", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
+  return `${formatDate(date, timeZone)} ${time}`;
+}

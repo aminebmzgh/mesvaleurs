@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+### Ajouté
+
+- Journal d'audit : écran de consultation (direction et comptabilité) avec filtres par période,
+  auteur, objet et action, détail des champs modifiés (avant → après), lien vers l'objet,
+  pagination et export CSV ; journalisation étendue aux invitations, banques ajoutées,
+  relevés importés et correspondances de colonnes.
+- Navigation : liens réservés à certains rôles.
+
 ## [1.0.0] — Phase 1 : MVP
 
 ### Ajouté
