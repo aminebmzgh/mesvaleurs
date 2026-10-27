@@ -1,4 +1,4 @@
-import { FileTextIcon, PaperclipIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { FileTextIcon, PaperclipIcon, PlusIcon, SearchIcon, UploadIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -52,10 +52,16 @@ async function NewInvoiceButton() {
     return null;
   }
   return (
-    <Link href="/factures/nouvelle" className={buttonVariants()}>
-      <PlusIcon aria-hidden />
-      Nouvelle facture
-    </Link>
+    <>
+      <Link href="/factures/importer" className={buttonVariants({ variant: "outline" })}>
+        <UploadIcon aria-hidden />
+        Importer
+      </Link>
+      <Link href="/factures/nouvelle" className={buttonVariants()}>
+        <PlusIcon aria-hidden />
+        Nouvelle facture
+      </Link>
+    </>
   );
 }
 
