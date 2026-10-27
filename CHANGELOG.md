@@ -67,6 +67,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   cohérence contrôlée, fournisseur reconnu par ICE puis par raison sociale (formes
   juridiques ignorées), fournisseurs inconnus créés en option, factures déjà saisies
   ignorées, erreurs signalées ligne par ligne.
+- Rapport de fin de mois : chèques et LCN débités groupés par fournisseur avec les factures
+  réglées, paiements en circulation avec leur ancienneté, anomalies (écarts de montant,
+  débits inconnus, numéros sautés dans les carnets, annulations du mois) ; filtre par
+  compte, navigation de mois en mois ; exports Excel (montants numériques, dates réelles)
+  et PDF paginé.
+- Tableau de bord : solde bancaire, montant en circulation, solde prévisionnel, reste à
+  payer, LCN à échoir sous 7 et 30 jours, factures en retard (date limite légale), dernières
+  opérations bancaires ; alertes de provision insuffisante et de carnet presque épuisé.
+- Date d'annulation des paiements renseignée et protégée par la base.
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.

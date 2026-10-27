@@ -1,7 +1,7 @@
 -- Cycle de vie des paiements (données du seed).
 begin;
 
-select plan(9);
+select plan(11);
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "a0000000-0000-4000-8000-000000000002", "role": "authenticated", "email": "gestionnaire@demo.ma", "aal": "aal1"}';
@@ -30,6 +30,11 @@ select throws_ok($$ update public.payments set status = 'cancelled' where id = '
   '23514', null, 'Une annulation exige un motif');
 select lives_ok($$ update public.payments set status = 'cancelled', cancellation_reason = 'Chèque déchiré'
                    where id = '10000000-0000-4000-8000-000000000006' $$, 'Annulation avec motif');
+select isnt((select cancelled_at from public.payments where id = '10000000-0000-4000-8000-000000000006'), null,
+  'La date d''annulation est renseignée par la base');
+update public.payments set cancelled_at = '2020-01-01', notes = 'x' where id = '10000000-0000-4000-8000-000000000006';
+select isnt((select cancelled_at::date from public.payments where id = '10000000-0000-4000-8000-000000000006'), '2020-01-01'::date,
+  'La date d''annulation ne peut pas être modifiée');
 select throws_ok($$ update public.payments set status = 'issued' where id = '10000000-0000-4000-8000-000000000005' $$,
   'P0001', null, 'Un paiement annulé ne revient jamais en circulation');
 
