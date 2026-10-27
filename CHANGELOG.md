@@ -20,7 +20,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Fournisseurs : liste avec recherche (raison sociale, nom imprimé, ICE), création,
   modification, archivage ; ICE unique par entreprise ; fiche avec reste à payer, montants
   en circulation, encaissés et contestés, factures (réglé / encaissé) et paiements.
-- Factures : saisie (HT + TVA = TTC vérifié), doublon refusé, liste filtrée (statut,
+- Factures : saisie (HT + TVA = TTC vérifié ; TVA à 20 % et TTC calculés depuis le HT, ou HT
+  et TVA depuis le TTC, modifiables), doublon refusé, liste filtrée (statut,
   fournisseur, numéro) avec totaux, fiche avec paiements rattachés, contestation,
   suppression ; pièce jointe envoyée directement du navigateur vers Supabase Storage et
   consultée par lien temporaire.

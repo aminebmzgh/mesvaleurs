@@ -1,13 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { FormSelect, type SelectOption } from "@/components/form-select";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { fromCents, parseAmount, toCents } from "@/lib/amount";
 import { formatAmount } from "@/lib/format";
 import { type FormState, initialFormState } from "@/lib/forms";
+import { DEFAULT_VAT_RATE, fromExclTax, fromInclTax } from "@/lib/invoices/vat";
 
 export type InvoiceValues = {
   supplier_id: string;
@@ -22,6 +24,88 @@ export type InvoiceValues = {
 };
 
 const amount = (value: number | null | undefined) => (value != null ? formatAmount(value) : "");
+const fromCentsText = (cents: number) => formatAmount(fromCents(cents));
+
+type AmountKey = "excl" | "vat" | "incl";
+
+/**
+ * HT, TVA et TTC : le premier montant saisi (HT ou TTC) calcule les deux autres à
+ * 20 %. Les montants calculés restent modifiables (autre taux, arrondi du fournisseur) ;
+ * modifier la TVA recalcule le montant non saisi.
+ */
+function AmountFields({ state, invoice }: { state: FormState; invoice?: InvoiceValues }) {
+  const [values, setValues] = useState<Record<AmountKey, string>>({
+    excl: amount(invoice?.amount_excl_tax),
+    vat: amount(invoice?.vat_amount),
+    incl: amount(invoice?.amount_incl_tax),
+  });
+  // Montant de départ : celui que l'utilisateur a saisi en premier
+  const [source, setSource] = useState<"excl" | "incl" | null>(null);
+
+  const change = (key: AmountKey, text: string) => {
+    const next = { ...values, [key]: text };
+    const parsed = parseAmount(text);
+    let from = source;
+    if ((key === "excl" || key === "incl") && (from === null || from === key)) {
+      from = text.trim() === "" ? null : key;
+      setSource(from);
+    }
+
+    if (key === from && parsed !== null) {
+      if (key === "excl") {
+        const { vatCents, inclCents } = fromExclTax(toCents(parsed));
+        next.vat = fromCentsText(vatCents);
+        next.incl = fromCentsText(inclCents);
+      } else {
+        const { exclCents, vatCents } = fromInclTax(toCents(parsed));
+        next.excl = fromCentsText(exclCents);
+        next.vat = fromCentsText(vatCents);
+      }
+    } else if (key === source && from === null) {
+      // Montant de départ effacé : les montants calculés aussi
+      next.vat = "";
+      next[key === "excl" ? "incl" : "excl"] = "";
+    } else if (key === "vat" && parsed !== null && source !== null) {
+      // TVA corrigée : le montant calculé suit
+      const base = parseAmount(values[source]);
+      if (base !== null) {
+        const sign = source === "excl" ? 1 : -1;
+        const cents = toCents(base) + sign * toCents(parsed);
+        if (cents >= 0) {
+          next[source === "excl" ? "incl" : "excl"] = fromCentsText(cents);
+        }
+      }
+    }
+    setValues(next);
+  };
+
+  const fields: { key: AmountKey; name: keyof InvoiceValues; label: string }[] = [
+    { key: "excl", name: "amount_excl_tax", label: "Montant HT (DH)" },
+    { key: "vat", name: "vat_amount", label: "TVA (DH)" },
+    { key: "incl", name: "amount_incl_tax", label: "Montant TTC (DH)" },
+  ];
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      {fields.map(({ key, name, label }) => (
+        <Field key={key}>
+          <FieldLabel htmlFor={name}>{label}</FieldLabel>
+          <Input
+            id={name}
+            name={name}
+            inputMode="decimal"
+            value={values[key]}
+            onChange={(event) => change(key, event.target.value)}
+            className="tabular-nums"
+            {...invalidProps(state, name)}
+          />
+          {key === "vat" && <FieldDescription>Calculée à {DEFAULT_VAT_RATE} %, modifiable.</FieldDescription>}
+          <FieldErrors state={state} name={name} />
+        </Field>
+      ))}
+    </div>
+  );
+}
 
 export function InvoiceForm({
   action,
@@ -102,44 +186,7 @@ export function InvoiceForm({
               <FieldErrors state={state} name="payment_terms_days" />
             </Field>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Field>
-              <FieldLabel htmlFor="amount_excl_tax">Montant HT (DH)</FieldLabel>
-              <Input
-                id="amount_excl_tax"
-                name="amount_excl_tax"
-                inputMode="decimal"
-                defaultValue={amount(invoice?.amount_excl_tax)}
-                className="tabular-nums"
-                {...invalidProps(state, "amount_excl_tax")}
-              />
-              <FieldErrors state={state} name="amount_excl_tax" />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="vat_amount">TVA (DH)</FieldLabel>
-              <Input
-                id="vat_amount"
-                name="vat_amount"
-                inputMode="decimal"
-                defaultValue={amount(invoice?.vat_amount)}
-                className="tabular-nums"
-                {...invalidProps(state, "vat_amount")}
-              />
-              <FieldErrors state={state} name="vat_amount" />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="amount_incl_tax">Montant TTC (DH)</FieldLabel>
-              <Input
-                id="amount_incl_tax"
-                name="amount_incl_tax"
-                inputMode="decimal"
-                defaultValue={amount(invoice?.amount_incl_tax)}
-                className="tabular-nums"
-                {...invalidProps(state, "amount_incl_tax")}
-              />
-              <FieldErrors state={state} name="amount_incl_tax" />
-            </Field>
-          </div>
+          <AmountFields state={state} invoice={invoice} />
           <Field>
             <FieldLabel htmlFor="notes">Notes</FieldLabel>
             <Textarea id="notes" name="notes" rows={2} defaultValue={invoice?.notes ?? ""} {...invalidProps(state, "notes")} />

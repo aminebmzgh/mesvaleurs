@@ -15,8 +15,12 @@ test("saisir, joindre, contester puis supprimer une facture", async ({ page }) =
   await page.getByLabel("Numéro de facture").fill(number);
   await page.getByLabel("Date de facture").fill("2026-10-01");
   await page.getByLabel("Montant HT (DH)").fill("10 000,00");
-  await page.getByLabel("TVA (DH)").fill("2 000,00");
+  // TVA à 20 % et TTC calculés depuis le HT
+  await expect(page.getByLabel("TVA (DH)")).toHaveValue(/^2\s000,00$/);
+  await expect(page.getByLabel("Montant TTC (DH)")).toHaveValue(/^12\s000,00$/);
+  // TTC corrigé à la main : il n'est plus recalculé, l'incohérence est signalée
   await page.getByLabel("Montant TTC (DH)").fill("12 500,00");
+  await expect(page.getByLabel("Montant HT (DH)")).toHaveValue("10 000,00");
   await page.getByRole("button", { name: "Enregistrer la facture" }).click();
 
   // Incohérence signalée, saisie conservée
@@ -47,6 +51,24 @@ test("saisir, joindre, contester puis supprimer une facture", async ({ page }) =
   await page.getByRole("button", { name: "Supprimer" }).click();
   await expect(page).toHaveURL(/\/factures$/);
   await expect(page.getByRole("link", { name: number })).toHaveCount(0);
+});
+
+test("HT et TVA calculés depuis le TTC, TVA modifiable", async ({ page }) => {
+  await login(page, "preparateur@demo.ma");
+  await page.goto("/factures/nouvelle");
+  await page.getByLabel("Montant TTC (DH)").fill("12 500,00");
+  await expect(page.getByLabel("Montant HT (DH)")).toHaveValue(/^10\s416,67$/);
+  await expect(page.getByLabel("TVA (DH)")).toHaveValue(/^2\s083,33$/);
+
+  // TVA à 10 % : le HT suit, le TTC saisi ne change pas
+  await page.getByLabel("TVA (DH)").fill("1 136,36");
+  await expect(page.getByLabel("Montant HT (DH)")).toHaveValue(/^11\s363,64$/);
+  await expect(page.getByLabel("Montant TTC (DH)")).toHaveValue("12 500,00");
+
+  // TTC effacé : les montants calculés aussi
+  await page.getByLabel("Montant TTC (DH)").fill("");
+  await expect(page.getByLabel("Montant HT (DH)")).toHaveValue("");
+  await expect(page.getByLabel("TVA (DH)")).toHaveValue("");
 });
 
 test("une facture en double est refusée", async ({ page }) => {
