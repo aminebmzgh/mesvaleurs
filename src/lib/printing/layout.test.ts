@@ -139,8 +139,16 @@ describe("modèles par défaut", () => {
   it("trouve le modèle de la banque, sinon le générique", () => {
     expect(defaultTemplateFor("check", "BP").key).toBe("check-bp");
     expect(defaultTemplateFor("lcn", "CAM").key).toBe("lcn-cam");
-    expect(defaultTemplateFor("lcn", "BP").key).toBe("lcn-generic");
+    expect(defaultTemplateFor("lcn", "BP").key).toBe("lcn-bp");
+    expect(defaultTemplateFor("check", "TGR").key).toBe("check-tgr");
+    expect(defaultTemplateFor("lcn", "CIH").key).toBe("lcn-generic");
     expect(defaultTemplateFor("check", null).key).toBe("check-generic");
+  });
+
+  it("une seule formule par banque et par type", () => {
+    const keys = DEFAULT_TEMPLATES.map((t) => `${t.type}-${t.bankShortName}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(new Set(DEFAULT_TEMPLATES.map((t) => t.key)).size).toBe(DEFAULT_TEMPLATES.length);
   });
 });
 
