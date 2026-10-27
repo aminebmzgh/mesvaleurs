@@ -14,6 +14,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <SidebarProvider>
       <AppSidebar
+        role={requireActiveOrganization({ allowMissingMfa: true }).then((organization) => organization.role)}
         header={
           <Suspense fallback={<SidebarMenuSkeleton showIcon />}>
             <SidebarOrganization />

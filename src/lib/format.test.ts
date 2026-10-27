@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAmount, formatDate, formatMAD } from "./format";
+import { formatAmount, formatDate, formatDateTime, formatMAD } from "./format";
 
 // Espace insécable utilisé comme séparateur de milliers
 const S = "\u00A0";
@@ -62,5 +62,12 @@ describe("formatDate", () => {
 
   it("refuse une date invalide", () => {
     expect(() => formatDate("pas une date")).toThrow(RangeError);
+  });
+});
+
+describe("formatDateTime", () => {
+  it("date et heure dans le fuseau donné", () => {
+    expect(formatDateTime("2026-10-27T23:30:00Z", "Asia/Tokyo")).toBe("28/10/2026 08:30");
+    expect(formatDateTime("2026-10-28T08:05:00Z", "UTC")).toBe("28/10/2026 08:05");
   });
 });
