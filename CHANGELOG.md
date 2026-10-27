@@ -45,8 +45,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   montant encadré (#…#), montant en lettres réparti sur 2 ou 3 lignes selon la largeur
   réelle du texte, police réduite puis signalée si un texte déborde, décalage imprimante.
 - Modèles par défaut relevés sur des formules réelles : chèques Attijariwafa bank, Banque
-  Populaire, Crédit Agricole du Maroc, CIH Bank (175 × 80 mm) ; LCN Attijariwafa bank et
-  Crédit Agricole du Maroc (200 × 105 mm) ; modèles génériques.
+  Populaire, Crédit Agricole du Maroc, CIH Bank, Al Barid Bank, BMCI, Bank of Africa,
+  Crédit du Maroc, Société Générale Maroc et Trésorerie Générale du Royaume (175 × 80 mm) ;
+  LCN Attijariwafa bank, Crédit Agricole du Maroc, BMCI, Bank of Africa, Banque Populaire,
+  Crédit du Maroc et Société Générale Maroc (200 × 105 mm) ; modèles génériques.
+- Référentiel des banques : Trésorerie Générale du Royaume (TGR).
 - Éditeur visuel de modèle : scan de la formule en fond, zones déplaçables à la souris ou
   au clavier (0,5 / 0,1 mm), largeur, police, alignement, options ; aperçu avec les mêmes
   métriques de police que le PDF ; impression test sur papier blanc avec le scan en fond.
