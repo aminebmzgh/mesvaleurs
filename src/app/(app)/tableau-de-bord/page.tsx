@@ -1,25 +1,28 @@
-import { CircleAlertIcon } from "lucide-react";
+import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { requireActiveOrganization } from "@/lib/auth/dal";
-import { formatMAD } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
+import { getDashboard } from "@/lib/dashboard/queries";
+import { formatDate, formatMAD } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
 export default function DashboardPage({ searchParams }: PageProps<"/tableau-de-bord">) {
   return (
     <>
-      <PageHeader title="Tableau de bord" description="Vue d'ensemble de vos règlements fournisseurs." />
+      <PageHeader title="Tableau de bord" description="Vue d'ensemble de vos règlements fournisseurs et de votre trésorerie." />
       <Suspense>
         <AccessDeniedNotice searchParams={searchParams} />
       </Suspense>
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardSummary />
+        <Dashboard />
       </Suspense>
     </>
   );
@@ -38,66 +41,169 @@ async function AccessDeniedNotice({ searchParams }: Pick<PageProps<"/tableau-de-
   );
 }
 
-const IN_CIRCULATION = ["issued", "delivered"] as const;
-
-async function DashboardSummary() {
-  const organization = await requireActiveOrganization();
-  const supabase = await createClient();
-  const orgId = organization.organizationId;
-
-  // Indicateurs simples ; le tableau de bord complet arrive en Phase 1
-  const [accounts, inCirculation, openInvoices, suppliers] = await Promise.all([
-    supabase.from("bank_accounts").select("current_balance").eq("organization_id", orgId).eq("is_active", true),
-    supabase.from("payments").select("amount").eq("organization_id", orgId).in("status", IN_CIRCULATION),
-    supabase
-      .from("invoices")
-      .select("amount_incl_tax, amount_paid")
-      .eq("organization_id", orgId)
-      .in("status", ["unpaid", "partially_paid"]),
-    supabase.from("suppliers").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
-  ]);
-
-  const sum = (values: number[]) => values.reduce((total, value) => total + Number(value), 0);
-  const balance = sum((accounts.data ?? []).map((a) => a.current_balance));
-  const circulating = sum((inCirculation.data ?? []).map((p) => p.amount));
-  const remaining = sum((openInvoices.data ?? []).map((i) => i.amount_incl_tax - i.amount_paid));
+async function Dashboard() {
+  const data = await getDashboard();
+  const lcn7 = data.lcnDue.filter((p) => p.daysLeft <= 7);
+  const overdueTotal = data.overdue.reduce((sum, invoice) => sum + invoice.remaining, 0);
 
   const cards = [
-    { label: "Solde bancaire", value: formatMAD(balance), hint: `${accounts.data?.length ?? 0} compte(s) actif(s)` },
+    { label: "Solde bancaire", value: data.balance, hint: "Selon les derniers relevés importés" },
+    { label: "En circulation", value: data.inCirculation, hint: "Chèques et LCN émis non débités" },
     {
-      label: "En circulation",
-      value: formatMAD(circulating),
-      hint: `${inCirculation.data?.length ?? 0} chèque(s) / LCN émis non débités`,
+      label: "Solde prévisionnel",
+      value: data.projected,
+      hint: "Solde − paiements en circulation",
+      danger: data.projected < 0,
     },
-    {
-      label: "Reste à payer",
-      value: formatMAD(remaining),
-      hint: `${openInvoices.data?.length ?? 0} facture(s) non soldée(s)`,
-    },
-    { label: "Fournisseurs", value: String(suppliers.count ?? 0), hint: "enregistrés" },
+    { label: "Reste à payer", value: data.remaining, hint: `${data.openInvoiceCount} facture(s) non soldée(s)` },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {cards.map((card) => (
-        <Card key={card.label}>
+    <div className="flex flex-col gap-6">
+      {(data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
+        <div className="flex flex-col gap-3">
+          {data.insufficientAccounts.map((account) => (
+            <Alert key={account.id} variant="destructive">
+              <TriangleAlertIcon aria-hidden />
+              <AlertTitle>Provision insuffisante : {account.label}</AlertTitle>
+              <AlertDescription>
+                Les chèques et LCN en circulation ({formatMAD(account.circulation)}) dépassent le solde ({formatMAD(account.current_balance)}).
+                Solde prévisionnel : {formatMAD(account.projected)}.
+              </AlertDescription>
+            </Alert>
+          ))}
+          {data.lowStock.map((book) => (
+            <Alert key={book.id}>
+              <BookOpenIcon aria-hidden />
+              <AlertTitle>{book.type === "lcn" ? "Carnet de LCN" : "Chéquier"} presque épuisé</AlertTitle>
+              <AlertDescription>
+                {book.account} : {book.remaining} formule(s) restante(s). Commandez un nouveau carnet à votre banque.
+              </AlertDescription>
+            </Alert>
+          ))}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => (
+          <Card key={card.label}>
+            <CardHeader>
+              <CardDescription>{card.label}</CardDescription>
+              <CardTitle className={cn("text-2xl tabular-nums", card.danger && "text-destructive")}>{formatMAD(card.value)}</CardTitle>
+              <CardDescription className="text-xs">{card.hint}</CardDescription>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
           <CardHeader>
-            <CardDescription>{card.label}</CardDescription>
-            <CardTitle className="text-2xl tabular-nums">{card.value}</CardTitle>
-            <CardDescription className="text-xs">{card.hint}</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarClockIcon className="size-4" aria-hidden />
+              LCN à échoir sous 30 jours
+            </CardTitle>
+            <CardDescription>
+              {data.lcnDue.length} LCN · {formatMAD(data.lcnDue.reduce((s, p) => s + p.amount, 0))}
+              {lcn7.length > 0 && ` · dont ${lcn7.length} sous 7 jours`}
+            </CardDescription>
           </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {data.lcnDue.length === 0 && <p className="text-sm text-muted-foreground">Aucune échéance dans les 30 prochains jours.</p>}
+            {data.lcnDue.slice(0, 8).map((lcn) => (
+              <div key={lcn.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate">{lcn.supplier}</span>
+                  <span className="font-mono text-xs text-muted-foreground">LCN {lcn.number}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Badge variant={lcn.daysLeft < 0 ? "destructive" : lcn.daysLeft <= 7 ? "secondary" : "outline"}>
+                    {lcn.daysLeft < 0 ? `échue depuis ${-lcn.daysLeft} j` : lcn.daysLeft === 0 ? "aujourd'hui" : `${formatDate(lcn.dueDate)} · J-${lcn.daysLeft}`}
+                  </Badge>
+                  <span className="tabular-nums">{formatMAD(lcn.amount)}</span>
+                </span>
+              </div>
+            ))}
+          </CardContent>
         </Card>
-      ))}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClockAlertIcon className="size-4" aria-hidden />
+              Factures en retard
+            </CardTitle>
+            <CardDescription>
+              Date limite légale dépassée (loi 69-21, calcul indicatif) · {data.overdue.length} facture(s) · {formatMAD(overdueTotal)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {data.overdue.length === 0 && <p className="text-sm text-muted-foreground">Aucune facture en retard.</p>}
+            {data.overdue.slice(0, 8).map((invoice) => (
+              <Link key={invoice.id} href={`/factures/${invoice.id}`} className="flex items-center justify-between gap-2 rounded-md text-sm hover:bg-muted/50">
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate">{invoice.supplier}</span>
+                  <span className="text-xs text-muted-foreground">{invoice.number}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Badge variant="destructive">{invoice.daysLate} j de retard</Badge>
+                  <span className="tabular-nums">{formatMAD(invoice.remaining)}</span>
+                </span>
+              </Link>
+            ))}
+            {data.overdue.length > 8 && (
+              <Link href="/factures" className={buttonVariants({ variant: "link", size: "sm", className: "w-fit" })}>
+                Voir toutes les factures
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LandmarkIcon className="size-4" aria-hidden />
+            Dernières opérations bancaires
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {data.operations.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Aucune opération : <Link href="/rapprochement/importer" className="underline">importez un relevé</Link>.
+            </p>
+          )}
+          {data.operations.map((operation) => (
+            <div key={operation.id} className="flex items-center justify-between gap-2 text-sm">
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate">{operation.label}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(operation.operation_date)} · {operation.bank_accounts?.label}
+                </span>
+              </span>
+              <span className={cn("shrink-0 tabular-nums", operation.credit && "text-emerald-700 dark:text-emerald-400")}>
+                {operation.debit ? `−${formatMAD(operation.debit)}` : `+${formatMAD(operation.credit ?? 0)}`}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }, (_, index) => (
-        <Skeleton key={index} className="h-28 rounded-xl" />
-      ))}
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className="h-28 rounded-xl" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
     </div>
   );
 }
