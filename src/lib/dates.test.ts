@@ -24,7 +24,7 @@ describe("daysBetween / addDays", () => {
 
 describe("dayStartInstant", () => {
   it("minuit local converti en UTC", () => {
-    expect(dayStartInstant("2026-10-28")).toBe("2026-10-27T23:00:00.000Z");
+    expect(dayStartInstant("2026-10-28", "Asia/Tokyo")).toBe("2026-10-27T15:00:00.000Z");
     expect(dayStartInstant("2026-10-28", "UTC")).toBe("2026-10-28T00:00:00.000Z");
   });
 

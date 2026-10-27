@@ -66,8 +66,8 @@ describe("formatDate", () => {
 });
 
 describe("formatDateTime", () => {
-  it("date et heure du Maroc", () => {
-    expect(formatDateTime("2026-10-27T23:30:00Z")).toBe("28/10/2026 00:30");
+  it("date et heure dans le fuseau donné", () => {
+    expect(formatDateTime("2026-10-27T23:30:00Z", "Asia/Tokyo")).toBe("28/10/2026 08:30");
     expect(formatDateTime("2026-10-28T08:05:00Z", "UTC")).toBe("28/10/2026 08:05");
   });
 });
