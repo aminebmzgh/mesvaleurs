@@ -363,6 +363,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"statement_column_mappings": {
+                  Row: {
+                    "bank_id": string,"header_signature": string,"id": string,"mapping": NonNullable<Json>,"organization_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_id": string,"header_signature": string,"id"?: string,"mapping": NonNullable<Json>,"organization_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "bank_id"?: string,"header_signature"?: string,"id"?: string,"mapping"?: NonNullable<Json>,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "statement_column_mappings_bank_id_fkey"
+      columns: ["bank_id"]
+isOneToOne: false
+      referencedRelation: "banks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "statement_column_mappings_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"statement_imports": {
                   Row: {
                     "bank_account_id": string,"created_at": string,"error_message": string | null,"file_hash": string | null,"file_path": string | null,"format": Database["public"]['Enums']["statement_format"],"id": string,"imported_by": string | null,"line_count": number,"organization_id": string,"period_end": string | null,"period_start": string | null,"status": Database["public"]['Enums']["statement_import_status"],"updated_at": string
@@ -391,14 +417,14 @@ isOneToOne: false
                   ]
                 },"statement_lines": {
                   Row: {
-                    "bank_account_id": string,"confidence": number | null,"created_at": string,"credit": number | null,"debit": number | null,"extracted_number": number | null,"id": string,"import_id": string,"label": string,"line_hash": string,"matched_payment_id": string | null,"operation_date": string,"organization_id": string,"reference": string | null,"status": Database["public"]['Enums']["statement_line_status"],"updated_at": string,"value_date": string | null
+                    "bank_account_id": string,"confidence": number | null,"created_at": string,"credit": number | null,"debit": number | null,"extracted_kind": string | null,"extracted_number": number | null,"id": string,"import_id": string,"label": string,"line_hash": string,"match_reason": string | null,"matched_payment_id": string | null,"operation_date": string,"organization_id": string,"reference": string | null,"status": Database["public"]['Enums']["statement_line_status"],"updated_at": string,"value_date": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "bank_account_id": string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_number"?: number | null,"id"?: string,"import_id": string,"label": string,"line_hash": string,"matched_payment_id"?: string | null,"operation_date": string,"organization_id": string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
+                    "bank_account_id": string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_kind"?: string | null,"extracted_number"?: number | null,"id"?: string,"import_id": string,"label": string,"line_hash": string,"match_reason"?: string | null,"matched_payment_id"?: string | null,"operation_date": string,"organization_id": string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
                   }
                   Update: {
-                    "bank_account_id"?: string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_number"?: number | null,"id"?: string,"import_id"?: string,"label"?: string,"line_hash"?: string,"matched_payment_id"?: string | null,"operation_date"?: string,"organization_id"?: string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
+                    "bank_account_id"?: string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_kind"?: string | null,"extracted_number"?: number | null,"id"?: string,"import_id"?: string,"label"?: string,"line_hash"?: string,"match_reason"?: string | null,"matched_payment_id"?: string | null,"operation_date"?: string,"organization_id"?: string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
                   }
                   Relationships: [
                     {
@@ -502,6 +528,12 @@ isOneToOne: false
             "accept_invitation":
 { Args: { "p_invitation_id": string }; Returns: string
                            },
+"apply_statement_matches":
+{ Args: { "p_import_id": string,"p_matches": Json }; Returns: undefined
+                           },
+"confirm_statement_line":
+{ Args: { "p_line_id": string,"p_payment_id": string }; Returns: undefined
+                           },
 "create_organization":
 { Args: { "p_city"?: string,"p_name": string }; Returns: string
                            },
@@ -518,6 +550,12 @@ isOneToOne: false
                            },
 "record_batch_print":
 { Args: { "p_batch_id": string }; Returns: number
+                           },
+"set_statement_line_ignored":
+{ Args: { "p_ignored": boolean,"p_line_id": string }; Returns: undefined
+                           },
+"unmatch_statement_line":
+{ Args: { "p_line_id": string }; Returns: undefined
                            }
           }
           Enums: {
