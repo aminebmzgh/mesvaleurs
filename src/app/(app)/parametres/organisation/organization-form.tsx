@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount } from "@/lib/format";
 import { initialFormState } from "@/lib/forms";
 import { updateOrganization } from "./actions";
@@ -22,6 +23,7 @@ type OrganizationValues = {
   email: string | null;
   annual_revenue: number | null;
   require_mfa: boolean;
+  amount_words_rectified: boolean;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -44,10 +46,10 @@ export function OrganizationForm({
   organization: OrganizationValues;
   readOnly: boolean;
 }) {
-  const [state, action] = useActionState(updateOrganization, initialFormState);
+  const [state, action, pending] = useActionState(updateOrganization, initialFormState);
 
   return (
-    <form action={action} noValidate className="max-w-3xl">
+    <ActionForm action={action} pending={pending} noValidate className="max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Identité de l&apos;entreprise</CardTitle>
@@ -103,6 +105,24 @@ export function OrganizationForm({
                   </FieldDescription>
                 </FieldContent>
               </Field>
+              <Field orientation="horizontal">
+                <input
+                  id="amount_words_rectified"
+                  name="amount_words_rectified"
+                  type="checkbox"
+                  defaultChecked={organization.amount_words_rectified}
+                  className="mt-0.5 size-4 accent-primary"
+                />
+                <FieldContent>
+                  <FieldLabel htmlFor="amount_words_rectified">
+                    Montant en lettres selon l&apos;orthographe rectifiée de 1990
+                  </FieldLabel>
+                  <FieldDescription>
+                    Traditionnelle : « {amountInWords(1221.21)} ». Rectifiée : «{" "}
+                    {amountInWords(1221.21, { rectified: true })} ».
+                  </FieldDescription>
+                </FieldContent>
+              </Field>
             </FieldGroup>
           </fieldset>
         </CardContent>
@@ -112,6 +132,6 @@ export function OrganizationForm({
           </CardFooter>
         )}
       </Card>
-    </form>
+    </ActionForm>
   );
 }

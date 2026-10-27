@@ -13,7 +13,7 @@ export type RibParts = {
 
 /** Retire espaces, tirets et points de saisie. */
 export function normalizeRib(value: string): string {
-  return value.replace(/[\s.\- ]/g, "");
+  return value.replace(/[\s.\-\u00A0]/g, "");
 }
 
 /** Calcule la clé (2 chiffres) à partir des 22 premiers chiffres. */

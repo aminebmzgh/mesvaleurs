@@ -145,9 +145,29 @@ isOneToOne: false
       foreignKeyName: "invoices_organization_id_supplier_id_fkey"
       columns: ["organization_id","supplier_id"]
 isOneToOne: false
+      referencedRelation: "supplier_summaries"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "invoices_organization_id_supplier_id_fkey"
+      columns: ["organization_id","supplier_id"]
+isOneToOne: false
       referencedRelation: "suppliers"
       referencedColumns: ["organization_id","id"]
     }
+                  ]
+                },"legal_settings": {
+                  Row: {
+                    "description": string,"key": string,"updated_at": string,"value": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description": string,"key": string,"updated_at"?: string,"value": number
+                  }
+                  Update: {
+                    "description"?: string,"key"?: string,"updated_at"?: string,"value"?: number
+                  }
+                  Relationships: [
+                    
                   ]
                 },"memberships": {
                   Row: {
@@ -223,14 +243,14 @@ isOneToOne: false
                   ]
                 },"payments": {
                   Row: {
-                    "amount": number,"bank_account_id": string,"cancellation_reason": string | null,"checkbook_id": string | null,"created_at": string,"created_by": string | null,"debited_at": string | null,"delivered_at": string | null,"due_date": string | null,"id": string,"issue_date": string,"issue_place": string | null,"notes": string | null,"number": number | null,"organization_id": string,"payee_name": string,"print_batch_id": string | null,"rejection_reason": string | null,"scan_path": string | null,"status": Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at": string
+                    "amount": number,"bank_account_id": string,"cancellation_reason": string | null,"cancelled_at": string | null,"checkbook_id": string | null,"created_at": string,"created_by": string | null,"debited_at": string | null,"delivered_at": string | null,"due_date": string | null,"id": string,"issue_date": string,"issue_place": string | null,"notes": string | null,"number": number | null,"organization_id": string,"payee_name": string,"print_batch_id": string | null,"rejection_reason": string | null,"scan_path": string | null,"status": Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount": number,"bank_account_id": string,"cancellation_reason"?: string | null,"checkbook_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"debited_at"?: string | null,"delivered_at"?: string | null,"due_date"?: string | null,"id"?: string,"issue_date"?: string,"issue_place"?: string | null,"notes"?: string | null,"number"?: number | null,"organization_id": string,"payee_name": string,"print_batch_id"?: string | null,"rejection_reason"?: string | null,"scan_path"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at"?: string
+                    "amount": number,"bank_account_id": string,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"checkbook_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"debited_at"?: string | null,"delivered_at"?: string | null,"due_date"?: string | null,"id"?: string,"issue_date"?: string,"issue_place"?: string | null,"notes"?: string | null,"number"?: number | null,"organization_id": string,"payee_name": string,"print_batch_id"?: string | null,"rejection_reason"?: string | null,"scan_path"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at"?: string
                   }
                   Update: {
-                    "amount"?: number,"bank_account_id"?: string,"cancellation_reason"?: string | null,"checkbook_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"debited_at"?: string | null,"delivered_at"?: string | null,"due_date"?: string | null,"id"?: string,"issue_date"?: string,"issue_place"?: string | null,"notes"?: string | null,"number"?: number | null,"organization_id"?: string,"payee_name"?: string,"print_batch_id"?: string | null,"rejection_reason"?: string | null,"scan_path"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"supplier_id"?: string,"type"?: Database["public"]['Enums']["payment_type"],"updated_at"?: string
+                    "amount"?: number,"bank_account_id"?: string,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"checkbook_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"debited_at"?: string | null,"delivered_at"?: string | null,"due_date"?: string | null,"id"?: string,"issue_date"?: string,"issue_place"?: string | null,"notes"?: string | null,"number"?: number | null,"organization_id"?: string,"payee_name"?: string,"print_batch_id"?: string | null,"rejection_reason"?: string | null,"scan_path"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"supplier_id"?: string,"type"?: Database["public"]['Enums']["payment_type"],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -238,6 +258,12 @@ isOneToOne: false
       columns: ["organization_id","bank_account_id"]
 isOneToOne: false
       referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_checkbook_id_fkey"
+      columns: ["organization_id","checkbook_id"]
+isOneToOne: false
+      referencedRelation: "checkbook_summaries"
       referencedColumns: ["organization_id","id"]
     },{
       foreignKeyName: "payments_organization_id_checkbook_id_fkey"
@@ -261,20 +287,26 @@ isOneToOne: false
       foreignKeyName: "payments_organization_id_supplier_id_fkey"
       columns: ["organization_id","supplier_id"]
 isOneToOne: false
+      referencedRelation: "supplier_summaries"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "payments_organization_id_supplier_id_fkey"
+      columns: ["organization_id","supplier_id"]
+isOneToOne: false
       referencedRelation: "suppliers"
       referencedColumns: ["organization_id","id"]
     }
                   ]
                 },"print_batches": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"organization_id": string,"printed_at": string | null
+                    "created_at": string,"created_by": string | null,"id": string,"organization_id": string,"print_count": number,"printed_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id": string,"printed_at"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id": string,"print_count"?: number,"printed_at"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id"?: string,"printed_at"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id"?: string,"print_count"?: number,"printed_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -287,14 +319,14 @@ isOneToOne: false
                   ]
                 },"print_templates": {
                   Row: {
-                    "background_path": string | null,"bank_id": string | null,"created_at": string,"height_mm": number,"id": string,"name": string,"offset_x_mm": number,"offset_y_mm": number,"organization_id": string | null,"type": Database["public"]['Enums']["instrument_type"],"updated_at": string,"width_mm": number,"zones": NonNullable<Json>
+                    "background_path": string | null,"bank_id": string | null,"created_at": string,"height_mm": number,"id": string,"name": string,"offset_x_mm": number,"offset_y_mm": number,"options": NonNullable<Json>,"organization_id": string | null,"source_key": string | null,"type": Database["public"]['Enums']["instrument_type"],"updated_at": string,"width_mm": number,"zones": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "background_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"height_mm": number,"id"?: string,"name": string,"offset_x_mm"?: number,"offset_y_mm"?: number,"organization_id"?: string | null,"type": Database["public"]['Enums']["instrument_type"],"updated_at"?: string,"width_mm": number,"zones"?: NonNullable<Json>
+                    "background_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"height_mm": number,"id"?: string,"name": string,"offset_x_mm"?: number,"offset_y_mm"?: number,"options"?: NonNullable<Json>,"organization_id"?: string | null,"source_key"?: string | null,"type": Database["public"]['Enums']["instrument_type"],"updated_at"?: string,"width_mm": number,"zones"?: NonNullable<Json>
                   }
                   Update: {
-                    "background_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"height_mm"?: number,"id"?: string,"name"?: string,"offset_x_mm"?: number,"offset_y_mm"?: number,"organization_id"?: string | null,"type"?: Database["public"]['Enums']["instrument_type"],"updated_at"?: string,"width_mm"?: number,"zones"?: NonNullable<Json>
+                    "background_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"height_mm"?: number,"id"?: string,"name"?: string,"offset_x_mm"?: number,"offset_y_mm"?: number,"options"?: NonNullable<Json>,"organization_id"?: string | null,"source_key"?: string | null,"type"?: Database["public"]['Enums']["instrument_type"],"updated_at"?: string,"width_mm"?: number,"zones"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
@@ -331,6 +363,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"statement_column_mappings": {
+                  Row: {
+                    "bank_id": string,"header_signature": string,"id": string,"mapping": NonNullable<Json>,"organization_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_id": string,"header_signature": string,"id"?: string,"mapping": NonNullable<Json>,"organization_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "bank_id"?: string,"header_signature"?: string,"id"?: string,"mapping"?: NonNullable<Json>,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "statement_column_mappings_bank_id_fkey"
+      columns: ["bank_id"]
+isOneToOne: false
+      referencedRelation: "banks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "statement_column_mappings_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"statement_imports": {
                   Row: {
                     "bank_account_id": string,"created_at": string,"error_message": string | null,"file_hash": string | null,"file_path": string | null,"format": Database["public"]['Enums']["statement_format"],"id": string,"imported_by": string | null,"line_count": number,"organization_id": string,"period_end": string | null,"period_start": string | null,"status": Database["public"]['Enums']["statement_import_status"],"updated_at": string
@@ -359,14 +417,14 @@ isOneToOne: false
                   ]
                 },"statement_lines": {
                   Row: {
-                    "bank_account_id": string,"confidence": number | null,"created_at": string,"credit": number | null,"debit": number | null,"extracted_number": number | null,"id": string,"import_id": string,"label": string,"line_hash": string,"matched_payment_id": string | null,"operation_date": string,"organization_id": string,"reference": string | null,"status": Database["public"]['Enums']["statement_line_status"],"updated_at": string,"value_date": string | null
+                    "bank_account_id": string,"confidence": number | null,"created_at": string,"credit": number | null,"debit": number | null,"extracted_kind": string | null,"extracted_number": number | null,"id": string,"import_id": string,"label": string,"line_hash": string,"match_reason": string | null,"matched_payment_id": string | null,"operation_date": string,"organization_id": string,"reference": string | null,"status": Database["public"]['Enums']["statement_line_status"],"updated_at": string,"value_date": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "bank_account_id": string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_number"?: number | null,"id"?: string,"import_id": string,"label": string,"line_hash": string,"matched_payment_id"?: string | null,"operation_date": string,"organization_id": string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
+                    "bank_account_id": string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_kind"?: string | null,"extracted_number"?: number | null,"id"?: string,"import_id": string,"label": string,"line_hash": string,"match_reason"?: string | null,"matched_payment_id"?: string | null,"operation_date": string,"organization_id": string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
                   }
                   Update: {
-                    "bank_account_id"?: string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_number"?: number | null,"id"?: string,"import_id"?: string,"label"?: string,"line_hash"?: string,"matched_payment_id"?: string | null,"operation_date"?: string,"organization_id"?: string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
+                    "bank_account_id"?: string,"confidence"?: number | null,"created_at"?: string,"credit"?: number | null,"debit"?: number | null,"extracted_kind"?: string | null,"extracted_number"?: number | null,"id"?: string,"import_id"?: string,"label"?: string,"line_hash"?: string,"match_reason"?: string | null,"matched_payment_id"?: string | null,"operation_date"?: string,"organization_id"?: string,"reference"?: string | null,"status"?: Database["public"]['Enums']["statement_line_status"],"updated_at"?: string,"value_date"?: string | null
                   }
                   Relationships: [
                     {
@@ -418,14 +476,69 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "checkbook_summaries": {
+                  Row: {
+                    "bank_account_id": string,"cancelled_count": number | null,"created_at": string,"first_number": number,"id": string,"last_number": number,"next_number": number,"number_width": number,"organization_id": string,"print_template_id": string | null,"received_at": string | null,"remaining_count": number | null,"status": Database["public"]['Enums']["checkbook_status"],"total_count": number | null,"type": Database["public"]['Enums']["instrument_type"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"print_template_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
+                         }
+                        Update: {
+                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"print_template_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
+                         }
+                        Relationships: [
+                    {
+      foreignKeyName: "checkbooks_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "checkbooks_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checkbooks_print_template_id_fkey"
+      columns: ["print_template_id"]
+isOneToOne: false
+      referencedRelation: "print_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"supplier_summaries": {
+                  Row: {
+                    "amount_cashed": number | null,"amount_disputed": number | null,"amount_due": number | null,"amount_in_circulation": number | null,"id": string,"last_payment_date": string | null,"open_invoice_count": number | null,"organization_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "suppliers_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             "accept_invitation":
 { Args: { "p_invitation_id": string }; Returns: string
                            },
+"apply_statement_matches":
+{ Args: { "p_import_id": string,"p_matches": Json }; Returns: undefined
+                           },
+"confirm_statement_line":
+{ Args: { "p_line_id": string,"p_payment_id": string }; Returns: undefined
+                           },
 "create_organization":
 { Args: { "p_city"?: string,"p_name": string }; Returns: string
+                           },
+"issue_payments":
+{ Args: { "p_allocations"?: Json,"p_checkbook_id": string,"p_instruments": Json,"p_issue_date": string,"p_issue_place": string,"p_organization_id": string,"p_payee_name": string,"p_supplier_id": string }; Returns: string
                            },
 "log_audit_event":
 { Args: { "p_action": string,"p_details"?: Json,"p_organization_id": string,"p_record_id"?: string,"p_table_name"?: string }; Returns: undefined
@@ -434,6 +547,15 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["app_role"]
             }[]
+                           },
+"record_batch_print":
+{ Args: { "p_batch_id": string }; Returns: number
+                           },
+"set_statement_line_ignored":
+{ Args: { "p_ignored": boolean,"p_line_id": string }; Returns: undefined
+                           },
+"unmatch_statement_line":
+{ Args: { "p_line_id": string }; Returns: undefined
                            }
           }
           Enums: {

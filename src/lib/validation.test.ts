@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { emailSchema, iceSchema, optionalText, passwordSchema } from "./validation";
+import {
+  amountSchema,
+  emailSchema,
+  iceSchema,
+  integerSchema,
+  optionalText,
+  passwordSchema,
+  ribSchema,
+} from "./validation";
 
 describe("emailSchema", () => {
   it("normalise l'adresse", () => {
@@ -38,5 +46,44 @@ describe("iceSchema", () => {
 describe("optionalText", () => {
   it("transforme une chaîne vide en null", () => {
     expect(optionalText().parse("   ")).toBeNull();
+  });
+});
+
+describe("ribSchema", () => {
+  it("accepte un RIB valide saisi par blocs", () => {
+    expect(ribSchema.parse("150 500 2115014416910015 83")).toBe("150500211501441691001583");
+  });
+
+  it("refuse une clé invalide", () => {
+    const result = ribSchema.safeParse("150500211501441691001584");
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toMatch(/Clé RIB invalide/);
+  });
+
+  it("transforme une valeur vide en null", () => {
+    expect(ribSchema.parse("")).toBeNull();
+  });
+});
+
+describe("amountSchema", () => {
+  it("convertit un montant marocain", () => {
+    expect(amountSchema("Le solde").parse("12 500,50")).toBe(12500.5);
+  });
+
+  it("refuse une saisie invalide ou vide", () => {
+    expect(amountSchema("Le solde").safeParse("abc").success).toBe(false);
+    expect(amountSchema("Le solde").safeParse("").success).toBe(false);
+  });
+
+  it("autorise un solde négatif si demandé", () => {
+    expect(amountSchema("Le solde", { allowNegative: true }).parse("-1 000,00")).toBe(-1000);
+  });
+});
+
+describe("integerSchema", () => {
+  it("valide les bornes", () => {
+    expect(integerSchema("Le numéro", { min: 1 }).parse("0001234")).toBe(1234);
+    expect(integerSchema("Le nombre", { min: 1, max: 10 }).safeParse("11").success).toBe(false);
+    expect(integerSchema("Le numéro").safeParse("12a").success).toBe(false);
   });
 });

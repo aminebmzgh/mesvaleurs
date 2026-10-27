@@ -2,21 +2,21 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { initialFormState } from "@/lib/forms";
 import { signUp } from "../actions";
 
 export function SignupForm() {
-  const [state, action] = useActionState(signUp, initialFormState);
+  const [state, action, pending] = useActionState(signUp, initialFormState);
 
   if (state.success) {
     return <FormMessage state={state} />;
   }
 
   return (
-    <form action={action} noValidate>
+    <ActionForm action={action} pending={pending} noValidate>
       <FieldGroup>
         <FormMessage state={state} />
         <Field>
@@ -61,6 +61,6 @@ export function SignupForm() {
         <FieldErrors state={state} name="consent" />
         <SubmitButton className="w-full">Créer mon compte</SubmitButton>
       </FieldGroup>
-    </form>
+    </ActionForm>
   );
 }

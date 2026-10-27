@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS, ROLES } from "@/lib/auth/roles";
@@ -10,10 +10,10 @@ import { inviteMember } from "./actions";
 import { RoleSelect } from "./role-select";
 
 export function InviteMemberForm() {
-  const [state, action] = useActionState(inviteMember, initialFormState);
+  const [state, action, pending] = useActionState(inviteMember, initialFormState);
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-4">
+    <ActionForm action={action} pending={pending} noValidate className="flex flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-[1fr_16rem_auto] sm:items-start">
         <Field>
@@ -35,6 +35,6 @@ export function InviteMemberForm() {
           </li>
         ))}
       </ul>
-    </form>
+    </ActionForm>
   );
 }

@@ -5,6 +5,7 @@ import { cache } from "react";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole } from "@/types/app";
+import { parseOrganizationSettings } from "@/lib/organizations/settings";
 import { MFA_ELIGIBLE_ROLES } from "./roles";
 
 /**
@@ -29,6 +30,8 @@ export type OrganizationMembership = {
 export type ActiveOrganization = OrganizationMembership & {
   memberships: OrganizationMembership[];
   mfaRequired: boolean;
+  /** Montant en lettres selon l'orthographe rectifiée de 1990. */
+  amountWordsRectified: boolean;
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -148,12 +151,13 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     .select("settings")
     .eq("id", active.organizationId)
     .single();
-  const settings = (organization?.settings ?? {}) as { require_mfa?: boolean };
+  const settings = parseOrganizationSettings(organization?.settings);
 
   return {
     ...active,
     memberships,
-    mfaRequired: Boolean(settings.require_mfa) && MFA_ELIGIBLE_ROLES.includes(active.role),
+    mfaRequired: settings.require_mfa && MFA_ELIGIBLE_ROLES.includes(active.role),
+    amountWordsRectified: settings.amount_words_rectified,
   };
 });
 

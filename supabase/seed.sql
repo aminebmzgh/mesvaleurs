@@ -196,6 +196,7 @@ insert into public.payment_allocations (organization_id, payment_id, invoice_id,
 
 -- -----------------------------------------------------------------------------
 -- Extrait bancaire d'exemple (Attijariwafa, octobre 2026)
+-- Empreintes calculées comme l'application : réimporter le CSV d'exemple ne crée aucun doublon.
 -- Le fichier CSV correspondant est dans supabase/seed-files/releve-awb-2026-10.csv
 -- -----------------------------------------------------------------------------
 
@@ -208,17 +209,17 @@ insert into public.statement_lines (organization_id, import_id, bank_account_id,
   label, debit, credit, extracted_number, matched_payment_id, confidence, status, line_hash) values
   -- Exact : numéro + montant identiques
   ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
-   '2026-10-03', '2026-10-03', 'CHQ 0001000 SOTRAMA', 24000.00, null, 1000, '10000000-0000-4000-8000-000000000001', 100, 'auto_matched', 'demo-1'),
+   '2026-10-03', '2026-10-03', 'CHQ 0001000 SOTRAMA', 24000.00, null, 1000, '10000000-0000-4000-8000-000000000001', 100, 'auto_matched', encode(extensions.digest('2026-10-03|24000||CHQ 0001000 SOTRAMA|1', 'sha256'), 'hex')),
   ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
-   '2026-10-06', '2026-10-06', 'PAIEMENT CHEQUE N°1001', 24000.00, null, 1001, '10000000-0000-4000-8000-000000000002', 100, 'auto_matched', 'demo-2'),
+   '2026-10-06', '2026-10-06', 'PAIEMENT CHEQUE N°1001', 24000.00, null, 1001, '10000000-0000-4000-8000-000000000002', 100, 'auto_matched', encode(extensions.digest('2026-10-06|24000||PAIEMENT CHEQUE N°1001|1', 'sha256'), 'hex')),
   -- Non rapprochée : frais bancaires
   ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
-   '2026-10-08', '2026-10-08', 'FRAIS TENUE DE COMPTE', 45.00, null, null, null, null, 'unmatched', 'demo-3'),
+   '2026-10-08', '2026-10-08', 'FRAIS TENUE DE COMPTE', 45.00, null, null, null, null, 'unmatched', encode(extensions.digest('2026-10-08|45||FRAIS TENUE DE COMPTE|1', 'sha256'), 'hex')),
   -- Probable : numéro identique mais montant différent (15 060 au lieu de 15 600)
   ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
-   '2026-10-15', '2026-10-15', 'CHEQUE 1002', 15060.00, null, 1002, '10000000-0000-4000-8000-000000000003', 60, 'to_confirm', 'demo-4'),
+   '2026-10-15', '2026-10-15', 'CHEQUE 1002', 15060.00, null, 1002, '10000000-0000-4000-8000-000000000003', 60, 'to_confirm', encode(extensions.digest('2026-10-15|15060||CHEQUE 1002|1', 'sha256'), 'hex')),
   -- Chèque débité inconnu (numéro hors des paiements enregistrés)
   ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
-   '2026-10-20', '2026-10-20', 'CHQ 0001017', 3200.00, null, 1017, null, null, 'unmatched', 'demo-5'),
+   '2026-10-20', '2026-10-20', 'CHQ 0001017', 3200.00, null, 1017, null, null, 'unmatched', encode(extensions.digest('2026-10-20|3200||CHQ 0001017|1', 'sha256'), 'hex')),
   ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
-   '2026-10-22', '2026-10-22', 'VIREMENT RECU CLIENT MARJANE', null, 50000.00, null, null, null, 'unmatched', 'demo-6');
+   '2026-10-22', '2026-10-22', 'VIREMENT RECU CLIENT MARJANE', null, 50000.00, null, null, null, 'unmatched', encode(extensions.digest('2026-10-22||50000|VIREMENT RECU CLIENT MARJANE|1', 'sha256'), 'hex'));

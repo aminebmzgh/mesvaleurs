@@ -27,3 +27,6 @@ export const WRITER_ROLES: AppRole[] = ["admin", "manager", "preparer"];
 export function hasRole(role: AppRole, allowed: readonly AppRole[]) {
   return allowed.includes(role);
 }
+
+/** Rôles autorisés à gérer comptes bancaires, chéquiers et modèles d'impression. */
+export const ACCOUNT_MANAGER_ROLES: AppRole[] = ["admin", "manager"];

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useState } from "react";
-import { FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -19,12 +19,12 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const linkError = LINK_ERRORS[searchParams.get("erreur") ?? ""];
   const [mode, setMode] = useState<"password" | "magic-link">("password");
-  const [passwordState, passwordAction] = useActionState(signIn, { error: linkError });
-  const [magicState, magicAction] = useActionState(sendMagicLink, initialFormState);
+  const [passwordState, passwordAction, passwordPending] = useActionState(signIn, { error: linkError });
+  const [magicState, magicAction, magicPending] = useActionState(sendMagicLink, initialFormState);
 
   if (mode === "magic-link") {
     return (
-      <form action={magicAction} noValidate>
+      <ActionForm action={magicAction} pending={magicPending} noValidate>
         <FieldGroup>
           <FormMessage state={magicState} />
           <Field>
@@ -37,12 +37,12 @@ export function LoginForm() {
             Se connecter avec un mot de passe
           </Button>
         </FieldGroup>
-      </form>
+      </ActionForm>
     );
   }
 
   return (
-    <form action={passwordAction} noValidate>
+    <ActionForm action={passwordAction} pending={passwordPending} noValidate>
       <input type="hidden" name="suivant" value={searchParams.get("suivant") ?? ""} />
       <FieldGroup>
         <FormMessage state={passwordState} />
@@ -73,6 +73,6 @@ export function LoginForm() {
           Recevoir un lien de connexion par e-mail
         </Button>
       </FieldGroup>
-    </form>
+    </ActionForm>
   );
 }

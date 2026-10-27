@@ -45,3 +45,11 @@ next-env.d.ts
 supabase/.temp
 supabase/.branches
 supabase/signing_keys.json
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Formules d'exemple (images de tiers, servent uniquement au calibrage local)
+/exemples/
