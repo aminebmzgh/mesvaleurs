@@ -5,6 +5,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+## [1.0.0] — Phase 1 : MVP
+
 ### Ajouté
 
 - Déploiement : projets Supabase de préproduction et de production (Paris), projet Vercel
