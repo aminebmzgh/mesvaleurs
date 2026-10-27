@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
+  experimental: {
+    serverActions: {
+      // Lignes de relevés importés (quelques milliers) ; plafond Vercel : 4,5 Mo
+      bodySizeLimit: "4mb",
+    },
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

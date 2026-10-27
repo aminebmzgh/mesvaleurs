@@ -52,6 +52,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   métriques de police que le PDF ; impression test sur papier blanc avec le scan en fond.
 - Modèle d'impression par carnet (sinon modèle par défaut de la banque) ; impression et
   réimpression d'un lot tracées dans le journal d'audit.
+- Import des relevés Excel (.xlsx, .xls) et CSV : lecture dans le navigateur (SheetJS),
+  détection de l'en-tête, correspondance des colonnes mémorisée par banque, dates (y compris
+  Excel) et montants au format marocain, encodage UTF-8 ou Windows-1252, aperçu et erreurs
+  par ligne ; fichier d'origine envoyé directement vers Supabase Storage ; doublons de
+  relevés et de lignes écartés ; solde du compte mis à jour.
+- Rapprochement bancaire : extraction des numéros de chèques et LCN des libellés (CHQ,
+  CHEQUE, CH N°, LCN, EFFET, ECH…), rapprochement automatique (numéro + montant), propositions
+  à confirmer (numéro identique et montant différent, montant identique et numéro proche)
+  avec score de confiance ; écran deux colonnes : confirmation en un clic, association
+  manuelle par sélection ou glisser-déposer, rapprochement défait, lignes ignorées ; le
+  paiement passe en « débité » et la facture en « encaissée ».
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.
