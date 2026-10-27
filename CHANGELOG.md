@@ -63,6 +63,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   avec score de confiance ; écran deux colonnes : confirmation en un clic, association
   manuelle par sélection ou glisser-déposer, rapprochement défait, lignes ignorées ; le
   paiement passe en « débité » et la facture en « encaissée ».
+- Import de factures depuis Excel ou CSV : colonnes reconnues, TTC calculé depuis HT + TVA,
+  cohérence contrôlée, fournisseur reconnu par ICE puis par raison sociale (formes
+  juridiques ignorées), fournisseurs inconnus créés en option, factures déjà saisies
+  ignorées, erreurs signalées ligne par ligne.
 
 - Tests de bout en bout Playwright (connexion, isolation, comptes et chéquiers, lecture
   seule du comptable), exécutés dans la CI contre une base Supabase locale.
