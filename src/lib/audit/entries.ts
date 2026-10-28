@@ -73,6 +73,7 @@ const FIELD_LABELS: Record<string, string> = {
   legal_due_date: "Date limite légale",
   is_active: "Actif",
   rib: "RIB",
+  reference: "Référence",
   branch: "Agence",
   address: "Adresse",
   city: "Ville",
@@ -178,7 +179,10 @@ export function describeRecord(table: string | null, before: Row | null, after: 
   switch (table) {
     case "payments": {
       const type = PAYMENT_TYPE_LABELS[row.type as PaymentType] ?? "Paiement";
-      return typeof row.number === "number" ? `${type} n° ${formatInstrumentNumber(row.number, 7)}` : type;
+      if (typeof row.number === "number") {
+        return `${type} n° ${formatInstrumentNumber(row.number, 7)}`;
+      }
+      return text("reference") ? `${type} ${text("reference")}` : type;
     }
     case "invoices":
       return text("number") ? `Facture ${text("number")}` : "Facture";

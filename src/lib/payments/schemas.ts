@@ -29,3 +29,18 @@ export const issueRequestSchema = z
   });
 
 export type IssueRequest = z.infer<typeof issueRequestSchema>;
+
+/** Saisie d'un virement (montant en centimes). */
+export const transferRequestSchema = z.object({
+  bankAccountId: z.uuid({ error: "Choisissez le compte débité." }),
+  supplierId: z.uuid({ error: "Choisissez un fournisseur." }),
+  amountCents: z.number().int().positive({ error: "Le montant doit être positif." }),
+  transferDate: isoDate,
+  reference: z.string().trim().min(1, { error: "La référence du virement est obligatoire." }).max(100),
+  debited: z.boolean(),
+  /** Factures à régler, dans l'ordre d'affectation (les plus anciennes d'abord). */
+  invoiceIds: z.array(z.uuid()).max(50),
+  notes: z.string().trim().max(500),
+});
+
+export type TransferRequest = z.infer<typeof transferRequestSchema>;

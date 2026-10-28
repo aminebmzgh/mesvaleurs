@@ -83,7 +83,7 @@ export async function getInvoice(id: string) {
     supabase
       .from("payment_allocations")
       .select(
-        "id, amount, payments ( id, type, status, number, issue_date, due_date, debited_at, checkbooks ( number_width ) )",
+        "id, amount, payments ( id, type, status, number, reference, issue_date, due_date, debited_at, checkbooks ( number_width ) )",
       )
       .eq("organization_id", orgId)
       .eq("invoice_id", id),

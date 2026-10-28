@@ -33,6 +33,25 @@ export async function markDelivered(paymentId: string, deliveredAt: string): Pro
   return readable(error);
 }
 
+/** Virement en attente : débit constaté (sans passer par le rapprochement). */
+export async function markTransferDebited(paymentId: string, debitedAt: string): Promise<ActionResult> {
+  const organization = await requireRole(WRITER_ROLES);
+  const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).safeParse(debitedAt);
+  if (!date.success) {
+    return { error: "Date de débit invalide." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("payments")
+    .update({ status: "paid", debited_at: date.data })
+    .eq("id", z.uuid().parse(paymentId))
+    .eq("organization_id", organization.organizationId)
+    .eq("type", "transfer")
+    .eq("status", "issued");
+  revalidatePath("/", "layout");
+  return readable(error);
+}
+
 /**
  * Annulation (formule gâchée, erreur d'impression…) : le numéro reste dans
  * l'historique avec son motif ; la facture redevient à payer.

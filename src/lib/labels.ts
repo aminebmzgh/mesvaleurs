@@ -16,6 +16,7 @@ export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
   check: "Chèque",
   lcn: "LCN",
   guarantee_check: "Chèque de garantie",
+  transfer: "Virement",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {

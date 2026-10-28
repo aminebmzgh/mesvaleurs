@@ -59,7 +59,7 @@ export async function getImport(importId: string) {
       .select(
         `id, operation_date, value_date, label, reference, debit, credit, extracted_number, extracted_kind, status, confidence,
          match_reason, matched_payment_id,
-         payments!statement_lines_organization_id_matched_payment_id_fkey ( id, type, number, amount, suppliers ( name ), checkbooks ( number_width ) )`,
+         payments!statement_lines_organization_id_matched_payment_id_fkey ( id, type, number, reference, amount, suppliers ( name ), checkbooks ( number_width ) )`,
       )
       .eq("organization_id", orgId)
       .eq("import_id", importId)
@@ -67,7 +67,7 @@ export async function getImport(importId: string) {
       .order("created_at"),
     supabase
       .from("payments")
-      .select("id, type, number, amount, issue_date, due_date, status, suppliers ( name ), checkbooks ( number_width )")
+      .select("id, type, number, reference, amount, issue_date, due_date, status, suppliers ( name ), checkbooks ( number_width )")
       .eq("organization_id", orgId)
       .eq("bank_account_id", statementImport.bank_account_id)
       .in("status", ["issued", "delivered"])

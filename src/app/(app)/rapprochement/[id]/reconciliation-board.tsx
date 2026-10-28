@@ -6,9 +6,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { formatDate, formatMAD } from "@/lib/format";
-import { PAYMENT_TYPE_LABELS } from "@/lib/labels";
+import { paymentLabel } from "@/lib/payments/label";
 import type { ImportDetail, LineStatus } from "@/lib/statements/queries";
 import { cn } from "@/lib/utils";
 import { type ActionResult, confirmLine, setLineIgnored, unmatchLine } from "../actions";
@@ -34,8 +33,6 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 const isTodo = (line: Line) => line.status === "to_confirm" || (line.status === "unmatched" && (line.debit ?? 0) > 0);
 const isMatched = (line: Line) => line.status === "auto_matched" || line.status === "manually_matched";
-const paymentLabel = (p: { type: Payment["type"]; number: number | null; checkbooks: { number_width: number } | null }) =>
-  `${PAYMENT_TYPE_LABELS[p.type]} ${p.number != null ? formatInstrumentNumber(p.number, p.checkbooks?.number_width ?? 7) : ""}`;
 
 /**
  * Écran de rapprochement en deux colonnes : lignes du relevé ↔ chèques et LCN en

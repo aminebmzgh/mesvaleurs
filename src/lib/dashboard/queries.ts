@@ -1,6 +1,7 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
-import { formatInstrumentNumber, LOW_STOCK_THRESHOLD } from "@/lib/checkbooks";
+import { LOW_STOCK_THRESHOLD } from "@/lib/checkbooks";
+import { paymentNumber } from "@/lib/payments/label";
 import { addDays, daysBetween, todayIso } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,7 +24,7 @@ export async function getDashboard() {
     supabase.from("invoices").select("amount_incl_tax, amount_paid").eq("organization_id", orgId).in("status", ["unpaid", "partially_paid"]),
     supabase
       .from("payments")
-      .select("id, number, amount, due_date, suppliers ( name ), checkbooks ( number_width )")
+      .select("id, number, reference, amount, due_date, suppliers ( name ), checkbooks ( number_width )")
       .eq("organization_id", orgId)
       .eq("type", "lcn")
       .in("status", ["issued", "delivered"])
@@ -78,7 +79,7 @@ export async function getDashboard() {
     insufficientAccounts: accountRows.filter((a) => a.projected < 0),
     lcnDue: (lcn.data ?? []).map((payment) => ({
       id: payment.id,
-      number: payment.number != null ? formatInstrumentNumber(payment.number, payment.checkbooks?.number_width ?? 7) : "",
+      number: paymentNumber(payment),
       supplier: payment.suppliers?.name ?? "",
       amount: payment.amount,
       dueDate: payment.due_date!,
