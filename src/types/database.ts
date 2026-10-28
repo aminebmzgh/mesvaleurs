@@ -195,6 +195,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"letter_templates": {
+                  Row: {
+                    "body": string,"closing": string,"created_at": string,"created_by": string | null,"id": string,"kind": Database["public"]['Enums']["letter_kind"],"name": string,"organization_id": string,"subject": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"closing": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["letter_kind"],"name": string,"organization_id": string,"subject": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "body"?: string,"closing"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["letter_kind"],"name"?: string,"organization_id"?: string,"subject"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "letter_templates_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
@@ -620,7 +640,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored"
+            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -736,7 +756,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"]
+            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"]
           }
         }
 } as const
