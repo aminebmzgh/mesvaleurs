@@ -1,5 +1,6 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
+import { addDays, todayIso } from "@/lib/dates";
 import type { PaymentStatus, PaymentType } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 
@@ -73,4 +74,28 @@ export async function getBatch(batchId: string) {
     return null;
   }
   return { ...batch.data, payments: payments.data ?? [] };
+}
+
+/**
+ * Chèques émis et non encaissés depuis plus de `days` jours (spec §11 bis F), les plus
+ * anciens d'abord, avec le contact du fournisseur pour la relance.
+ */
+export async function listUncashedChecks(days: number) {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .select(
+      "id, type, status, number, reference, amount, issue_date, delivered_at, checkbooks ( number_width ), bank_accounts ( label ), suppliers ( id, name, contact_name, email, phone )",
+    )
+    .eq("organization_id", organization.organizationId)
+    .eq("type", "check")
+    .in("status", ["issued", "delivered"])
+    .lte("issue_date", addDays(todayIso(), -days))
+    .order("issue_date")
+    .limit(LIST_LIMIT);
+  if (error) {
+    throw new Error("Impossible de charger les chèques non encaissés.", { cause: error });
+  }
+  return data;
 }

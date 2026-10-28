@@ -1,6 +1,7 @@
 import {
   BanknoteIcon,
   BuildingIcon,
+  ClockAlertIcon,
   FileBarChartIcon,
   FileTextIcon,
   GitCompareArrowsIcon,
@@ -28,6 +29,7 @@ export const navigation: NavSection[] = [
     items: [
       { title: "Nouveau paiement", href: "/paiements/nouveau", icon: SquarePenIcon },
       { title: "Chèques et LCN", href: "/paiements", icon: BanknoteIcon },
+      { title: "Non encaissés", href: "/paiements/non-encaisses", icon: ClockAlertIcon },
       { title: "Factures", href: "/factures", icon: FileTextIcon },
       { title: "Fournisseurs", href: "/fournisseurs", icon: TruckIcon },
     ],

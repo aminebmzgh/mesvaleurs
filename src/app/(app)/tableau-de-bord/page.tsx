@@ -71,7 +71,11 @@ async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {(data.rejected.length > 0 || data.guaranteesToRecover.length > 0 || data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
+      {(data.rejected.length > 0 ||
+        data.guaranteesToRecover.length > 0 ||
+        data.uncashed.count > 0 ||
+        data.insufficientAccounts.length > 0 ||
+        data.lowStock.length > 0) && (
         <div className="flex flex-col gap-3">
           {data.rejected.length > 0 && (
             <Alert variant="destructive">
@@ -127,6 +131,21 @@ async function Dashboard() {
                 </ul>
                 <Link href="/paiements?type=guarantee_check" className="mt-2 block font-medium underline">
                   Voir les chèques de garantie
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
+          {data.uncashed.count > 0 && (
+            <Alert>
+              <ClockAlertIcon aria-hidden />
+              <AlertTitle>
+                {data.uncashed.count} chèque{data.uncashed.count > 1 ? "s" : ""} non encaissé{data.uncashed.count > 1 ? "s" : ""} depuis plus de{" "}
+                {data.uncashed.days} jours
+              </AlertTitle>
+              <AlertDescription>
+                {formatMAD(data.uncashed.total)} restent bloqués dans le solde prévisionnel.{" "}
+                <Link href="/paiements/non-encaisses" className="font-medium underline">
+                  Relancer les fournisseurs
                 </Link>
               </AlertDescription>
             </Alert>

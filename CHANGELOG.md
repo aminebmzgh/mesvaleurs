@@ -28,6 +28,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Report d'échéance des LCN : nouvelle échéance, motif et accord du fournisseur, historique
   des reports (échéance initiale affichée), action tracée au journal d'audit.
 - Journal d'audit : rejets, régularisations et reports désignés par le numéro du paiement.
+- Chèques non encaissés depuis longtemps : liste au-delà d'un délai (30 à 120 jours, réglable
+  dans les paramètres de l'entreprise, 60 par défaut), contact du fournisseur, relance par
+  e-mail pré-rédigée, total bloqué ; alerte sur le tableau de bord.
 
 ## [1.0.0] — Phase 1 : MVP
 

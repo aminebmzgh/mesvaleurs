@@ -14,7 +14,8 @@ export async function getDashboard() {
   const today = todayIso();
   const in30 = addDays(today, 30);
 
-  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees] = await Promise.all([
+  const uncashedBefore = addDays(today, -organization.uncashedAlertDays);
+  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees, uncashed] = await Promise.all([
     supabase.from("bank_accounts").select("id, label, current_balance").eq("organization_id", orgId).eq("is_active", true),
     supabase
       .from("payments")
@@ -66,8 +67,16 @@ export async function getDashboard() {
       .eq("type", "guarantee_check")
       .in("status", ["issued", "delivered"])
       .order("guarantee_return_due"),
+    // Chèques non encaissés au-delà du délai d'alerte de l'entreprise
+    supabase
+      .from("payments")
+      .select("amount")
+      .eq("organization_id", orgId)
+      .eq("type", "check")
+      .in("status", ["issued", "delivered"])
+      .lte("issue_date", uncashedBefore),
   ]);
-  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error;
+  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error ?? uncashed.error;
   if (error) {
     throw new Error("Impossible de charger le tableau de bord.", { cause: error });
   }
@@ -118,6 +127,11 @@ export async function getDashboard() {
       kind: payment.rejection_kind,
       state: regularizationState(payment, today),
     })),
+    uncashed: {
+      days: organization.uncashedAlertDays,
+      count: uncashed.data?.length ?? 0,
+      total: sum((uncashed.data ?? []).map((p) => p.amount)),
+    },
     guaranteeRisk: sum((guarantees.data ?? []).map((g) => g.amount)),
     guaranteeCount: guarantees.data?.length ?? 0,
     // Restitution prévue dans les 7 jours, ou dépassée

@@ -2,12 +2,14 @@
 
 import { useActionState } from "react";
 import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { FormSelect } from "@/components/form-select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount } from "@/lib/format";
 import { initialFormState } from "@/lib/forms";
+import { UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { updateOrganization } from "./actions";
 
 type OrganizationValues = {
@@ -24,6 +26,7 @@ type OrganizationValues = {
   annual_revenue: number | null;
   require_mfa: boolean;
   amount_words_rectified: boolean;
+  uncashed_alert_days: number;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -104,6 +107,16 @@ export function OrganizationForm({
                     Les personnes concernées devront l&apos;activer avant d&apos;accéder aux données.
                   </FieldDescription>
                 </FieldContent>
+              </Field>
+              <Field className="max-w-sm">
+                <FieldLabel htmlFor="uncashed_alert_days">Signaler un chèque non encaissé après</FieldLabel>
+                <FormSelect
+                  id="uncashed_alert_days"
+                  name="uncashed_alert_days"
+                  options={UNCASHED_ALERT_CHOICES.map((days) => ({ value: String(days), label: `${days} jours` }))}
+                  defaultValue={String(organization.uncashed_alert_days)}
+                />
+                <FieldDescription>Délai depuis l&apos;émission, pour la liste des chèques non encaissés et le tableau de bord.</FieldDescription>
               </Field>
               <Field orientation="horizontal">
                 <input
