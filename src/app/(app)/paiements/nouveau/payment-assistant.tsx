@@ -2,7 +2,7 @@
 
 import { CircleAlertIcon, Loader2Icon, PlusIcon, TriangleAlertIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { InstrumentPreview } from "@/components/instrument-preview";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,7 +15,7 @@ import { fromCents, parseAmount, toCents } from "@/lib/amount";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { formatAmount, formatDate, formatMAD } from "@/lib/format";
-import type { AssistantData, OpenInvoice } from "@/lib/payments/queries";
+import type { AssistantData, OpenInvoice, ReplacedPayment } from "@/lib/payments/queries";
 import { checkCustomSplit, MAX_INSTRUMENTS, scheduleDueDates, splitEqual } from "@/lib/payments/split";
 import { issuePayments, loadOpenInvoices } from "./actions";
 import { QuickInvoiceForm, QuickSupplierDialog } from "./quick-create";
@@ -28,7 +28,16 @@ const TYPE_LABELS: Record<InstrumentType, { one: string; many: string }> = {
   lcn: { one: "LCN", many: "LCN" },
 };
 
-export function PaymentAssistant({ data, today }: { data: AssistantData; today: string }) {
+export function PaymentAssistant({
+  data,
+  today,
+  replacing = null,
+}: {
+  data: AssistantData;
+  today: string;
+  /** Paiement rejeté que cette émission régularise. */
+  replacing?: ReplacedPayment | null;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -61,9 +70,10 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
   const [intervalDays, setIntervalDays] = useState(30);
   const [dueDates, setDueDates] = useState<string[]>(() => scheduleDueDates(today, 1, 30));
   const [overpayConfirmed, setOverpayConfirmed] = useState(false);
+  const [fundsConfirmed, setFundsConfirmed] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
 
-  const selectSupplier = (id: string) => {
+  const selectSupplier = (id: string, preselected?: string[]) => {
     setSupplierId(id);
     setSelectedIds([]);
     setInvoices([]);
@@ -78,13 +88,24 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
       setLoadingInvoices(false);
       if (result.ok) {
         setInvoices(result.data);
-        // Toutes les factures ouvertes cochées par défaut, les plus anciennes d'abord
-        setSelectedIds(result.data.map((invoice) => invoice.id));
+        // Toutes les factures ouvertes cochées par défaut, les plus anciennes d'abord ;
+        // en remplacement, celles que réglait le paiement rejeté
+        const ids = result.data.map((invoice) => invoice.id);
+        setSelectedIds(preselected?.length ? ids.filter((invoiceId) => preselected.includes(invoiceId)) : ids);
       } else {
         toast.error(result.error);
       }
     });
   };
+
+  // Remplacement d'un paiement rejeté : fournisseur et factures pré-sélectionnés, une fois
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (replacing && !prefilled.current) {
+      prefilled.current = true;
+      selectSupplier(replacing.supplierId, replacing.invoiceIds);
+    }
+  });
 
   const selectedInvoices = invoices.filter((invoice) => selectedIds.includes(invoice.id));
   const dueCents = selectedInvoices.reduce(
@@ -173,6 +194,10 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
   }
   const projectedBalance = checkbook ? toCents(checkbook.availableBalance) - totalCents : 0;
   const insufficientFunds = checkbook !== undefined && totalCents > 0 && projectedBalance < 0;
+  // Prévention des rejets (loi 71-24) : émission sans provision à confirmer explicitement
+  if (insufficientFunds && !fundsConfirmed) {
+    errors.push("Provision insuffisante : confirmez l'émission malgré le risque de rejet.");
+  }
 
   const submit = () => {
     if (errors.length > 0 || !checkbook || !supplier) {
@@ -192,9 +217,15 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
         issuePlace: issuePlace.trim(),
         instruments: parts.map((amountCents, i) => ({ amountCents, dueDate: type === "lcn" ? dueDates[i] : null })),
         invoiceIds: selectedInvoices.map((invoice) => invoice.id),
+        replacesPaymentId: replacing?.id,
       });
       if (result.ok) {
-        toast.success("Paiements émis : les numéros sont attribués.");
+        toast.success(
+          replacing ? `Paiements émis : ${replacing.label} régularisé.` : "Paiements émis : les numéros sont attribués.",
+        );
+        if (result.data.warning) {
+          toast.warning(result.data.warning);
+        }
         router.push(`/paiements/lots/${result.data.batchId}`);
       } else {
         setSubmitError(result.error);
@@ -207,6 +238,14 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="flex flex-col gap-6">
+        {replacing && (
+          <Alert>
+            <AlertDescription>
+              Remplacement du {replacing.label.toLowerCase()} rejeté ({formatMAD(replacing.amount)}) : une fois émis, le nouveau
+              paiement le régularise et le paiement rejeté est annulé.
+            </AlertDescription>
+          </Alert>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>1. Moyen de paiement</CardTitle>
@@ -262,6 +301,7 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
                   id="supplier"
                   className="h-8 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
                   value={supplierId}
+                  disabled={replacing !== null}
                   onChange={(event) => selectSupplier(event.target.value)}
                 >
                   <option value="">Choisir un fournisseur…</option>
@@ -530,7 +570,17 @@ export function PaymentAssistant({ data, today }: { data: AssistantData; today: 
                 <TriangleAlertIcon aria-hidden />
                 <AlertDescription>
                   Provision insuffisante : après les paiements déjà en circulation et ce règlement, le solde prévisionnel du
-                  compte serait de {formatMAD(fromCents(projectedBalance))}.
+                  compte serait de {formatMAD(fromCents(projectedBalance))}. Un chèque présenté sans provision est rejeté
+                  (loi 71-24).
+                  <label className="mt-2 flex items-center gap-2 font-medium">
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-destructive"
+                      checked={fundsConfirmed}
+                      onChange={(event) => setFundsConfirmed(event.target.checked)}
+                    />
+                    J&apos;émets quand même : la provision sera faite avant la présentation.
+                  </label>
                 </AlertDescription>
               </Alert>
             )}

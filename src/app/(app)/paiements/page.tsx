@@ -17,14 +17,18 @@ import { WRITER_ROLES } from "@/lib/auth/roles";
 import { daysBetween, todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
+  LEGAL_DISCLAIMER,
   PAYMENT_STATUS_LABELS,
   PAYMENT_TYPE_LABELS,
+  REJECTION_KIND_LABELS,
+  type RejectionKind,
   type PaymentStatus,
   type PaymentType,
   paymentStatusVariant,
 } from "@/lib/labels";
 import { paymentNumber } from "@/lib/payments/label";
 import { listPayments, type PaymentFilter } from "@/lib/payments/list";
+import { countdownLabel, type RegularizationState, regularizationState } from "@/lib/payments/rejections";
 import { PaymentRowActions } from "./payment-row-actions";
 
 export const metadata: Metadata = { title: "Chèques et LCN" };
@@ -172,6 +176,18 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                             {payment.cancellation_reason}
                           </span>
                         )}
+                        {payment.status === "rejected" && payment.rejection_kind && (
+                          <RejectionInfo
+                            kind={payment.rejection_kind}
+                            rejectedAt={payment.rejected_at}
+                            state={regularizationState(payment, today)}
+                          />
+                        )}
+                        {payment.regularized_at && payment.regularization_method && payment.status !== "rejected" && (
+                          <span className="block text-xs text-muted-foreground">
+                            Rejet régularisé le {formatDate(payment.regularized_at)}
+                          </span>
+                        )}
                         {payment.status === "delivered" && payment.delivered_at && (
                           <span className="block text-xs text-muted-foreground">le {formatDate(payment.delivered_at)}</span>
                         )}
@@ -183,6 +199,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                             label={`${PAYMENT_TYPE_LABELS[payment.type].toLowerCase()} n° ${formatted}`}
                             type={payment.type}
                             status={payment.status}
+                            regularized={payment.regularized_at !== null}
                             today={today}
                           />
                         </TableCell>
@@ -204,5 +221,25 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
         {truncated && <p className="text-xs text-muted-foreground">Seuls les 300 paiements les plus récents sont affichés.</p>}
       </CardContent>
     </Card>
+  );
+}
+
+/** Motif du rejet et compte à rebours de régularisation (loi 71-24). */
+function RejectionInfo({ kind, rejectedAt, state }: { kind: RejectionKind; rejectedAt: string | null; state: RegularizationState }) {
+  return (
+    <span className="block text-xs text-muted-foreground" title={LEGAL_DISCLAIMER}>
+      {REJECTION_KIND_LABELS[kind]}
+      {rejectedAt && ` le ${formatDate(rejectedAt)}`}
+      <span
+        className={
+          state.kind === "overdue" || (state.kind === "pending" && state.daysLeft <= 7)
+            ? "block font-medium text-destructive"
+            : "block font-medium text-foreground"
+        }
+      >
+        {countdownLabel(state)}
+        {(state.kind === "pending" || state.kind === "overdue") && ` · avant le ${formatDate(state.dueDate)}`}
+      </span>
+    </span>
   );
 }

@@ -22,6 +22,8 @@ export const issueRequestSchema = z
       .max(MAX_INSTRUMENTS, { error: `${MAX_INSTRUMENTS} formules au maximum par émission.` }),
     /** Factures à régler, dans l'ordre d'affectation (les plus anciennes d'abord). */
     invoiceIds: z.array(z.uuid()).max(50),
+    /** Paiement rejeté que cette émission remplace (régularisation). */
+    replacesPaymentId: z.uuid().optional(),
   })
   .refine((request) => request.instruments.every((instrument) => !instrument.dueDate || instrument.dueDate >= request.issueDate), {
     error: "Une échéance ne peut pas précéder la date d'émission.",
@@ -41,6 +43,8 @@ export const transferRequestSchema = z.object({
   /** Factures à régler, dans l'ordre d'affectation (les plus anciennes d'abord). */
   invoiceIds: z.array(z.uuid()).max(50),
   notes: z.string().trim().max(500),
+  /** Paiement rejeté que ce virement remplace (régularisation). */
+  replacesPaymentId: z.uuid().optional(),
 });
 
 export type TransferRequest = z.infer<typeof transferRequestSchema>;

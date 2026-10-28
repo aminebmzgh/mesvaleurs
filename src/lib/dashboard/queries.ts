@@ -1,7 +1,8 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { LOW_STOCK_THRESHOLD } from "@/lib/checkbooks";
-import { paymentNumber } from "@/lib/payments/label";
+import { paymentLabel, paymentNumber } from "@/lib/payments/label";
+import { regularizationState } from "@/lib/payments/rejections";
 import { addDays, daysBetween, todayIso } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +14,7 @@ export async function getDashboard() {
   const today = todayIso();
   const in30 = addDays(today, 30);
 
-  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks] = await Promise.all([
+  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected] = await Promise.all([
     supabase.from("bank_accounts").select("id, label, current_balance").eq("organization_id", orgId).eq("is_active", true),
     supabase
       .from("payments")
@@ -49,8 +50,16 @@ export async function getDashboard() {
       .select("id, type, remaining_count, bank_account_id")
       .eq("organization_id", orgId)
       .eq("status", "active"),
+    // Rejets non régularisés : alerte immédiate (loi 71-24)
+    supabase
+      .from("payments")
+      .select("id, type, number, reference, amount, rejection_kind, regularized_at, regularization_due_date, suppliers ( name ), checkbooks ( number_width )")
+      .eq("organization_id", orgId)
+      .eq("status", "rejected")
+      .is("regularized_at", null)
+      .order("regularization_due_date", { nullsFirst: false }),
   ]);
-  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error;
+  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error;
   if (error) {
     throw new Error("Impossible de charger le tableau de bord.", { cause: error });
   }
@@ -93,6 +102,14 @@ export async function getDashboard() {
       daysLate: daysBetween(invoice.legal_due_date!, today),
     })),
     operations: operations.data ?? [],
+    rejected: (rejected.data ?? []).map((payment) => ({
+      id: payment.id,
+      label: paymentLabel(payment),
+      supplier: payment.suppliers?.name ?? "",
+      amount: payment.amount,
+      kind: payment.rejection_kind,
+      state: regularizationState(payment, today),
+    })),
     lowStock: (checkbooks.data ?? [])
       .filter((book) => (book.remaining_count ?? 0) <= LOW_STOCK_THRESHOLD)
       .map((book) => ({

@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatMAD } from "@/lib/format";
+import { todayIso } from "@/lib/dates";
 import { paymentLabel } from "@/lib/payments/label";
+import { RejectDialog } from "../../paiements/rejection-dialogs";
 import type { ImportDetail, LineStatus } from "@/lib/statements/queries";
 import { cn } from "@/lib/utils";
 import { type ActionResult, confirmLine, setLineIgnored, unmatchLine } from "../actions";
@@ -156,12 +158,24 @@ export function ReconciliationBoard({ detail, canEdit }: { detail: ImportDetail;
                       </span>
                     )}
                     {line.match_reason && <span className="text-muted-foreground">({line.match_reason})</span>}
+                    {detail.rejections[line.id] && (
+                      <Badge variant="destructive">Rejet signalé : {detail.rejections[line.id].label}</Badge>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className={cn("tabular-nums font-medium", line.credit ? "text-emerald-700 dark:text-emerald-400" : "")}>
                     {line.debit ? `−${formatMAD(line.debit)}` : `+${formatMAD(line.credit ?? 0)}`}
                   </span>
+                  {canEdit && detail.rejections[line.id] && (
+                    <RejectDialog
+                      paymentId={detail.rejections[line.id].id}
+                      label={detail.rejections[line.id].label.toLowerCase()}
+                      isCheck={detail.rejections[line.id].type === "check"}
+                      today={todayIso()}
+                      triggerLabel="Déclarer le rejet"
+                    />
+                  )}
                   {canEdit && line.status === "to_confirm" && proposal && (
                     <Button size="sm" disabled={pending} onClick={() => run(() => confirmLine(line.id, proposal.id), "Rapprochement confirmé.")}>
                       <CheckIcon aria-hidden />

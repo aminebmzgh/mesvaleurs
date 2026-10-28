@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { login, uniqueSuffix } from "./helpers";
+import { confirmFundsIfNeeded, login, uniqueSuffix } from "./helpers";
 
 // PNG 1 × 1 pixel, en guise de scan de formule
 const PNG = Buffer.from(
@@ -56,6 +56,7 @@ test("imprimer puis réimprimer un lot", async ({ page }) => {
     }
   }
   page.once("dialog", (dialog) => dialog.accept());
+  await confirmFundsIfNeeded(page);
   await page.getByRole("button", { name: "Émettre 1 chèque" }).click();
   await expect(page.getByText("Numéros attribués")).toBeVisible();
 
