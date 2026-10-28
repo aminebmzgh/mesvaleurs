@@ -21,6 +21,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   moyen ; détection des libellés d'impayé dans le rapprochement ; mention « informations
   indicatives ».
 - Assistant de paiement : émission sans provision suffisante soumise à confirmation explicite.
+- Chèques de garantie : émission depuis le chéquier (objet, restitution prévue), sans
+  règlement de facture ; rappel de restitution et indicateur « risque d'encaissement » sur le
+  tableau de bord ; clôture par restitution, destruction ou encaissement ; exclus des
+  prévisions.
 
 ## [1.0.0] — Phase 1 : MVP
 

@@ -48,3 +48,22 @@ export const transferRequestSchema = z.object({
 });
 
 export type TransferRequest = z.infer<typeof transferRequestSchema>;
+
+/** Émission d'un chèque de garantie (montant en centimes). */
+export const guaranteeRequestSchema = z
+  .object({
+    checkbookId: z.uuid({ error: "Choisissez un chéquier." }),
+    supplierId: z.uuid({ error: "Choisissez un fournisseur." }),
+    payeeName: z.string().trim().min(1, { error: "Le bénéficiaire est obligatoire." }).max(200),
+    amountCents: z.number().int().positive({ error: "Le montant doit être positif." }),
+    issueDate: isoDate,
+    issuePlace: z.string().trim().max(120),
+    purpose: z.string().trim().min(3, { error: "Indiquez l'objet de la garantie." }).max(200),
+    returnDue: isoDate,
+  })
+  .refine((request) => request.returnDue >= request.issueDate, {
+    error: "La restitution prévue doit suivre la date d'émission.",
+    path: ["returnDue"],
+  });
+
+export type GuaranteeRequest = z.infer<typeof guaranteeRequestSchema>;

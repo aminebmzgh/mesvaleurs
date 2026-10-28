@@ -1,6 +1,6 @@
 "use client";
 
-import { BanIcon, CircleCheckIcon, HandshakeIcon, Loader2Icon, type LucideIcon } from "lucide-react";
+import { BanIcon, CircleCheckIcon, HandshakeIcon, Loader2Icon, type LucideIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,14 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { PaymentStatus, PaymentType } from "@/lib/labels";
-import { type ActionResult, cancelPayment, markDelivered, markTransferDebited } from "./actions";
+import {
+  type ActionResult,
+  cancelPayment,
+  markDebited,
+  markDelivered,
+  markGuaranteeDestroyed,
+  markGuaranteeReturned,
+} from "./actions";
 import { RegularizeDialog, RejectDialog } from "./rejection-dialogs";
 
 /**
@@ -41,10 +48,12 @@ export function PaymentRowActions({
   today: string;
 }) {
   const canDeliver = status === "issued" && type !== "transfer";
-  const canDebit = status === "issued" && type === "transfer";
+  const guaranteeOut = type === "guarantee_check" && (status === "issued" || status === "delivered");
+  const canDebit = (status === "issued" && type === "transfer") || guaranteeOut;
   const canReject = (type === "check" || type === "lcn") && ["issued", "delivered", "paid"].includes(status);
   const canRegularize = status === "rejected" && !regularized;
-  const canCancel = ["issued", "delivered", "rejected", "lost", "stopped"].includes(status);
+  // Un chèque de garantie se clôt par restitution ou destruction, pas par annulation
+  const canCancel = type !== "guarantee_check" && ["issued", "delivered", "rejected", "lost", "stopped"].includes(status);
   if (!canDeliver && !canDebit && !canReject && !canRegularize && !canCancel) {
     return null;
   }
@@ -69,14 +78,42 @@ export function PaymentRowActions({
           paymentId={paymentId}
           today={today}
           icon={CircleCheckIcon}
-          trigger="Débité"
-          title="Virement débité"
+          trigger={type === "guarantee_check" ? "Encaissé" : "Débité"}
+          title={type === "guarantee_check" ? "Chèque de garantie encaissé" : "Virement débité"}
           description={`${label} — date à laquelle le compte a été débité.`}
           fieldLabel="Débité le"
           submitLabel="Enregistrer le débit"
           success="Débit enregistré."
-          action={markTransferDebited}
+          action={markDebited}
         />
+      )}
+      {guaranteeOut && (
+        <>
+          <DateDialog
+            paymentId={paymentId}
+            today={today}
+            icon={ShieldCheckIcon}
+            trigger="Restitué"
+            title="Chèque de garantie restitué"
+            description={`${label} — rendu par le fournisseur : il sort du risque d'encaissement.`}
+            fieldLabel="Restitué le"
+            submitLabel="Enregistrer la restitution"
+            success="Restitution enregistrée."
+            action={markGuaranteeReturned}
+          />
+          <DateDialog
+            paymentId={paymentId}
+            today={today}
+            icon={Trash2Icon}
+            trigger="Détruit"
+            title="Chèque de garantie détruit"
+            description={`${label} — détruit (par le fournisseur ou en votre présence).`}
+            fieldLabel="Détruit le"
+            submitLabel="Enregistrer la destruction"
+            success="Destruction enregistrée."
+            action={markGuaranteeDestroyed}
+          />
+        </>
       )}
       {canRegularize && <RegularizeDialog paymentId={paymentId} label={label} today={today} />}
       {canReject && <RejectDialog paymentId={paymentId} label={label} isCheck={type === "check"} today={today} />}

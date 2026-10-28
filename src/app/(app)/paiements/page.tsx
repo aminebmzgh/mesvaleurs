@@ -72,6 +72,10 @@ async function NewPaymentButton() {
   }
   return (
     <>
+      <Link href="/paiements/garantie" className={buttonVariants({ variant: "outline" })}>
+        <PlusIcon aria-hidden />
+        Chèque de garantie
+      </Link>
       <Link href="/paiements/virement" className={buttonVariants({ variant: "outline" })}>
         <PlusIcon aria-hidden />
         Nouveau virement
@@ -186,6 +190,20 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                         {payment.regularized_at && payment.regularization_method && payment.status !== "rejected" && (
                           <span className="block text-xs text-muted-foreground">
                             Rejet régularisé le {formatDate(payment.regularized_at)}
+                          </span>
+                        )}
+                        {payment.type === "guarantee_check" && inCirculation && payment.guarantee_return_due && (
+                          <span
+                            className={
+                              payment.guarantee_return_due < today ? "block text-xs font-medium text-destructive" : "block text-xs text-muted-foreground"
+                            }
+                          >
+                            Restitution prévue le {formatDate(payment.guarantee_return_due)}
+                          </span>
+                        )}
+                        {payment.type === "guarantee_check" && payment.guarantee_purpose && (
+                          <span className="block max-w-48 truncate text-xs text-muted-foreground" title={payment.guarantee_purpose}>
+                            {payment.guarantee_purpose}
                           </span>
                         )}
                         {payment.status === "delivered" && payment.delivered_at && (

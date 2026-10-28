@@ -14,7 +14,7 @@ export async function getDashboard() {
   const today = todayIso();
   const in30 = addDays(today, 30);
 
-  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected] = await Promise.all([
+  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees] = await Promise.all([
     supabase.from("bank_accounts").select("id, label, current_balance").eq("organization_id", orgId).eq("is_active", true),
     supabase
       .from("payments")
@@ -58,8 +58,16 @@ export async function getDashboard() {
       .eq("status", "rejected")
       .is("regularized_at", null)
       .order("regularization_due_date", { nullsFirst: false }),
+    // Chèques de garantie chez les fournisseurs : risque d'encaissement, rappels de restitution
+    supabase
+      .from("payments")
+      .select("id, type, number, reference, amount, guarantee_return_due, guarantee_purpose, suppliers ( name ), checkbooks ( number_width )")
+      .eq("organization_id", orgId)
+      .eq("type", "guarantee_check")
+      .in("status", ["issued", "delivered"])
+      .order("guarantee_return_due"),
   ]);
-  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error;
+  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error;
   if (error) {
     throw new Error("Impossible de charger le tableau de bord.", { cause: error });
   }
@@ -110,6 +118,20 @@ export async function getDashboard() {
       kind: payment.rejection_kind,
       state: regularizationState(payment, today),
     })),
+    guaranteeRisk: sum((guarantees.data ?? []).map((g) => g.amount)),
+    guaranteeCount: guarantees.data?.length ?? 0,
+    // Restitution prévue dans les 7 jours, ou dépassée
+    guaranteesToRecover: (guarantees.data ?? [])
+      .filter((g) => g.guarantee_return_due && g.guarantee_return_due <= addDays(today, 7))
+      .map((g) => ({
+        id: g.id,
+        label: paymentLabel(g),
+        supplier: g.suppliers?.name ?? "",
+        amount: g.amount,
+        purpose: g.guarantee_purpose,
+        returnDue: g.guarantee_return_due!,
+        daysLeft: daysBetween(today, g.guarantee_return_due!),
+      })),
     lowStock: (checkbooks.data ?? [])
       .filter((book) => (book.remaining_count ?? 0) <= LOW_STOCK_THRESHOLD)
       .map((book) => ({
