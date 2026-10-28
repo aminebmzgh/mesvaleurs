@@ -1,4 +1,5 @@
 import { toCents } from "@/lib/amount";
+import type { PaymentType } from "@/lib/labels";
 
 /**
  * Rapprochement automatique des lignes de relevé avec les chèques et LCN en
@@ -18,7 +19,7 @@ export type CandidatePayment = {
   id: string;
   number: number;
   amount: number;
-  type: "check" | "lcn" | "guarantee_check";
+  type: PaymentType;
 };
 
 export type MatchStatus = "auto_matched" | "to_confirm" | "unmatched";

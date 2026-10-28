@@ -12,6 +12,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   pagination et export CSV ; journalisation étendue aux invitations, banques ajoutées,
   relevés importés et correspondances de colonnes.
 - Navigation : liens réservés à certains rôles.
+- Virements fournisseurs : nouveau mode de paiement (compte débité, référence, date, factures
+  réglées), saisi déjà débité ou en attente puis marqué débité ou rapproché ; référence
+  affichée partout à la place du numéro de formule.
 
 ## [1.0.0] — Phase 1 : MVP
 

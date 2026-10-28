@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
   INVOICE_STATUS_LABELS,
@@ -21,6 +20,7 @@ import {
   PAYMENT_TYPE_LABELS,
   paymentStatusVariant,
 } from "@/lib/labels";
+import { paymentNumber } from "@/lib/payments/label";
 import { getSupplier } from "@/lib/suppliers/queries";
 import { updateSupplier } from "../actions";
 import { SupplierForm } from "../supplier-form";
@@ -161,9 +161,7 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
                     <TableRow key={payment.id}>
                       <TableCell>{PAYMENT_TYPE_LABELS[payment.type]}</TableCell>
                       <TableCell className="font-mono tabular-nums">
-                        {payment.number != null
-                          ? formatInstrumentNumber(payment.number, payment.checkbooks?.number_width ?? 7)
-                          : "—"}
+                        {paymentNumber(payment) || "—"}
                       </TableCell>
                       <TableCell>{formatDate(payment.issue_date)}</TableCell>
                       <TableCell>{payment.due_date ? formatDate(payment.due_date) : "—"}</TableCell>

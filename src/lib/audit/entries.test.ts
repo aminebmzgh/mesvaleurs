@@ -37,6 +37,7 @@ describe("formatValue", () => {
 describe("describeRecord", () => {
   it("désigne l'objet concerné", () => {
     expect(describeRecord("payments", null, { type: "check", number: 1003 }, null)).toBe("Chèque n° 0001003");
+    expect(describeRecord("payments", null, { type: "transfer", number: null, reference: "VIR-118" }, null)).toBe("Virement VIR-118");
     expect(describeRecord("invoices", { number: "F-12" }, null, null)).toBe("Facture F-12");
     expect(describeRecord("suppliers", null, { name: "Sotrama" }, null)).toBe("Sotrama");
     expect(describeRecord("print_batches", null, null, { first_number: 1006, last_number: 1008 })).toBe("Formules n° 1006 à 1008");

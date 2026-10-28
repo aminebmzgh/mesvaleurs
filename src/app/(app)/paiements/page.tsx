@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { daysBetween, todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
@@ -24,6 +23,7 @@ import {
   type PaymentType,
   paymentStatusVariant,
 } from "@/lib/labels";
+import { paymentNumber } from "@/lib/payments/label";
 import { listPayments, type PaymentFilter } from "@/lib/payments/list";
 import { PaymentRowActions } from "./payment-row-actions";
 
@@ -67,17 +67,23 @@ async function NewPaymentButton() {
     return null;
   }
   return (
-    <Link href="/paiements/nouveau" className={buttonVariants()}>
-      <PlusIcon aria-hidden />
-      Nouveau paiement
-    </Link>
+    <>
+      <Link href="/paiements/virement" className={buttonVariants({ variant: "outline" })}>
+        <PlusIcon aria-hidden />
+        Nouveau virement
+      </Link>
+      <Link href="/paiements/nouveau" className={buttonVariants()}>
+        <PlusIcon aria-hidden />
+        Nouveau paiement
+      </Link>
+    </>
   );
 }
 
 async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "searchParams">) {
   const params = await searchParams;
   const status = STATUS_FILTERS.some((f) => f.value === params.statut) ? (params.statut as PaymentFilter) : "circulation";
-  const type = params.type === "check" || params.type === "lcn" || params.type === "guarantee_check" ? params.type : undefined;
+  const type = TYPE_FILTERS.some((f) => f.value !== "tous" && f.value === params.type) ? (params.type as PaymentType) : undefined;
   const numberText = typeof params.numero === "string" ? params.numero.trim() : "";
   const number = /^\d{1,12}$/.test(numberText) ? Number(numberText) : undefined;
 
@@ -130,8 +136,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
               </TableHeader>
               <TableBody>
                 {payments.map((payment) => {
-                  const formatted =
-                    payment.number != null ? formatInstrumentNumber(payment.number, payment.checkbooks?.number_width ?? 7) : "—";
+                  const formatted = paymentNumber(payment) || "—";
                   const age = daysBetween(payment.issue_date, today);
                   const inCirculation = payment.status === "issued" || payment.status === "delivered";
                   return (
@@ -176,6 +181,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                           <PaymentRowActions
                             paymentId={payment.id}
                             label={`${PAYMENT_TYPE_LABELS[payment.type].toLowerCase()} n° ${formatted}`}
+                            type={payment.type}
                             status={payment.status}
                             today={today}
                           />

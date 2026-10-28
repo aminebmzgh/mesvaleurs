@@ -115,3 +115,24 @@ export async function listOpenInvoices(supplierId: string): Promise<OpenInvoice[
     amountPaid: invoice.amount_paid,
   }));
 }
+
+/** Données du formulaire de virement : comptes en service et fournisseurs actifs. */
+export async function getTransferFormData() {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const orgId = organization.organizationId;
+  const [accounts, suppliers] = await Promise.all([
+    supabase.from("bank_accounts").select("id, label, banks ( name )").eq("organization_id", orgId).eq("is_active", true).order("label"),
+    supabase.from("suppliers").select("id, name").eq("organization_id", orgId).eq("is_active", true).order("name"),
+  ]);
+  const error = accounts.error ?? suppliers.error;
+  if (error) {
+    throw new Error("Impossible de charger le formulaire de virement.", { cause: error });
+  }
+  return {
+    accounts: (accounts.data ?? []).map((account) => ({ id: account.id, label: account.label, bankName: account.banks?.name ?? "" })),
+    suppliers: suppliers.data ?? [],
+  };
+}
+
+export type TransferFormData = Awaited<ReturnType<typeof getTransferFormData>>;

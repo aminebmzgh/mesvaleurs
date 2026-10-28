@@ -8,7 +8,7 @@ const LIST_LIMIT = 300;
 export type PaymentFilter = "circulation" | "all" | PaymentStatus;
 
 const BASE_COLUMNS =
-  "id, type, status, number, amount, payee_name, issue_date, due_date, delivered_at, debited_at, cancellation_reason, print_batch_id, suppliers ( id, name ), checkbooks ( number_width )";
+  "id, type, status, number, reference, amount, payee_name, issue_date, due_date, delivered_at, debited_at, cancellation_reason, print_batch_id, suppliers ( id, name ), checkbooks ( number_width )";
 // Une relation ne peut être embarquée qu'une fois par requête (PostgREST, erreur 42712)
 const PAYMENT_COLUMNS = `${BASE_COLUMNS}, bank_accounts ( label )`;
 

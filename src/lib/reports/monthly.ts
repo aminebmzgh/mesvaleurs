@@ -2,7 +2,7 @@ import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { daysBetween, todayIso } from "@/lib/dates";
-import { PAYMENT_TYPE_LABELS } from "@/lib/labels";
+import { paymentLabel } from "@/lib/payments/label";
 import { createClient } from "@/lib/supabase/server";
 import { ageBucket, missingNumbers, monthLabel, monthRange } from "./period";
 
@@ -45,8 +45,6 @@ export type MonthlyReport = {
   };
 };
 
-const instrument = (type: keyof typeof PAYMENT_TYPE_LABELS, number: number | null, width: number | undefined) =>
-  `${PAYMENT_TYPE_LABELS[type]} ${number != null ? formatInstrumentNumber(number, width ?? 7) : ""}`.trim();
 
 /**
  * Rapport de fin de mois (spec §7.3) : chèques et LCN débités dans le mois, groupés par
@@ -71,7 +69,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
       supabase
         .from("payments")
         .select(
-          "id, type, number, amount, issue_date, debited_at, suppliers ( name ), checkbooks ( number_width ), bank_accounts ( label ), payment_allocations ( amount, invoices ( number ) )",
+          "id, type, number, reference, amount, issue_date, debited_at, suppliers ( name ), checkbooks ( number_width ), bank_accounts ( label ), payment_allocations ( amount, invoices ( number ) )",
         )
         .eq("organization_id", orgId)
         .eq("status", "paid")
@@ -81,7 +79,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
     byAccount(
       supabase
         .from("payments")
-        .select("id, type, number, amount, issue_date, due_date, delivered_at, status, suppliers ( name ), checkbooks ( number_width ), bank_accounts ( label )")
+        .select("id, type, number, reference, amount, issue_date, due_date, delivered_at, status, suppliers ( name ), checkbooks ( number_width ), bank_accounts ( label )")
         .eq("organization_id", orgId)
         .in("status", ["issued", "delivered"])
         .lte("issue_date", end),
@@ -90,7 +88,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
       supabase
         .from("statement_lines")
         .select(
-          "operation_date, label, debit, extracted_number, status, payments!statement_lines_organization_id_matched_payment_id_fkey ( type, number, amount, checkbooks ( number_width ) )",
+          "operation_date, label, debit, extracted_number, status, payments!statement_lines_organization_id_matched_payment_id_fkey ( type, number, reference, amount, checkbooks ( number_width ) )",
         )
         .eq("organization_id", orgId)
         .gte("operation_date", start)
@@ -100,7 +98,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
     byAccount(
       supabase
         .from("payments")
-        .select("type, number, amount, cancellation_reason, suppliers ( name ), checkbooks ( number_width )")
+        .select("type, number, reference, amount, cancellation_reason, suppliers ( name ), checkbooks ( number_width )")
         .eq("organization_id", orgId)
         .eq("status", "cancelled")
         .gte("cancelled_at", `${start}T00:00:00Z`)
@@ -126,7 +124,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
     group.total += payment.amount;
     group.payments.push({
       id: payment.id,
-      instrument: instrument(payment.type, payment.number, payment.checkbooks?.number_width),
+      instrument: paymentLabel(payment),
       amount: payment.amount,
       issueDate: payment.issue_date,
       debitedAt: payment.debited_at!,
@@ -164,7 +162,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
     const ageDays = Math.max(daysBetween(payment.delivered_at ?? payment.issue_date, asOf), 0);
     return {
       id: payment.id,
-      instrument: instrument(payment.type, payment.number, payment.checkbooks?.number_width),
+      instrument: paymentLabel(payment),
       supplier: payment.suppliers?.name ?? "—",
       account: payment.bank_accounts?.label ?? "",
       amount: payment.amount,
@@ -194,7 +192,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
                 date: line.operation_date,
                 label: line.label,
                 lineAmount: line.debit ?? 0,
-                instrument: instrument(line.payments.type, line.payments.number, line.payments.checkbooks?.number_width),
+                instrument: paymentLabel(line.payments),
                 paymentAmount: line.payments.amount,
                 confirmed: line.status === "auto_matched" || line.status === "manually_matched",
               },
@@ -208,7 +206,7 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
       ),
       missingNumbers: missing,
       cancelled: (cancelled.data ?? []).map((payment) => ({
-        instrument: instrument(payment.type, payment.number, payment.checkbooks?.number_width),
+        instrument: paymentLabel(payment),
         supplier: payment.suppliers?.name ?? "—",
         amount: payment.amount,
         reason: payment.cancellation_reason ?? "",

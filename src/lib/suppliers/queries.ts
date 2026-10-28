@@ -57,7 +57,7 @@ export async function getSupplier(id: string) {
       .order("issue_date", { ascending: false }),
     supabase
       .from("payments")
-      .select("id, type, status, number, amount, issue_date, due_date, debited_at, checkbooks ( number_width )")
+      .select("id, type, status, number, reference, amount, issue_date, due_date, debited_at, checkbooks ( number_width )")
       .eq("organization_id", orgId)
       .eq("supplier_id", id)
       .order("issue_date", { ascending: false })
