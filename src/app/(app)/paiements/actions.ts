@@ -33,8 +33,8 @@ export async function markDelivered(paymentId: string, deliveredAt: string): Pro
   return readable(error);
 }
 
-/** Virement en attente : débit constaté (sans passer par le rapprochement). */
-export async function markTransferDebited(paymentId: string, debitedAt: string): Promise<ActionResult> {
+/** Virement en attente ou chèque de garantie encaissé : débit constaté (sans passer par le rapprochement). */
+export async function markDebited(paymentId: string, debitedAt: string): Promise<ActionResult> {
   const organization = await requireRole(WRITER_ROLES);
   const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).safeParse(debitedAt);
   if (!date.success) {
@@ -46,8 +46,8 @@ export async function markTransferDebited(paymentId: string, debitedAt: string):
     .update({ status: "paid", debited_at: date.data })
     .eq("id", z.uuid().parse(paymentId))
     .eq("organization_id", organization.organizationId)
-    .eq("type", "transfer")
-    .eq("status", "issued");
+    .in("type", ["transfer", "guarantee_check"])
+    .in("status", ["issued", "delivered"]);
   revalidatePath("/", "layout");
   return readable(error);
 }
@@ -126,4 +126,31 @@ export async function regularizePayment(
   });
   revalidatePath("/", "layout");
   return readableRpc(error, "Impossible d'enregistrer la régularisation.");
+}
+
+/** Chèque de garantie restitué par le fournisseur, ou détruit. */
+export async function closeGuarantee(paymentId: string, outcome: "returned" | "destroyed", closedOn: string): Promise<ActionResult> {
+  await requireRole(WRITER_ROLES);
+  const input = z
+    .object({ id: z.uuid(), outcome: z.enum(["returned", "destroyed"]), date: isoDate })
+    .safeParse({ id: paymentId, outcome, date: closedOn });
+  if (!input.success) {
+    return { error: "Date invalide." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("close_guarantee", {
+    p_payment_id: input.data.id,
+    p_outcome: input.data.outcome,
+    p_closed_on: input.data.date,
+  });
+  revalidatePath("/", "layout");
+  return readableRpc(error, "Impossible de clôturer le chèque de garantie.");
+}
+
+export async function markGuaranteeReturned(paymentId: string, date: string) {
+  return closeGuarantee(paymentId, "returned", date);
+}
+
+export async function markGuaranteeDestroyed(paymentId: string, date: string) {
+  return closeGuarantee(paymentId, "destroyed", date);
 }

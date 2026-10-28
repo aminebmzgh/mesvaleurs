@@ -1,4 +1,4 @@
-import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, CircleXIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
+import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, CircleXIcon, ShieldAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -58,11 +58,20 @@ async function Dashboard() {
       danger: data.projected < 0,
     },
     { label: "Reste à payer", value: data.remaining, hint: `${data.openInvoiceCount} facture(s) non soldée(s)` },
+    ...(data.guaranteeCount > 0
+      ? [
+          {
+            label: "Risque d'encaissement",
+            value: data.guaranteeRisk,
+            hint: `${data.guaranteeCount} chèque(s) de garantie chez les fournisseurs, hors prévisions`,
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      {(data.rejected.length > 0 || data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
+      {(data.rejected.length > 0 || data.guaranteesToRecover.length > 0 || data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
         <div className="flex flex-col gap-3">
           {data.rejected.length > 0 && (
             <Alert variant="destructive">
@@ -95,6 +104,33 @@ async function Dashboard() {
               </AlertDescription>
             </Alert>
           )}
+          {data.guaranteesToRecover.length > 0 && (
+            <Alert>
+              <ShieldAlertIcon aria-hidden />
+              <AlertTitle>Chèques de garantie à récupérer</AlertTitle>
+              <AlertDescription>
+                <ul className="flex flex-col gap-1">
+                  {data.guaranteesToRecover.map((guarantee) => (
+                    <li key={guarantee.id} className="flex flex-wrap items-center gap-x-2">
+                      <span className="font-medium">{guarantee.label}</span>
+                      <span>
+                        {guarantee.supplier} · {formatMAD(guarantee.amount)}
+                        {guarantee.purpose && ` · ${guarantee.purpose}`}
+                      </span>
+                      <Badge variant={guarantee.daysLeft < 0 ? "destructive" : "secondary"}>
+                        {guarantee.daysLeft < 0
+                          ? `restitution dépassée de ${-guarantee.daysLeft} j`
+                          : `restitution le ${formatDate(guarantee.returnDue)}`}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/paiements?type=guarantee_check" className="mt-2 block font-medium underline">
+                  Voir les chèques de garantie
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
           {data.insufficientAccounts.map((account) => (
             <Alert key={account.id} variant="destructive">
               <TriangleAlertIcon aria-hidden />
@@ -117,7 +153,7 @@ async function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={cn("grid gap-4 sm:grid-cols-2", cards.length > 4 ? "lg:grid-cols-3 2xl:grid-cols-5" : "xl:grid-cols-4")}>
         {cards.map((card) => (
           <Card key={card.label}>
             <CardHeader>
