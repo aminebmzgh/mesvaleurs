@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractInstrumentNumber, normalizeLabel } from "./extract";
+import { extractInstrumentNumber, isRejectionLabel, normalizeLabel } from "./extract";
 
 describe("extractInstrumentNumber — chèques", () => {
   it.each([
@@ -60,5 +60,18 @@ describe("extractInstrumentNumber — sans numéro", () => {
 describe("normalizeLabel", () => {
   it("retire accents et espaces multiples", () => {
     expect(normalizeLabel("  Chèque   n°  12 ")).toBe("CHEQUE N° 12");
+  });
+});
+
+describe("isRejectionLabel", () => {
+  it.each(["CHQ IMPAYE 0001003", "Chèque impayé n° 1003", "REJET LCN 5000102", "FRAIS RETOUR CHEQUE 1003", "CONTRE-PASSATION CHQ 1003", "EFFET IMPAYES"])(
+    "« %s » signale un rejet",
+    (label) => {
+      expect(isRejectionLabel(label)).toBe(true);
+    },
+  );
+
+  it.each(["CHQ 0001003 SOTRAMA", "PAIEMENT CHEQUE N°1001", "ECH LCN 5000102", "VIREMENT RECU"])("« %s » n'est pas un rejet", (label) => {
+    expect(isRejectionLabel(label)).toBe(false);
   });
 });

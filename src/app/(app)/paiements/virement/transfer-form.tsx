@@ -2,7 +2,7 @@
 
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { fromCents, parseAmount, toCents } from "@/lib/amount";
 import { formatAmount, formatDate, formatMAD } from "@/lib/format";
-import type { OpenInvoice, TransferFormData } from "@/lib/payments/queries";
+import type { OpenInvoice, ReplacedPayment, TransferFormData } from "@/lib/payments/queries";
 import { loadOpenInvoices } from "../nouveau/actions";
 import { recordTransfer } from "./actions";
 
 const SELECT_CLASS = "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30";
 
-export function TransferForm({ data, today }: { data: TransferFormData; today: string }) {
+export function TransferForm({ data, today, replacing }: { data: TransferFormData; today: string; replacing: ReplacedPayment | null }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [accountId, setAccountId] = useState(data.accounts[0]?.id ?? "");
@@ -35,7 +35,7 @@ export function TransferForm({ data, today }: { data: TransferFormData; today: s
   const [notes, setNotes] = useState("");
   const [submitError, setSubmitError] = useState<string>();
 
-  const selectSupplier = (id: string) => {
+  const selectSupplier = (id: string, preselected?: string[]) => {
     setSupplierId(id);
     setInvoices([]);
     setSelectedIds([]);
@@ -48,12 +48,23 @@ export function TransferForm({ data, today }: { data: TransferFormData; today: s
       setLoadingInvoices(false);
       if (result.ok) {
         setInvoices(result.data);
-        setSelectedIds(result.data.map((invoice) => invoice.id));
+        // Remplacement : les factures réglées par le paiement rejeté ; sinon toutes
+        const ids = result.data.map((invoice) => invoice.id);
+        setSelectedIds(preselected?.length ? ids.filter((invoiceId) => preselected.includes(invoiceId)) : ids);
       } else {
         toast.error(result.error);
       }
     });
   };
+
+  // Remplacement d'un paiement rejeté : fournisseur et factures pré-sélectionnés, une fois
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (replacing && !prefilled.current) {
+      prefilled.current = true;
+      selectSupplier(replacing.supplierId, replacing.invoiceIds);
+    }
+  });
 
   const selectedInvoices = invoices.filter((invoice) => selectedIds.includes(invoice.id));
   const dueCents = selectedInvoices.reduce((sum, invoice) => sum + toCents(invoice.amountInclTax) - toCents(invoice.amountPaid), 0);
@@ -85,9 +96,13 @@ export function TransferForm({ data, today }: { data: TransferFormData; today: s
         debited,
         invoiceIds: selectedInvoices.map((invoice) => invoice.id),
         notes,
+        replacesPaymentId: replacing?.id,
       });
       if (result.ok) {
-        toast.success("Virement enregistré.");
+        toast.success(replacing ? `Virement enregistré : ${replacing.label} régularisé.` : "Virement enregistré.");
+        if (result.data.warning) {
+          toast.warning(result.data.warning);
+        }
         router.push("/paiements?type=transfer&statut=all");
       } else {
         setSubmitError(result.error);
@@ -97,6 +112,14 @@ export function TransferForm({ data, today }: { data: TransferFormData; today: s
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
+      {replacing && (
+        <Alert>
+          <AlertDescription>
+            Régularisation du {replacing.label.toLowerCase()} rejeté ({formatMAD(replacing.amount)}) : une fois enregistré, ce virement le remplace et
+            le paiement rejeté est annulé.
+          </AlertDescription>
+        </Alert>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Virement</CardTitle>
@@ -116,7 +139,13 @@ export function TransferForm({ data, today }: { data: TransferFormData; today: s
           </Field>
           <Field>
             <FieldLabel htmlFor="supplier">Fournisseur</FieldLabel>
-            <select id="supplier" className={SELECT_CLASS} value={supplierId} onChange={(event) => selectSupplier(event.target.value)}>
+            <select
+              id="supplier"
+              className={SELECT_CLASS}
+              value={supplierId}
+              disabled={replacing !== null}
+              onChange={(event) => selectSupplier(event.target.value)}
+            >
               <option value="">Choisir un fournisseur…</option>
               {data.suppliers.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>

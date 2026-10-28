@@ -1,4 +1,4 @@
-import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
+import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, CircleXIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDashboard } from "@/lib/dashboard/queries";
 import { formatDate, formatMAD } from "@/lib/format";
+import { LEGAL_DISCLAIMER, REJECTION_KIND_LABELS } from "@/lib/labels";
+import { countdownLabel } from "@/lib/payments/rejections";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -60,8 +62,39 @@ async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {(data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
+      {(data.rejected.length > 0 || data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
         <div className="flex flex-col gap-3">
+          {data.rejected.length > 0 && (
+            <Alert variant="destructive">
+              <CircleXIcon aria-hidden />
+              <AlertTitle>
+                {data.rejected.length} paiement{data.rejected.length > 1 ? "s" : ""} rejeté{data.rejected.length > 1 ? "s" : ""} à régulariser
+              </AlertTitle>
+              <AlertDescription>
+                <ul className="flex flex-col gap-1">
+                  {data.rejected.map((payment) => (
+                    <li key={payment.id} className="flex flex-wrap items-center gap-x-2">
+                      <span className="font-medium">{payment.label}</span>
+                      <span>
+                        {payment.supplier} · {formatMAD(payment.amount)}
+                        {payment.kind && ` · ${REJECTION_KIND_LABELS[payment.kind].toLowerCase()}`}
+                      </span>
+                      <Badge variant={payment.state.kind === "overdue" ? "destructive" : "secondary"}>
+                        {countdownLabel(payment.state)}
+                        {(payment.state.kind === "pending" || payment.state.kind === "overdue") && ` · ${formatDate(payment.state.dueDate)}`}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                <span className="mt-2 block">
+                  <Link href="/paiements?statut=rejected" className="font-medium underline">
+                    Régulariser
+                  </Link>{" "}
+                  · {LEGAL_DISCLAIMER}
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
           {data.insufficientAccounts.map((account) => (
             <Alert key={account.id} variant="destructive">
               <TriangleAlertIcon aria-hidden />

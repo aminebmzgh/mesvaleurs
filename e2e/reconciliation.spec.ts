@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { expect, type Page, test } from "@playwright/test";
-import { login, uniqueSuffix } from "./helpers";
+import { confirmFundsIfNeeded, login, uniqueSuffix } from "./helpers";
 
 const SEED_IMPORT = "/rapprochement/20000000-0000-4000-8000-000000000001";
 
@@ -24,6 +24,7 @@ async function issueCheck(page: Page, invoiceNumber: string, amount: string): Pr
     }
   }
   page.once("dialog", (dialog) => dialog.accept());
+  await confirmFundsIfNeeded(page);
   await page.getByRole("button", { name: "Émettre 1 chèque" }).click();
   await expect(page.getByText("Numéros attribués")).toBeVisible();
   return (await page.getByRole("row").nth(1).getByRole("cell").first().textContent())!.trim();

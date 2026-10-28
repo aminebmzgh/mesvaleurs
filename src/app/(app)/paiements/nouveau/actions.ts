@@ -8,6 +8,7 @@ import { WRITER_ROLES } from "@/lib/auth/roles";
 import { invoiceSchema } from "@/lib/invoices/schemas";
 import { listOpenInvoices, type OpenInvoice } from "@/lib/payments/queries";
 import { type IssueRequest, issueRequestSchema } from "@/lib/payments/schemas";
+import { regularizeByReplacement } from "@/lib/payments/regularize";
 import { allocatePayments } from "@/lib/payments/split";
 import { createClient } from "@/lib/supabase/server";
 import { supplierSchema } from "@/lib/suppliers/schemas";
@@ -95,7 +96,7 @@ export async function quickCreateInvoice(input: {
  * Émission du lot. Les affectations aux factures sont recalculées ici, à partir des
  * restes dus lus en base : le navigateur ne fournit que les montants et l'ordre.
  */
-export async function issuePayments(request: IssueRequest): Promise<Result<{ batchId: string }>> {
+export async function issuePayments(request: IssueRequest): Promise<Result<{ batchId: string; warning?: string }>> {
   const organization = await requireRole(WRITER_ROLES);
   const parsed = issueRequestSchema.safeParse(request);
   if (!parsed.success) {
@@ -148,6 +149,21 @@ export async function issuePayments(request: IssueRequest): Promise<Result<{ bat
     return { ok: false, error: readable ? error.message : "L'émission a échoué. Aucun numéro n'a été consommé." };
   }
 
+  // Remplacement d'un chèque rejeté : la première formule émise le régularise
+  let warning: string | undefined;
+  if (input.replacesPaymentId) {
+    const { data: first } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("print_batch_id", batchId)
+      .order("number")
+      .limit(1)
+      .maybeSingle();
+    warning = first
+      ? await regularizeByReplacement(supabase, input.replacesPaymentId, first.id, "replacement")
+      : "Le paiement est émis, mais la régularisation du paiement rejeté a échoué.";
+  }
+
   revalidatePath("/", "layout");
-  return { ok: true, data: { batchId } };
+  return { ok: true, data: { batchId, warning } };
 }

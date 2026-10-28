@@ -5,6 +5,7 @@ import { fromCents, toCents } from "@/lib/amount";
 import { requireRole } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
 import { type TransferRequest, transferRequestSchema } from "@/lib/payments/schemas";
+import { regularizeByReplacement } from "@/lib/payments/regularize";
 import { allocatePayments } from "@/lib/payments/split";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,7 +15,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
  * Saisie d'un virement. Comme pour l'émission, les affectations aux factures sont
  * recalculées à partir des restes dus lus en base.
  */
-export async function recordTransfer(request: TransferRequest): Promise<Result<{ paymentId: string }>> {
+export async function recordTransfer(request: TransferRequest): Promise<Result<{ paymentId: string; warning?: string }>> {
   const organization = await requireRole(WRITER_ROLES);
   const parsed = transferRequestSchema.safeParse(request);
   if (!parsed.success) {
@@ -59,6 +60,8 @@ export async function recordTransfer(request: TransferRequest): Promise<Result<{
     const readable = error && ["P0001", "P0002", "22023", "42501"].includes(error.code);
     return { ok: false, error: readable ? error.message : "Le virement n'a pas pu être enregistré." };
   }
+  // Régularisation d'un chèque rejeté par ce virement
+  const warning = await regularizeByReplacement(supabase, input.replacesPaymentId, paymentId, "transfer");
   revalidatePath("/", "layout");
-  return { ok: true, data: { paymentId } };
+  return { ok: true, data: { paymentId, warning } };
 }
