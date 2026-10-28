@@ -25,6 +25,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   règlement de facture ; rappel de restitution et indicateur « risque d'encaissement » sur le
   tableau de bord ; clôture par restitution, destruction ou encaissement ; exclus des
   prévisions.
+- Report d'échéance des LCN : nouvelle échéance, motif et accord du fournisseur, historique
+  des reports (échéance initiale affichée), action tracée au journal d'audit.
+- Journal d'audit : rejets, régularisations et reports désignés par le numéro du paiement.
 
 ## [1.0.0] — Phase 1 : MVP
 

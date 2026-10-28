@@ -128,6 +128,26 @@ export async function regularizePayment(
   return readableRpc(error, "Impossible d'enregistrer la régularisation.");
 }
 
+/** Report de l'échéance d'une LCN, avec l'accord du fournisseur. */
+export async function postponeLcn(paymentId: string, newDueDate: string, reason: string, agreedAt: string): Promise<ActionResult> {
+  await requireRole(WRITER_ROLES);
+  const input = z
+    .object({ id: z.uuid(), due: isoDate, reason: z.string().trim().min(3).max(300), agreed: isoDate })
+    .safeParse({ id: paymentId, due: newDueDate, reason, agreed: agreedAt });
+  if (!input.success) {
+    return { error: "Indiquez la nouvelle échéance, le motif et la date de l'accord du fournisseur." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("postpone_lcn", {
+    p_payment_id: input.data.id,
+    p_new_due_date: input.data.due,
+    p_reason: input.data.reason,
+    p_supplier_agreed_at: input.data.agreed,
+  });
+  revalidatePath("/", "layout");
+  return readableRpc(error, "Impossible de reporter l'échéance.");
+}
+
 /** Chèque de garantie restitué par le fournisseur, ou détruit. */
 export async function closeGuarantee(paymentId: string, outcome: "returned" | "destroyed", closedOn: string): Promise<ActionResult> {
   await requireRole(WRITER_ROLES);

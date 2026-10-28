@@ -25,6 +25,7 @@ import {
   markGuaranteeDestroyed,
   markGuaranteeReturned,
 } from "./actions";
+import { PostponeDialog } from "./postpone-dialog";
 import { RegularizeDialog, RejectDialog } from "./rejection-dialogs";
 
 /**
@@ -37,6 +38,7 @@ export function PaymentRowActions({
   type,
   status,
   regularized = false,
+  dueDate = null,
   today,
 }: {
   paymentId: string;
@@ -45,6 +47,8 @@ export function PaymentRowActions({
   status: PaymentStatus;
   /** Rejet déjà régularisé (par un autre moyen noté). */
   regularized?: boolean;
+  /** Échéance actuelle (LCN). */
+  dueDate?: string | null;
   today: string;
 }) {
   const canDeliver = status === "issued" && type !== "transfer";
@@ -52,9 +56,10 @@ export function PaymentRowActions({
   const canDebit = (status === "issued" && type === "transfer") || guaranteeOut;
   const canReject = (type === "check" || type === "lcn") && ["issued", "delivered", "paid"].includes(status);
   const canRegularize = status === "rejected" && !regularized;
+  const canPostpone = type === "lcn" && (status === "issued" || status === "delivered") && dueDate !== null;
   // Un chèque de garantie se clôt par restitution ou destruction, pas par annulation
   const canCancel = type !== "guarantee_check" && ["issued", "delivered", "rejected", "lost", "stopped"].includes(status);
-  if (!canDeliver && !canDebit && !canReject && !canRegularize && !canCancel) {
+  if (!canDeliver && !canDebit && !canReject && !canRegularize && !canPostpone && !canCancel) {
     return null;
   }
   return (
@@ -116,6 +121,7 @@ export function PaymentRowActions({
         </>
       )}
       {canRegularize && <RegularizeDialog paymentId={paymentId} label={label} today={today} />}
+      {canPostpone && dueDate && <PostponeDialog paymentId={paymentId} label={label} dueDate={dueDate} today={today} />}
       {canReject && <RejectDialog paymentId={paymentId} label={label} isCheck={type === "check"} today={today} />}
       {canCancel && <CancelDialog paymentId={paymentId} label={label} />}
     </div>

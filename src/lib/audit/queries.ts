@@ -70,6 +70,34 @@ async function auditQuery(filters: AuditFilters) {
   return { query };
 }
 
+type RawEntry = { table_name: string | null; record_id: string | null; before: unknown; after: unknown; details: unknown };
+
+/**
+ * Actions métier sur un paiement (rejet, report…) : l'entrée ne porte pas l'état du
+ * paiement ; son type et son numéro sont ajoutés au détail pour le désigner.
+ */
+async function withPaymentIdentity<T extends RawEntry>(entries: T[]): Promise<T[]> {
+  const ids = [
+    ...new Set(
+      entries.filter((e) => e.table_name === "payments" && !e.before && !e.after && e.record_id).map((e) => e.record_id!),
+    ),
+  ];
+  if (ids.length === 0) {
+    return entries;
+  }
+  const supabase = await createClient();
+  const { data } = await supabase.from("payments").select("id, type, number, reference").in("id", ids);
+  const byId = new Map((data ?? []).map((p) => [p.id, p]));
+  return entries.map((entry) => {
+    const payment = entry.record_id ? byId.get(entry.record_id) : undefined;
+    if (!payment || entry.table_name !== "payments" || entry.before || entry.after) {
+      return entry;
+    }
+    const details = entry.details && typeof entry.details === "object" ? entry.details : {};
+    return { ...entry, details: { ...details, type: payment.type, number: payment.number, reference: payment.reference } };
+  });
+}
+
 /** Une page du journal, la plus récente d'abord. */
 export async function listAuditEntries(filters: AuditFilters, page: number) {
   const offset = (page - 1) * AUDIT_PAGE_SIZE;
@@ -78,7 +106,7 @@ export async function listAuditEntries(filters: AuditFilters, page: number) {
   if (error) {
     throw new Error("Impossible de charger le journal d'audit.", { cause: error });
   }
-  return { entries: data.slice(0, AUDIT_PAGE_SIZE), hasNext: data.length > AUDIT_PAGE_SIZE };
+  return { entries: await withPaymentIdentity(data.slice(0, AUDIT_PAGE_SIZE)), hasNext: data.length > AUDIT_PAGE_SIZE };
 }
 
 /** Entrées à exporter, plafonnées. */
@@ -87,7 +115,7 @@ export async function exportAuditEntries(filters: AuditFilters) {
   if (error) {
     throw new Error("Impossible d'exporter le journal d'audit.", { cause: error });
   }
-  return { entries: data, truncated: data.length === AUDIT_EXPORT_LIMIT };
+  return { entries: await withPaymentIdentity(data), truncated: data.length === AUDIT_EXPORT_LIMIT };
 }
 
 /** Membres de l'organisation, pour le filtre « Auteur ». */
