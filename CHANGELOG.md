@@ -38,6 +38,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   Case « Imprimer la lettre d'accompagnement » dans l'assistant, selon le fournisseur.
 - Bordereau de remise des valeurs au fournisseur (PDF, deux exemplaires, accusé de réception).
 - Paramètres de l'entreprise : logo (PNG ou JPEG).
+- Modèles de lettres de l'entreprise (paramètres, direction) : copie d'un modèle intégré,
+  objet, corps et formule de politesse avec variables, aperçu immédiat ; proposés sur la page
+  de chaque lot.
 
 ## [1.0.0] — Phase 1 : MVP
 

@@ -17,6 +17,7 @@ import { formatDate, formatMAD } from "@/lib/format";
 import { PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS, paymentStatusVariant } from "@/lib/labels";
 import { getBatch } from "@/lib/payments/list";
 import { WRITER_ROLES } from "@/lib/auth/roles";
+import { listCoverLetterTemplates } from "@/lib/letters/queries";
 import { settlementReference } from "@/lib/letters/reference";
 import { LetterActions } from "./letter-actions";
 import { PrintButtons } from "./print-buttons";
@@ -42,7 +43,7 @@ async function BatchDetail({ params, searchParams }: PageProps<"/paiements/lots/
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
-  const [organization, batch] = await Promise.all([requireActiveOrganization(), getBatch(id)]);
+  const [organization, batch, customTemplates] = await Promise.all([requireActiveOrganization(), getBatch(id), listCoverLetterTemplates()]);
   if (!batch || batch.payments.length === 0) {
     notFound();
   }
@@ -78,7 +79,11 @@ async function BatchDetail({ params, searchParams }: PageProps<"/paiements/lots/
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <LetterActions batchId={batch.id} reference={settlementReference(first.issue_date, first.number)} />
+          <LetterActions
+            batchId={batch.id}
+            reference={settlementReference(first.issue_date, first.number)}
+            customTemplates={customTemplates.map((t) => ({ key: t.key, name: t.name }))}
+          />
         </CardContent>
       </Card>
 

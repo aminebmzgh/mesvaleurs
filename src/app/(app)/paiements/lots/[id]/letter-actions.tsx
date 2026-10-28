@@ -16,7 +16,16 @@ const SELECT_CLASS = "h-8 w-full rounded-lg border border-input bg-transparent p
  * ouverture du PDF pour impression, ou partage du fichier (e-mail, WhatsApp) depuis
  * un téléphone ou une tablette.
  */
-export function LetterActions({ batchId, reference }: { batchId: string; reference: string }) {
+export function LetterActions({
+  batchId,
+  reference,
+  customTemplates,
+}: {
+  batchId: string;
+  reference: string;
+  /** Modèles de l'entreprise (paramètres), proposés après les modèles intégrés. */
+  customTemplates: { key: string; name: string }[];
+}) {
   const [template, setTemplate] = useState("auto");
   const [copies, setCopies] = useState(true);
   // Partage de fichiers : navigateurs mobiles surtout (jamais au rendu serveur)
@@ -59,6 +68,15 @@ export function LetterActions({ batchId, reference }: { batchId: string; referen
                 {t.name}
               </option>
             ))}
+            {customTemplates.length > 0 && (
+              <optgroup label="Vos modèles">
+                {customTemplates.map((t) => (
+                  <option key={t.key} value={t.key}>
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </Field>
         <label className="flex h-8 items-center gap-2 text-sm">

@@ -51,6 +51,7 @@ export const TABLE_LABELS: Record<string, string> = {
   statement_imports: "Relevé importé",
   statement_column_mappings: "Correspondance de colonnes",
   statement_lines: "Ligne de relevé",
+  letter_templates: "Modèle de lettre",
 };
 
 export function actionLabel(action: string): string {

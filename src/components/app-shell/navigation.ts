@@ -7,6 +7,7 @@ import {
   GitCompareArrowsIcon,
   LandmarkIcon,
   LayoutDashboardIcon,
+  MailIcon,
   ScrollTextIcon,
   type LucideIcon,
   ShieldCheckIcon,
@@ -48,6 +49,7 @@ export const navigation: NavSection[] = [
       { title: "Entreprise", href: "/parametres/organisation", icon: BuildingIcon },
       { title: "Membres", href: "/parametres/membres", icon: UsersIcon },
       { title: "Sécurité", href: "/parametres/securite", icon: ShieldCheckIcon },
+      { title: "Modèles de lettres", href: "/parametres/lettres", icon: MailIcon, roles: ["admin", "manager"] },
       {
         title: "Journal d'audit",
         href: "/journal",
