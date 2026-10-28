@@ -71,6 +71,8 @@ export function PaymentAssistant({
   const [dueDates, setDueDates] = useState<string[]>(() => scheduleDueDates(today, 1, 30));
   const [overpayConfirmed, setOverpayConfirmed] = useState(false);
   const [fundsConfirmed, setFundsConfirmed] = useState(false);
+  // Lettre d'accompagnement : cochée selon la préférence du fournisseur
+  const [coverLetter, setCoverLetter] = useState(true);
   const [submitError, setSubmitError] = useState<string>();
 
   const selectSupplier = (id: string, preselected?: string[]) => {
@@ -80,6 +82,7 @@ export function PaymentAssistant({
     setAmountTouched(false);
     const next = suppliers.find((s) => s.id === id);
     setPayeeName(next?.payeeName ?? "");
+    setCoverLetter(next?.printCoverLetter ?? true);
     if (!id) {
       return;
     }
@@ -226,7 +229,7 @@ export function PaymentAssistant({
         if (result.data.warning) {
           toast.warning(result.data.warning);
         }
-        router.push(`/paiements/lots/${result.data.batchId}`);
+        router.push(`/paiements/lots/${result.data.batchId}${coverLetter ? "?lettre=1" : ""}`);
       } else {
         setSubmitError(result.error);
       }
@@ -629,6 +632,10 @@ export function PaymentAssistant({
                 ))}
               </ul>
             )}
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" className="size-4 accent-primary" checked={coverLetter} onChange={(event) => setCoverLetter(event.target.checked)} />
+              Imprimer la lettre d&apos;accompagnement
+            </label>
             <Button size="lg" onClick={submit} disabled={pending || errors.length > 0}>
               {pending ? <Loader2Icon className="animate-spin" aria-hidden /> : <PlusIcon aria-hidden />}
               Émettre {count} {typeLabel(count)}
