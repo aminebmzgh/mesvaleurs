@@ -31,6 +31,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Chèques non encaissés depuis longtemps : liste au-delà d'un délai (30 à 120 jours, réglable
   dans les paramètres de l'entreprise, 60 par défaut), contact du fournisseur, relance par
   e-mail pré-rédigée, total bloqué ; alerte sur le tableau de bord.
+- Lettre d'accompagnement de règlement (PDF A4) : en-tête de l'entreprise avec logo,
+  destinataire, référence, factures réglées (réglé, reste dû), paiements joints, total en
+  chiffres et en lettres, mention du reste à payer, signataire, zone « Reçu par » ; modèles
+  standard, LCN échelonnées, acompte et solde ; double exemplaire ; partage depuis un mobile.
+  Case « Imprimer la lettre d'accompagnement » dans l'assistant, selon le fournisseur.
+- Bordereau de remise des valeurs au fournisseur (PDF, deux exemplaires, accusé de réception).
+- Paramètres de l'entreprise : logo (PNG ou JPEG).
 
 ## [1.0.0] — Phase 1 : MVP
 

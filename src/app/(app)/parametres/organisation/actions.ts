@@ -58,3 +58,23 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
   revalidatePath("/", "layout");
   return { success: "Informations de l'entreprise enregistrées." };
 }
+
+/** Logo de l'entreprise (en-tête des lettres) : chemin du fichier envoyé dans le bucket `logos`, ou retrait. */
+export async function setOrganizationLogo(path: string | null): Promise<{ error?: string }> {
+  const organization = await requireRole(["admin"]);
+  if (path !== null && !new RegExp(`^${organization.organizationId}/logo-[0-9a-f-]{36}\.(png|jpg)$`).test(path)) {
+    return { error: "Fichier de logo invalide." };
+  }
+  const supabase = await createClient();
+  const { data: current } = await supabase.from("organizations").select("logo_path").eq("id", organization.organizationId).single();
+  const { error } = await supabase.from("organizations").update({ logo_path: path }).eq("id", organization.organizationId);
+  if (error) {
+    return { error: "Impossible d'enregistrer le logo." };
+  }
+  // L'ancien fichier n'est plus utilisé
+  if (current?.logo_path && current.logo_path !== path) {
+    await supabase.storage.from("logos").remove([current.logo_path]);
+  }
+  revalidatePath("/parametres/organisation");
+  return {};
+}

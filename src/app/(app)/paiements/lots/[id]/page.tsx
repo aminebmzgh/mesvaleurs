@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
@@ -17,11 +17,13 @@ import { formatDate, formatMAD } from "@/lib/format";
 import { PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS, paymentStatusVariant } from "@/lib/labels";
 import { getBatch } from "@/lib/payments/list";
 import { WRITER_ROLES } from "@/lib/auth/roles";
+import { settlementReference } from "@/lib/letters/reference";
+import { LetterActions } from "./letter-actions";
 import { PrintButtons } from "./print-buttons";
 
 export const metadata: Metadata = { title: "Lot de paiements" };
 
-export default function BatchPage({ params }: PageProps<"/paiements/lots/[id]">) {
+export default function BatchPage({ params, searchParams }: PageProps<"/paiements/lots/[id]">) {
   return (
     <>
       <Link href="/paiements" className={buttonVariants({ variant: "ghost", size: "sm", className: "w-fit" })}>
@@ -29,14 +31,14 @@ export default function BatchPage({ params }: PageProps<"/paiements/lots/[id]">)
         Chèques et LCN
       </Link>
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
-        <BatchDetail params={params} />
+        <BatchDetail params={params} searchParams={searchParams} />
       </Suspense>
     </>
   );
 }
 
-async function BatchDetail({ params }: Pick<PageProps<"/paiements/lots/[id]">, "params">) {
-  const { id } = await params;
+async function BatchDetail({ params, searchParams }: PageProps<"/paiements/lots/[id]">) {
+  const [{ id }, { lettre }] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
@@ -65,6 +67,20 @@ async function BatchDetail({ params }: Pick<PageProps<"/paiements/lots/[id]">, "
           gâchée s&apos;annule depuis la liste des chèques et LCN : son numéro reste dans l&apos;historique.
         </AlertDescription>
       </Alert>
+
+      <Card className={lettre === "1" ? "border-primary" : undefined}>
+        <CardHeader>
+          <CardTitle>Lettre d&apos;accompagnement et bordereau</CardTitle>
+          <CardDescription>
+            {lettre === "1"
+              ? "À imprimer avec ce règlement, sur papier à en-tête (bac A4 séparé si besoin)."
+              : "Lettre de règlement sur papier à en-tête et bordereau de remise signé par le fournisseur."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LetterActions batchId={batch.id} reference={settlementReference(first.issue_date, first.number)} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-4">
