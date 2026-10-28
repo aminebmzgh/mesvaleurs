@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { login, uniqueSuffix } from "./helpers";
+import { confirmFundsIfNeeded, login, uniqueSuffix } from "./helpers";
 
 /**
  * Saisit une facture depuis l'assistant (fournisseur déjà choisi) et ne laisse cochée
@@ -40,6 +40,7 @@ test("régler une facture en deux chèques, puis annuler l'un d'eux", async ({ p
   await expect(page.getByText("Cinq mille dirhams et un centime").first()).toBeVisible();
 
   page.once("dialog", (dialog) => dialog.accept());
+  await confirmFundsIfNeeded(page);
   await page.getByRole("button", { name: "Émettre 2 chèques" }).click();
 
   await expect(page.getByText("Numéros attribués")).toBeVisible();
@@ -87,6 +88,10 @@ test("LCN échelonnées à 30/60/90 jours avec montants personnalisés", async (
   await expect(page.getByRole("button", { name: "Émettre 3 LCN" })).toBeDisabled();
 
   await page.getByLabel("Montant de la formule 3").fill("20 000");
+  // Compte LCN sans provision suffisante : émission à confirmer (prévention des rejets)
+  await expect(page.getByText(/^Provision insuffisante :/).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Émettre 3 LCN" })).toBeDisabled();
+  await page.getByLabel(/J'émets quand même/).check();
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Émettre 3 LCN" }).click();
 
@@ -107,5 +112,6 @@ test("un dépassement du reste dû doit être confirmé", async ({ page }) => {
   await expect(page.getByText("Le montant dépasse le reste dû de 500,00 DH.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Émettre 1 chèque" })).toBeDisabled();
   await page.getByLabel(/Je confirme le dépassement/).check();
+  await confirmFundsIfNeeded(page);
   await expect(page.getByRole("button", { name: "Émettre 1 chèque" })).toBeEnabled();
 });

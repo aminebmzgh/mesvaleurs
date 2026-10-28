@@ -15,6 +15,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Virements fournisseurs : nouveau mode de paiement (compte débité, référence, date, factures
   réglées), saisi déjà débité ou en attente puis marqué débité ou rapproché ; référence
   affichée partout à la place du numéro de formule.
+- Chèques et LCN rejetés (loi 71-24) : déclaration du rejet (motif, date), compte à rebours de
+  régularisation (délai paramétrable, un mois par défaut), alerte sur le tableau de bord,
+  régularisation par nouvelle provision, chèque ou LCN de remplacement, virement ou autre
+  moyen ; détection des libellés d'impayé dans le rapprochement ; mention « informations
+  indicatives ».
+- Assistant de paiement : émission sans provision suffisante soumise à confirmation explicite.
 
 ## [1.0.0] — Phase 1 : MVP
 

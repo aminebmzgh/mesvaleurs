@@ -1,5 +1,6 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
+import { paymentLabel } from "@/lib/payments/label";
 import { createClient } from "@/lib/supabase/server";
 
 export type AssistantCheckbook = {
@@ -136,3 +137,32 @@ export async function getTransferFormData() {
 }
 
 export type TransferFormData = Awaited<ReturnType<typeof getTransferFormData>>;
+
+export type ReplacedPayment = { id: string; label: string; supplierId: string; amount: number; invoiceIds: string[] };
+
+/** Paiement rejeté, non régularisé, à remplacer (nouveau chèque, LCN ou virement). */
+export async function getPaymentToReplace(paymentId: string | undefined): Promise<ReplacedPayment | null> {
+  if (!paymentId || !/^[0-9a-f-]{36}$/i.test(paymentId)) {
+    return null;
+  }
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("id, type, number, reference, amount, supplier_id, checkbooks ( number_width ), payment_allocations ( invoice_id )")
+    .eq("organization_id", organization.organizationId)
+    .eq("id", paymentId)
+    .eq("status", "rejected")
+    .is("regularized_at", null)
+    .maybeSingle();
+  if (!data) {
+    return null;
+  }
+  return {
+    id: data.id,
+    label: paymentLabel(data),
+    supplierId: data.supplier_id,
+    amount: data.amount,
+    invoiceIds: data.payment_allocations.map((allocation) => allocation.invoice_id),
+  };
+}

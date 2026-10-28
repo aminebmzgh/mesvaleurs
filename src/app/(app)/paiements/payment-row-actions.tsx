@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { PaymentStatus, PaymentType } from "@/lib/labels";
 import { type ActionResult, cancelPayment, markDelivered, markTransferDebited } from "./actions";
+import { RegularizeDialog, RejectDialog } from "./rejection-dialogs";
 
 /**
  * Actions sur un paiement : remise au fournisseur (chèque, LCN), débit d'un virement
@@ -28,18 +29,23 @@ export function PaymentRowActions({
   label,
   type,
   status,
+  regularized = false,
   today,
 }: {
   paymentId: string;
   label: string;
   type: PaymentType;
   status: PaymentStatus;
+  /** Rejet déjà régularisé (par un autre moyen noté). */
+  regularized?: boolean;
   today: string;
 }) {
   const canDeliver = status === "issued" && type !== "transfer";
   const canDebit = status === "issued" && type === "transfer";
+  const canReject = (type === "check" || type === "lcn") && ["issued", "delivered", "paid"].includes(status);
+  const canRegularize = status === "rejected" && !regularized;
   const canCancel = ["issued", "delivered", "rejected", "lost", "stopped"].includes(status);
-  if (!canDeliver && !canDebit && !canCancel) {
+  if (!canDeliver && !canDebit && !canReject && !canRegularize && !canCancel) {
     return null;
   }
   return (
@@ -72,6 +78,8 @@ export function PaymentRowActions({
           action={markTransferDebited}
         />
       )}
+      {canRegularize && <RegularizeDialog paymentId={paymentId} label={label} today={today} />}
+      {canReject && <RejectDialog paymentId={paymentId} label={label} isCheck={type === "check"} today={today} />}
       {canCancel && <CancelDialog paymentId={paymentId} label={label} />}
     </div>
   );

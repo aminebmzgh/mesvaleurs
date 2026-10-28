@@ -7,12 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { requireRole } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
 import { todayIso } from "@/lib/dates";
-import { getAssistantData } from "@/lib/payments/queries";
+import { getAssistantData, getPaymentToReplace } from "@/lib/payments/queries";
 import { PaymentAssistant } from "./payment-assistant";
 
 export const metadata: Metadata = { title: "Nouveau paiement" };
 
-export default function NewPaymentPage() {
+export default function NewPaymentPage({ searchParams }: PageProps<"/paiements/nouveau">) {
   return (
     <>
       <PageHeader
@@ -24,15 +24,16 @@ export default function NewPaymentPage() {
           </Link>
         }
       />
-      <Suspense fallback={<Skeleton className="h-[40rem] w-full rounded-xl" />}>
-        <Assistant />
+      <Suspense fallback={<Skeleton className="h-160 w-full rounded-xl" />}>
+        <Assistant searchParams={searchParams} />
       </Suspense>
     </>
   );
 }
 
-async function Assistant() {
+async function Assistant({ searchParams }: Pick<PageProps<"/paiements/nouveau">, "searchParams">) {
   await requireRole(WRITER_ROLES);
-  const data = await getAssistantData();
-  return <PaymentAssistant data={data} today={todayIso()} />;
+  const { remplace } = await searchParams;
+  const [data, replacing] = await Promise.all([getAssistantData(), getPaymentToReplace(typeof remplace === "string" ? remplace : undefined)]);
+  return <PaymentAssistant data={data} today={todayIso()} replacing={replacing} />;
 }
