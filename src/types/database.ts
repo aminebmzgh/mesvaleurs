@@ -155,6 +155,32 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     }
                   ]
+                },"lcn_postponements": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"new_due_date": string,"organization_id": string,"payment_id": string,"previous_due_date": string,"reason": string,"supplier_agreed_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"new_due_date": string,"organization_id": string,"payment_id": string,"previous_due_date": string,"reason": string,"supplier_agreed_at": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"new_due_date"?: string,"organization_id"?: string,"payment_id"?: string,"previous_due_date"?: string,"reason"?: string,"supplier_agreed_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lcn_postponements_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lcn_postponements_organization_id_payment_id_fkey"
+      columns: ["organization_id","payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
                 },"legal_settings": {
                   Row: {
                     "description": string,"key": string,"updated_at": string,"value": number
@@ -570,6 +596,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["app_role"]
             }[]
+                           },
+"postpone_lcn":
+{ Args: { "p_new_due_date": string,"p_payment_id": string,"p_reason": string,"p_supplier_agreed_at": string }; Returns: undefined
                            },
 "record_batch_print":
 { Args: { "p_batch_id": string }; Returns: number

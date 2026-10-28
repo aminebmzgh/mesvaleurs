@@ -171,7 +171,17 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                         {formatDate(payment.issue_date)}
                         {inCirculation && age > 0 && <span className="block text-xs text-muted-foreground">il y a {age} j</span>}
                       </TableCell>
-                      <TableCell>{payment.due_date ? formatDate(payment.due_date) : "—"}</TableCell>
+                      <TableCell>
+                        {payment.due_date ? formatDate(payment.due_date) : "—"}
+                        {payment.lcn_postponements.length > 0 && (
+                          <span className="block text-xs text-muted-foreground">
+                            Reportée{payment.lcn_postponements.length > 1 ? ` ${payment.lcn_postponements.length} fois` : ""} · initiale le{" "}
+                            {formatDate(
+                              [...payment.lcn_postponements].sort((a, b) => a.created_at.localeCompare(b.created_at))[0].previous_due_date,
+                            )}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-end tabular-nums">{formatMAD(payment.amount)}</TableCell>
                       <TableCell>
                         <Badge variant={paymentStatusVariant(payment.status)}>{PAYMENT_STATUS_LABELS[payment.status]}</Badge>
@@ -218,6 +228,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                             type={payment.type}
                             status={payment.status}
                             regularized={payment.regularized_at !== null}
+                            dueDate={payment.due_date}
                             today={today}
                           />
                         </TableCell>

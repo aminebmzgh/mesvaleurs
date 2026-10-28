@@ -15,10 +15,25 @@ export const ACTION_LABELS: Record<string, string> = {
   reprint: "Réimpression",
   manual_match: "Rapprochement manuel",
   unmatch: "Rapprochement défait",
+  reject: "Rejet",
+  regularize: "Régularisation",
+  postpone: "Report d'échéance",
 };
 
 /** Regroupements proposés dans le filtre « Action ». */
-export const ACTION_FILTERS = ["insert", "update", "delete", "issue", "print", "reprint", "manual_match", "unmatch"] as const;
+export const ACTION_FILTERS = [
+  "insert",
+  "update",
+  "delete",
+  "issue",
+  "print",
+  "reprint",
+  "manual_match",
+  "unmatch",
+  "reject",
+  "regularize",
+  "postpone",
+] as const;
 
 export const TABLE_LABELS: Record<string, string> = {
   organizations: "Entreprise",
@@ -174,7 +189,8 @@ export function formatValue(table: string | null, field: string, value: unknown)
 
 /** Désignation courte de l'objet concerné (« Chèque n° 0001003 », nom du fournisseur…). */
 export function describeRecord(table: string | null, before: Row | null, after: Row | null, details: Row | null): string {
-  const row = after ?? before ?? {};
+  // Action métier sans état de ligne : la désignation vient du détail
+  const row = after ?? before ?? details ?? {};
   const text = (key: string) => (typeof row[key] === "string" && row[key] ? (row[key] as string) : null);
   switch (table) {
     case "payments": {
