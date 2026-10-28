@@ -32,6 +32,8 @@ export type ActiveOrganization = OrganizationMembership & {
   mfaRequired: boolean;
   /** Montant en lettres selon l'orthographe rectifiée de 1990. */
   amountWordsRectified: boolean;
+  /** Délai d'alerte d'un chèque non encaissé (jours). */
+  uncashedAlertDays: number;
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -158,6 +160,7 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     memberships,
     mfaRequired: settings.require_mfa && MFA_ELIGIBLE_ROLES.includes(active.role),
     amountWordsRectified: settings.amount_words_rectified,
+    uncashedAlertDays: settings.uncashed_alert_days,
   };
 });
 
