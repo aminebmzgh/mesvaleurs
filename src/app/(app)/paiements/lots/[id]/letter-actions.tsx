@@ -3,6 +3,7 @@
 import { FileTextIcon, Loader2Icon, ReceiptTextIcon, Share2Icon } from "lucide-react";
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { toast } from "sonner";
+import { EnvelopeButton } from "@/components/envelope-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { BUILTIN_LETTER_TEMPLATES } from "@/lib/letters/templates";
@@ -93,6 +94,7 @@ export function LetterActions({
           <ReceiptTextIcon aria-hidden />
           Bordereau de remise (PDF)
         </a>
+        <EnvelopeButton href={`/paiements/lots/${batchId}/enveloppe`} />
         {canShare && (
           <Button variant="outline" onClick={share} disabled={pending}>
             {pending ? <Loader2Icon className="animate-spin" aria-hidden /> : <Share2Icon aria-hidden />}

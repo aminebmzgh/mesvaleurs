@@ -25,6 +25,7 @@ import {
 import { templateOptions } from "@/lib/letters/queries";
 import { paymentNumber } from "@/lib/payments/label";
 import { getSupplier } from "@/lib/suppliers/queries";
+import { EnvelopeButton } from "@/components/envelope-button";
 import { LetterDialog } from "../../courriers/letter-dialog";
 import { setSupplierCeiling, updateSupplier } from "../actions";
 import { SupplierForm } from "../supplier-form";
@@ -105,6 +106,7 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
               templates={statementTemplates}
               date={{ param: "au", label: "Relevé arrêté au", defaultValue: todayIso(), max: todayIso() }}
             />
+            <EnvelopeButton href={`/fournisseurs/${supplier.id}/enveloppe`} />
             {canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
           </>
         }

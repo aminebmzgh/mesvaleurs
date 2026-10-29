@@ -23,6 +23,15 @@ export const PRINT_FIELDS = [
   "bank_branch",
   "bank_city",
   "cause",
+  // Talon (souche) : partie conservée dans le carnet (spec §11 bis N)
+  "stub_payee",
+  "stub_amount",
+  "stub_date",
+  "stub_due_date",
+  "stub_cause",
+  // Mentions de sécurité, imprimées seulement si le modèle prévoit leur zone
+  "non_endorsable",
+  "crossing",
 ] as const;
 
 export type PrintField = (typeof PRINT_FIELDS)[number];
@@ -45,7 +54,17 @@ export const PRINT_FIELD_LABELS: Record<PrintField, string> = {
   bank_branch: "Agence",
   bank_city: "Ville de l'agence",
   cause: "La cause (factures réglées)",
+  stub_payee: "Talon : bénéficiaire",
+  stub_amount: "Talon : montant",
+  stub_date: "Talon : date",
+  stub_due_date: "Talon : échéance",
+  stub_cause: "Talon : factures réglées",
+  non_endorsable: "Mention « non endossable »",
+  crossing: "Barrement (deux traits parallèles)",
 };
+
+/** Mention imprimée dans la zone « non endossable ». */
+export const NON_ENDORSABLE_TEXT = "NON ENDOSSABLE";
 
 export const zoneSchema = z.object({
   field: z.enum(PRINT_FIELDS),

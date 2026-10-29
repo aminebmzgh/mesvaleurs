@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { MM_TO_PT, type PrintTemplate } from "./fields";
-import { alignedX, layoutInstrument, type PrintData } from "./layout";
+import { alignedX, crossingSegments, layoutInstrument, type PrintData } from "./layout";
 import { toWinAnsi } from "./measure";
 
 export { toWinAnsi };
@@ -46,11 +46,24 @@ export async function renderInstrumentsPdf({ template, items, test }: PdfOptions
           x: (zone.x + template.offsetXMm) * MM_TO_PT,
           y: pageHeight - (zone.y + template.offsetYMm) * MM_TO_PT,
           width: zone.width * MM_TO_PT,
-          height: zone.fontSize * 1.1,
+          // Barrement : la zone couvre les deux traits
+          height: zone.field === "crossing" ? zone.width * 0.35 * MM_TO_PT : zone.fontSize * 1.1,
           borderColor: rgb(0.2, 0.45, 0.9),
           borderWidth: 0.4,
           opacity: 0,
           borderOpacity: 0.6,
+        });
+      }
+    }
+
+    // Barrement : deux traits parallèles
+    for (const zone of template.zones.filter((z) => z.field === "crossing")) {
+      for (const segment of crossingSegments(zone)) {
+        page.drawLine({
+          start: { x: (segment.x1 + template.offsetXMm) * MM_TO_PT, y: pageHeight - (segment.y1 + template.offsetYMm) * MM_TO_PT },
+          end: { x: (segment.x2 + template.offsetXMm) * MM_TO_PT, y: pageHeight - (segment.y2 + template.offsetYMm) * MM_TO_PT },
+          thickness: 0.8,
+          color: rgb(0, 0, 0),
         });
       }
     }
