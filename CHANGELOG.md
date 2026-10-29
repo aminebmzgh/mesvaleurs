@@ -80,6 +80,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Calendrier des échéances (vues mois et semaine) : LCN, dates limites des factures et
   restitutions des chèques de garantie, état payé / en attente / en retard (couleur, icône et
   libellé), totaux de la période, liste par jour sur téléphone.
+- Statistiques (12 derniers mois ou année civile) : total réglé, répartition chèques / LCN /
+  virements, dépenses par mois (avec tableau des valeurs) et par fournisseur, délai moyen de
+  paiement par fournisseur (de la facture à la remise, pondéré par les montants).
+- Exports des listes Chèques et LCN, Factures et Fournisseurs en CSV (séparateur « ; »,
+  virgule décimale, accents lus par Excel), Excel (montants et dates réels) et PDF (A4
+  paysage), avec les filtres affichés.
 
 ### Sécurité
 
