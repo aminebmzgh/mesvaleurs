@@ -17,7 +17,8 @@ test("la fiche fournisseur présente soldes, factures et paiements", async ({ pa
   await expect(page.getByText("20 000,00 DH").first()).toBeVisible();
   await expect(page.getByText("18 900,00 DH").first()).toBeVisible();
   await expect(page.getByRole("cell", { name: "Contestée" })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "Annulé" })).toBeVisible();
+  // Chèque 1004 du seed, gâché à l'impression
+  await expect(page.getByRole("row").filter({ hasText: "0001004" }).getByRole("cell", { name: "Annulé" })).toBeVisible();
   await expect(page.getByText("Votre rôle permet uniquement la consultation.")).toBeVisible();
 });
 

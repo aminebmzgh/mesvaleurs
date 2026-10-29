@@ -67,7 +67,11 @@ export function GuaranteeForm({ data, today }: { data: AssistantData; today: str
         returnDue,
       });
       if (result.ok) {
-        toast.success("Chèque de garantie émis : le numéro est attribué.");
+        toast.success(
+          result.data.pendingApproval
+            ? "Chèque de garantie préparé : numéro réservé, à valider avant impression."
+            : "Chèque de garantie émis : le numéro est attribué.",
+        );
         router.push(`/paiements/lots/${result.data.batchId}`);
       } else {
         setSubmitError(result.error);

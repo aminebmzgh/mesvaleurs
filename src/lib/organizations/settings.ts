@@ -24,6 +24,10 @@ export const organizationSettingsSchema = z.object({
   uncashed_alert_days: z.number().int().min(15).max(365).catch(UNCASHED_ALERT_DEFAULT).default(UNCASHED_ALERT_DEFAULT),
   /** Formules restantes à partir desquelles un carnet est signalé « presque épuisé ». */
   low_stock_threshold: z.number().int().min(1).max(100).catch(LOW_STOCK_DEFAULT).default(LOW_STOCK_DEFAULT),
+  /** Double signature : validation exigée pour toute formule au-delà de ce montant (DH) ; null = désactivée. */
+  approval_threshold: z.number().positive().nullable().catch(null).default(null),
+  /** Plafond journalier de l'entreprise (total des paiements datés du jour, DH) ; null = aucun. */
+  daily_ceiling: z.number().positive().nullable().catch(null).default(null),
 });
 
 export type OrganizationSettings = z.infer<typeof organizationSettingsSchema>;

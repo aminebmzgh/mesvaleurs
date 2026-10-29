@@ -28,6 +28,8 @@ type OrganizationValues = {
   amount_words_rectified: boolean;
   uncashed_alert_days: number;
   low_stock_threshold: number;
+  approval_threshold: number | null;
+  daily_ceiling: number | null;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -129,6 +131,40 @@ export function OrganizationForm({
                 />
                 <FieldDescription>Pour commander un nouveau chéquier ou carnet de LCN à temps.</FieldDescription>
               </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="approval_threshold">Double signature au-delà de (DH)</FieldLabel>
+                  <Input
+                    id="approval_threshold"
+                    name="approval_threshold"
+                    inputMode="decimal"
+                    placeholder="Désactivée"
+                    defaultValue={organization.approval_threshold != null ? formatAmount(organization.approval_threshold) : ""}
+                    {...invalidProps(state, "approval_threshold")}
+                  />
+                  <FieldDescription>
+                    Une formule plus élevée est validée par un gestionnaire ou un administrateur, autre que le préparateur, avant
+                    impression.
+                  </FieldDescription>
+                  <FieldErrors state={state} name="approval_threshold" />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="daily_ceiling">Plafond journalier de l&apos;entreprise (DH)</FieldLabel>
+                  <Input
+                    id="daily_ceiling"
+                    name="daily_ceiling"
+                    inputMode="decimal"
+                    placeholder="Aucun"
+                    defaultValue={organization.daily_ceiling != null ? formatAmount(organization.daily_ceiling) : ""}
+                    {...invalidProps(state, "daily_ceiling")}
+                  />
+                  <FieldDescription>
+                    Au-delà, pour le total des paiements datés du jour, le lot passe en validation. Plafonds par membre et par
+                    fournisseur : pages Membres et fiche fournisseur.
+                  </FieldDescription>
+                  <FieldErrors state={state} name="daily_ceiling" />
+                </Field>
+              </div>
               <Field orientation="horizontal">
                 <input
                   id="amount_words_rectified"

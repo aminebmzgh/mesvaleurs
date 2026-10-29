@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole } from "@/types/app";
 import { emailSchema } from "@/lib/validation";
+import { parseCeiling } from "@/lib/payments/approvals";
 
 const roleSchema = z.enum(ROLES as [AppRole, ...AppRole[]], { error: "Rôle invalide." });
 
@@ -114,4 +115,21 @@ export async function removeMember(membershipId: string): Promise<ActionResult> 
     return { error: error.code === "P0001" ? error.message : "Impossible de retirer ce membre." };
   }
   return {};
+}
+
+/** Plafond journalier d'un membre (double signature) : vide = aucun plafond. */
+export async function setMemberCeiling(membershipId: string, amount: string): Promise<ActionResult> {
+  const organization = await requireRole(["admin"]);
+  const ceiling = parseCeiling(amount);
+  if (ceiling === undefined) {
+    return { error: "Plafond invalide (exemple : 50 000,00)." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("memberships")
+    .update({ daily_ceiling: ceiling })
+    .eq("id", z.uuid().parse(membershipId))
+    .eq("organization_id", organization.organizationId);
+  revalidatePath("/parametres/membres");
+  return error ? { error: "Impossible d'enregistrer le plafond." } : {};
 }

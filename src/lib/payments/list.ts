@@ -57,7 +57,12 @@ export async function getBatch(batchId: string) {
   const supabase = await createClient();
   const orgId = organization.organizationId;
   const [batch, payments] = await Promise.all([
-    supabase.from("print_batches").select("id, created_at, printed_at, print_count").eq("organization_id", orgId).eq("id", batchId).maybeSingle(),
+    supabase
+      .from("print_batches")
+      .select("id, created_at, printed_at, print_count, approval_status, approval_reasons, created_by, decided_by, decided_at, refusal_reason")
+      .eq("organization_id", orgId)
+      .eq("id", batchId)
+      .maybeSingle(),
     supabase
       .from("payments")
       .select(
@@ -73,7 +78,44 @@ export async function getBatch(batchId: string) {
   if (!batch.data) {
     return null;
   }
-  return { ...batch.data, payments: payments.data ?? [] };
+  const names = await profileNames([batch.data.created_by, batch.data.decided_by]);
+  return {
+    ...batch.data,
+    preparedByName: batch.data.created_by ? (names.get(batch.data.created_by) ?? null) : null,
+    decidedByName: batch.data.decided_by ? (names.get(batch.data.decided_by) ?? null) : null,
+    payments: payments.data ?? [],
+  };
+}
+
+/** Noms des membres (profils visibles de l'organisation), par identifiant. */
+async function profileNames(ids: (string | null)[]): Promise<Map<string, string>> {
+  const wanted = [...new Set(ids.filter((id): id is string => id !== null))];
+  if (wanted.length === 0) {
+    return new Map();
+  }
+  const supabase = await createClient();
+  const { data } = await supabase.from("profiles").select("id, full_name, email").in("id", wanted);
+  return new Map((data ?? []).map((p) => [p.id, p.full_name || p.email]));
+}
+
+/** Lots en attente de validation (double signature), les plus anciens d'abord. */
+export async function listPendingBatches() {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("print_batches")
+    .select(
+      "id, created_at, created_by, approval_reasons, payments ( id, type, number, amount, issue_date, suppliers ( name ), bank_accounts ( label ), checkbooks ( number_width ) )",
+    )
+    .eq("organization_id", organization.organizationId)
+    .eq("approval_status", "pending")
+    .order("created_at")
+    .limit(LIST_LIMIT);
+  if (error) {
+    throw new Error("Impossible de charger les lots à valider.", { cause: error });
+  }
+  const names = await profileNames(data.map((b) => b.created_by));
+  return data.map((batch) => ({ ...batch, preparedByName: batch.created_by ? (names.get(batch.created_by) ?? null) : null }));
 }
 
 /**

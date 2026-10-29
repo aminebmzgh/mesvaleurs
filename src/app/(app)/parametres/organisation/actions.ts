@@ -24,6 +24,8 @@ const organizationSchema = z.object({
   amount_words_rectified: z.literal("on").optional(),
   uncashed_alert_days: z.coerce.number().pipe(z.union(UNCASHED_ALERT_CHOICES.map((days) => z.literal(days)))),
   low_stock_threshold: z.coerce.number().pipe(z.union(LOW_STOCK_CHOICES.map((count) => z.literal(count)))),
+  approval_threshold: optionalAmountSchema("Le seuil de validation"),
+  daily_ceiling: optionalAmountSchema("Le plafond journalier"),
 });
 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -33,7 +35,8 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
-  const { require_mfa, amount_words_rectified, uncashed_alert_days, low_stock_threshold, ...fields } = parsed.data;
+  const { require_mfa, amount_words_rectified, uncashed_alert_days, low_stock_threshold, approval_threshold, daily_ceiling, ...fields } =
+    parsed.data;
   const supabase = await createClient();
 
   const { data: current } = await supabase
@@ -47,6 +50,9 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     amount_words_rectified: amount_words_rectified === "on",
     uncashed_alert_days,
     low_stock_threshold,
+    // Un montant nul désactive la règle
+    approval_threshold: approval_threshold || null,
+    daily_ceiling: daily_ceiling || null,
   };
 
   const { error } = await supabase

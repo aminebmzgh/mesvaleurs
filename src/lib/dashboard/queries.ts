@@ -15,7 +15,7 @@ export async function getDashboard() {
   const in30 = addDays(today, 30);
 
   const uncashedBefore = addDays(today, -organization.uncashedAlertDays);
-  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees, uncashed] = await Promise.all([
+  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees, uncashed, pendingBatches] = await Promise.all([
     supabase.from("bank_accounts").select("id, label, current_balance").eq("organization_id", orgId).eq("is_active", true),
     supabase
       .from("payments")
@@ -75,8 +75,11 @@ export async function getDashboard() {
       .eq("type", "check")
       .in("status", ["issued", "delivered"])
       .lte("issue_date", uncashedBefore),
+    // Lots en attente de validation (double signature)
+    supabase.from("print_batches").select("id", { count: "exact", head: true }).eq("organization_id", orgId).eq("approval_status", "pending"),
   ]);
-  const error = accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error ?? uncashed.error;
+  const error =
+    accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error ?? uncashed.error ?? pendingBatches.error;
   if (error) {
     throw new Error("Impossible de charger le tableau de bord.", { cause: error });
   }
@@ -96,6 +99,7 @@ export async function getDashboard() {
 
   return {
     today,
+    pendingBatchCount: pendingBatches.count ?? 0,
     balance,
     inCirculation,
     projected: balance - inCirculation,

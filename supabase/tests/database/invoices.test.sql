@@ -56,6 +56,8 @@ select results_eq(
   'Chèque annulé : la facture redevient non payée');
 
 -- Chèque de garantie rattaché à ATL-7845 (non payée) : il ne la règle pas
+-- (données de test : les paiements ne s'insèrent directement qu'en dehors des rôles applicatifs)
+reset role;
 insert into public.payments (id, organization_id, type, status, bank_account_id, checkbook_id, number,
   supplier_id, payee_name, amount, guarantee_return_due)
 values ('10000000-0000-4000-8000-0000000000a1', 'b0000000-0000-4000-8000-000000000001', 'guarantee_check', 'issued',
@@ -64,6 +66,7 @@ values ('10000000-0000-4000-8000-0000000000a1', 'b0000000-0000-4000-8000-0000000
 insert into public.payment_allocations (organization_id, payment_id, invoice_id, amount)
 values ('b0000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000a1',
   'f0000000-0000-4000-8000-000000000005', 6200);
+set local role authenticated;
 select is((select amount_paid from public.invoices where id = 'f0000000-0000-4000-8000-000000000005'),
   0.00::numeric(14, 2), 'Un chèque de garantie ne règle pas la facture');
 

@@ -19,6 +19,8 @@ export const ACTION_LABELS: Record<string, string> = {
   regularize: "Régularisation",
   postpone: "Report d'échéance",
   stop: "Opposition",
+  approve: "Validation",
+  refuse: "Refus de validation",
 };
 
 /** Regroupements proposés dans le filtre « Action ». */
@@ -35,6 +37,8 @@ export const ACTION_FILTERS = [
   "regularize",
   "postpone",
   "stop",
+  "approve",
+  "refuse",
 ] as const;
 
 export const TABLE_LABELS: Record<string, string> = {

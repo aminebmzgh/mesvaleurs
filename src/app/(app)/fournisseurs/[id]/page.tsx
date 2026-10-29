@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
-import { WRITER_ROLES } from "@/lib/auth/roles";
+import { ACCOUNT_MANAGER_ROLES, WRITER_ROLES } from "@/lib/auth/roles";
+import { CeilingDialog } from "@/components/ceiling-dialog";
 import { todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
@@ -25,7 +26,7 @@ import { templateOptions } from "@/lib/letters/queries";
 import { paymentNumber } from "@/lib/payments/label";
 import { getSupplier } from "@/lib/suppliers/queries";
 import { LetterDialog } from "../../courriers/letter-dialog";
-import { updateSupplier } from "../actions";
+import { setSupplierCeiling, updateSupplier } from "../actions";
 import { SupplierForm } from "../supplier-form";
 import { SupplierActiveToggle } from "./supplier-actions";
 
@@ -78,6 +79,20 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
             {supplier.ice && ` · ICE ${supplier.ice}`}
             {supplier.payment_terms_days != null && ` · Délai convenu : ${supplier.payment_terms_days} jours`}
             {!supplier.is_active && " · Archivé"}
+            {" · Plafond journalier : "}
+            {ACCOUNT_MANAGER_ROLES.includes(organization.role) ? (
+              <CeilingDialog
+                id={supplier.id}
+                name={supplier.name}
+                ceiling={supplier.daily_ceiling}
+                description="Au-delà de ce total de paiements datés du même jour pour ce fournisseur, les lots sont validés par une autre personne avant impression."
+                action={setSupplierCeiling.bind(null, supplier.id)}
+              />
+            ) : supplier.daily_ceiling != null ? (
+              formatMAD(supplier.daily_ceiling)
+            ) : (
+              "aucun"
+            )}
           </>
         }
         actions={

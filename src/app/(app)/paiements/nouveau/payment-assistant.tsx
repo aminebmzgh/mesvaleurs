@@ -233,7 +233,11 @@ export function PaymentAssistant({
       });
       if (result.ok) {
         toast.success(
-          replacing ? `Paiements émis : ${replacing.label} régularisé.` : "Paiements émis : les numéros sont attribués.",
+          result.data.pendingApproval
+            ? "Lot préparé : numéros réservés, à valider avant impression."
+            : replacing
+              ? `Paiements émis : ${replacing.label} régularisé.`
+              : "Paiements émis : les numéros sont attribués.",
         );
         if (result.data.warning) {
           toast.warning(result.data.warning);
