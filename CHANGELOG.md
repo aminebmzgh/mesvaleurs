@@ -54,6 +54,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Modèles de lettres : un modèle de l'entreprise pour chaque type de courrier, avec ses
   variables et son aperçu ; le premier modèle d'un type remplace le modèle intégré par défaut.
 
+### Corrigé
+
+- Rejet, régularisation, report de LCN et clôture d'un chèque de garantie : une date du jour
+  saisie entre minuit et 1 h (heure du Maroc) n'est plus refusée comme « dans le futur ».
+
 ## [1.0.0] — Phase 1 : MVP
 
 ### Ajouté
