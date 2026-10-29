@@ -86,6 +86,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Exports des listes Chèques et LCN, Factures et Fournisseurs en CSV (séparateur « ; »,
   virgule décimale, accents lus par Excel), Excel (montants et dates réels) et PDF (A4
   paysage), avec les filtres affichés.
+- Export comptable mensuel (Rapports) : journal des règlements fournisseurs en CSV, deux
+  lignes par règlement ; comptes par défaut du plan comptable marocain (4411 fournisseurs,
+  5141 banque, 4415 effets à payer), code comptable facultatif par fournisseur (compte
+  auxiliaire) et par compte bancaire ; base « date de débit » ou « date d'émission » (LCN par
+  les effets à payer) ; séparateur, format de date, séparateur décimal et en-tête réglables
+  (Paramètres › Comptabilité, administrateur).
 
 ### Sécurité
 

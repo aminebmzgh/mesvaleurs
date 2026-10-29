@@ -23,6 +23,7 @@ export type SupplierValues = {
   payment_terms_days: number | null;
   print_cover_letter: boolean;
   notes: string | null;
+  accounting_code?: string | null;
 };
 
 type TextField = {
@@ -111,6 +112,19 @@ export function SupplierForm({
               />
               <FieldDescription>Sert au calcul de la date limite de paiement (loi 69-21).</FieldDescription>
               <FieldErrors state={state} name="payment_terms_days" />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="accounting_code">Code comptable (compte auxiliaire)</FieldLabel>
+              <Input
+                id="accounting_code"
+                name="accounting_code"
+                placeholder="Ex. FSOTRAMA"
+                defaultValue={supplier?.accounting_code ?? ""}
+                className="font-mono"
+                {...invalidProps(state, "accounting_code")}
+              />
+              <FieldDescription>Repris dans l&apos;export comptable mensuel.</FieldDescription>
+              <FieldErrors state={state} name="accounting_code" />
             </Field>
             <Field orientation="horizontal" className="sm:mt-6">
               <input
