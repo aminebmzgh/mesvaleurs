@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
-import { LOW_STOCK_CHOICES, parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { emailSchema, iceSchema, optionalAmountSchema, optionalText, requiredText } from "@/lib/validation";
 
 const organizationSchema = z.object({
@@ -24,6 +24,8 @@ const organizationSchema = z.object({
   amount_words_rectified: z.literal("on").optional(),
   uncashed_alert_days: z.coerce.number().pipe(z.union(UNCASHED_ALERT_CHOICES.map((days) => z.literal(days)))),
   low_stock_threshold: z.coerce.number().pipe(z.union(LOW_STOCK_CHOICES.map((count) => z.literal(count)))),
+  lcn_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
+  invoice_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
   approval_threshold: optionalAmountSchema("Le seuil de validation"),
   daily_ceiling: optionalAmountSchema("Le plafond journalier"),
 });
@@ -35,8 +37,17 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
-  const { require_mfa, amount_words_rectified, uncashed_alert_days, low_stock_threshold, approval_threshold, daily_ceiling, ...fields } =
-    parsed.data;
+  const {
+    require_mfa,
+    amount_words_rectified,
+    uncashed_alert_days,
+    low_stock_threshold,
+    lcn_alert_days,
+    invoice_alert_days,
+    approval_threshold,
+    daily_ceiling,
+    ...fields
+  } = parsed.data;
   const supabase = await createClient();
 
   const { data: current } = await supabase
@@ -50,6 +61,8 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     amount_words_rectified: amount_words_rectified === "on",
     uncashed_alert_days,
     low_stock_threshold,
+    lcn_alert_days,
+    invoice_alert_days,
     // Un montant nul désactive la règle
     approval_threshold: approval_threshold || null,
     daily_ceiling: daily_ceiling || null,

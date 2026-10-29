@@ -1,21 +1,37 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { stockByAccount } from "@/lib/checkbooks";
 import { paymentLabel, paymentNumber } from "@/lib/payments/label";
 import { regularizationState } from "@/lib/payments/rejections";
 import { addDays, daysBetween, todayIso } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
+
+/** Réglages d'alerte de l'entreprise utilisés par les indicateurs. */
+export type DashboardContext = {
+  organizationId: string;
+  uncashedAlertDays: number;
+  lowStockThreshold: number;
+  invoiceAlertDays: number;
+};
 
 /** Indicateurs du tableau de bord (spec §8), en une série de requêtes parallèles. */
 export async function getDashboard() {
   const organization = await requireActiveOrganization();
-  const supabase = await createClient();
+  return loadDashboard(await createClient(), organization, todayIso());
+}
+
+/**
+ * Indicateurs d'une entreprise à une date, avec le client donné : celui de la session
+ * (RLS) pour l'application, le client service_role pour la tâche planifiée des alertes.
+ */
+export async function loadDashboard(supabase: SupabaseClient<Database>, organization: DashboardContext, today: string) {
   const orgId = organization.organizationId;
-  const today = todayIso();
   const in30 = addDays(today, 30);
 
   const uncashedBefore = addDays(today, -organization.uncashedAlertDays);
-  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees, uncashed, pendingBatches] = await Promise.all([
+  const [accounts, circulation, openInvoices, lcn, overdue, operations, checkbooks, rejected, guarantees, uncashed, pendingBatches, invoicesDue] = await Promise.all([
     supabase.from("bank_accounts").select("id, label, current_balance").eq("organization_id", orgId).eq("is_active", true),
     supabase
       .from("payments")
@@ -77,9 +93,18 @@ export async function getDashboard() {
       .lte("issue_date", uncashedBefore),
     // Lots en attente de validation (double signature)
     supabase.from("print_batches").select("id", { count: "exact", head: true }).eq("organization_id", orgId).eq("approval_status", "pending"),
+    // Factures dont la date limite légale approche (loi 69-21)
+    supabase
+      .from("invoices")
+      .select("id, number, legal_due_date, amount_incl_tax, amount_paid, suppliers ( name )")
+      .eq("organization_id", orgId)
+      .in("status", ["unpaid", "partially_paid"])
+      .gte("legal_due_date", today)
+      .lte("legal_due_date", addDays(today, organization.invoiceAlertDays))
+      .order("legal_due_date"),
   ]);
   const error =
-    accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error ?? uncashed.error ?? pendingBatches.error;
+    accounts.error ?? circulation.error ?? openInvoices.error ?? lcn.error ?? overdue.error ?? operations.error ?? checkbooks.error ?? rejected.error ?? guarantees.error ?? uncashed.error ?? pendingBatches.error ?? invoicesDue.error;
   if (error) {
     throw new Error("Impossible de charger le tableau de bord.", { cause: error });
   }
@@ -122,6 +147,17 @@ export async function getDashboard() {
       remaining: invoice.amount_incl_tax - invoice.amount_paid,
       daysLate: daysBetween(invoice.legal_due_date!, today),
     })),
+    invoicesDue: {
+      days: organization.invoiceAlertDays,
+      invoices: (invoicesDue.data ?? []).map((invoice) => ({
+        id: invoice.id,
+        number: invoice.number,
+        supplier: invoice.suppliers?.name ?? "",
+        remaining: invoice.amount_incl_tax - invoice.amount_paid,
+        legalDueDate: invoice.legal_due_date!,
+        daysLeft: daysBetween(today, invoice.legal_due_date!),
+      })),
+    },
     operations: operations.data ?? [],
     rejected: (rejected.data ?? []).map((payment) => ({
       id: payment.id,

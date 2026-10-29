@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount } from "@/lib/format";
 import { initialFormState } from "@/lib/forms";
-import { LOW_STOCK_CHOICES, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { updateOrganization } from "./actions";
 
 type OrganizationValues = {
@@ -28,6 +28,8 @@ type OrganizationValues = {
   amount_words_rectified: boolean;
   uncashed_alert_days: number;
   low_stock_threshold: number;
+  lcn_alert_days: number;
+  invoice_alert_days: number;
   approval_threshold: number | null;
   daily_ceiling: number | null;
 };
@@ -131,6 +133,28 @@ export function OrganizationForm({
                 />
                 <FieldDescription>Pour commander un nouveau chéquier ou carnet de LCN à temps.</FieldDescription>
               </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="lcn_alert_days">Signaler une LCN à échoir</FieldLabel>
+                  <FormSelect
+                    id="lcn_alert_days"
+                    name="lcn_alert_days"
+                    options={DUE_ALERT_CHOICES.map((days) => ({ value: String(days), label: `${days} jours avant` }))}
+                    defaultValue={String(organization.lcn_alert_days)}
+                  />
+                  <FieldDescription>Pour provisionner le compte avant l&apos;échéance.</FieldDescription>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="invoice_alert_days">Signaler une facture à payer</FieldLabel>
+                  <FormSelect
+                    id="invoice_alert_days"
+                    name="invoice_alert_days"
+                    options={DUE_ALERT_CHOICES.map((days) => ({ value: String(days), label: `${days} jours avant` }))}
+                    defaultValue={String(organization.invoice_alert_days)}
+                  />
+                  <FieldDescription>Avant la date limite légale (loi 69-21). Alertes : page Alertes et e-mail du matin.</FieldDescription>
+                </Field>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="approval_threshold">Double signature au-delà de (DH)</FieldLabel>

@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   "/auth",
   "/mentions-legales",
   "/confidentialite",
+  // Tâches planifiées : protégées par CRON_SECRET dans la route
+  "/api/cron",
 ];
 
 function isPublicPath(pathname: string) {

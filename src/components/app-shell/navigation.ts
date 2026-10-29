@@ -1,5 +1,6 @@
 import {
   BanknoteIcon,
+  BellIcon,
   BookOpenCheckIcon,
   BuildingIcon,
   CalendarDaysIcon,
@@ -29,7 +30,10 @@ export type NavSection = { label?: string; items: NavItem[] };
 
 export const navigation: NavSection[] = [
   {
-    items: [{ title: "Tableau de bord", href: "/tableau-de-bord", icon: LayoutDashboardIcon }],
+    items: [
+      { title: "Tableau de bord", href: "/tableau-de-bord", icon: LayoutDashboardIcon },
+      { title: "Alertes", href: "/alertes", icon: BellIcon },
+    ],
   },
   {
     label: "Paiements",
