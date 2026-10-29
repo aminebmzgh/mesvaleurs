@@ -2,14 +2,14 @@ import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatDate, formatMAD } from "@/lib/format";
 import { toWinAnsi } from "@/lib/printing/measure";
-import type { CoverLetterData } from "./data";
+import type { CoverLetterData, LetterOrganization, LetterSigner } from "./data";
 import { type LetterTemplate, type LetterValues, renderLetterText } from "./templates";
 
 const [WIDTH, HEIGHT, MARGIN] = [595.28, 841.89, 50];
 const INK = rgb(0.1, 0.1, 0.1);
 const MUTED = rgb(0.4, 0.4, 0.4);
 
-type Column = { header: string; width: number; align?: "left" | "right" };
+export type Column = { header: string; width: number; align?: "left" | "right" };
 
 /** Mise en page A4 simple : curseur vertical, retour à la ligne, tableaux, pagination. */
 class Writer {
@@ -108,13 +108,22 @@ class Writer {
     this.y -= 6;
   }
 
+  /** Cadre titré ; un titre trop long est réduit, puis tronqué, pour tenir dans le cadre. */
   box(x: number, width: number, height: number, title: string) {
     this.page.drawRectangle({ x, y: this.y - height, width, height, borderColor: MUTED, borderWidth: 0.7 });
-    this.page.drawText(toWinAnsi(title), { x: x + 6, y: this.y - 13, size: 9, font: this.bold, color: INK });
+    let size = 9;
+    let text = toWinAnsi(title);
+    while (size > 7 && this.bold.widthOfTextAtSize(text, size) > width - 12) {
+      size -= 0.5;
+    }
+    while (text.length > 1 && this.bold.widthOfTextAtSize(text, size) > width - 12) {
+      text = `${text.slice(0, -2)}…`;
+    }
+    this.page.drawText(text, { x: x + 6, y: this.y - 13, size, font: this.bold, color: INK });
   }
 }
 
-async function embedLogo(pdf: PDFDocument, logo: CoverLetterData["organization"]["logo"]) {
+async function embedLogo(pdf: PDFDocument, logo: LetterOrganization["logo"]) {
   if (!logo) {
     return null;
   }
@@ -126,8 +135,11 @@ async function embedLogo(pdf: PDFDocument, logo: CoverLetterData["organization"]
   }
 }
 
+type Recipient = { name: string; lines: string[] };
+type Heading = { organization: LetterOrganization; recipient: Recipient; place: string; date: string; reference: string };
+
 /** En-tête de l'entreprise (logo, identité, identifiants légaux) et bloc destinataire. */
-async function header(w: Writer, pdf: PDFDocument, data: CoverLetterData) {
+async function header(w: Writer, pdf: PDFDocument, data: Heading) {
   const logo = await embedLogo(pdf, data.organization.logo);
   const top = w.y;
   let x = MARGIN;
@@ -151,13 +163,13 @@ async function header(w: Writer, pdf: PDFDocument, data: CoverLetterData) {
 
   // Destinataire, à droite
   const right = WIDTH / 2 + 30;
-  w.text(data.supplier.name, right, 11, w.bold);
-  for (const line of [data.supplier.address, data.supplier.city, data.supplier.ice && `ICE ${data.supplier.ice}`].filter(Boolean) as string[]) {
+  w.text(data.recipient.name, right, 11, w.bold);
+  for (const line of data.recipient.lines.filter(Boolean)) {
     w.y -= 13;
     w.text(line, right, 10);
   }
   w.y -= 28;
-  const placeDate = `${data.place ? `${data.place}, le` : "Le"} ${formatDate(data.issueDate)}`;
+  const placeDate = `${data.place ? `${data.place}, le` : "Le"} ${formatDate(data.date)}`;
   w.text(placeDate, WIDTH - MARGIN - w.width(placeDate, 10), 10);
   w.y -= 14;
   w.text(`Réf. : ${data.reference}`, MARGIN, 9, w.font, MUTED);
@@ -204,7 +216,13 @@ export async function coverLetterPdf(
 
   for (const label of labels) {
     const w = new Writer(pdf, font, bold, label ? `${label} · ${data.reference}` : data.reference);
-    await header(w, pdf, data);
+    await header(w, pdf, {
+      organization: data.organization,
+      recipient: { name: data.supplier.name, lines: [data.supplier.address, data.supplier.city, data.supplier.ice && `ICE ${data.supplier.ice}`].filter(Boolean) as string[] },
+      place: data.place,
+      date: data.issueDate,
+      reference: data.reference,
+    });
     w.y -= 24;
     w.paragraph(`Objet : ${renderLetterText(template.subject, values)}`, 10.5, bold);
     w.y -= 8;
@@ -243,20 +261,77 @@ export async function coverLetterPdf(
     w.y -= 8;
     w.paragraph(renderLetterText(template.closing, values));
 
-    // Signature et cachet, à droite ; « Reçu par » (accusé de réception papier), à gauche
-    w.ensure(120);
-    w.y -= 24;
-    const boxWidth = (WIDTH - 2 * MARGIN - 20) / 2;
-    w.box(MARGIN, boxWidth, 90, "Reçu par (nom, date et signature)");
-    w.box(MARGIN + boxWidth + 20, boxWidth, 90, `${data.signer.name}${data.signer.jobTitle ? ` — ${data.signer.jobTitle}` : ""}`);
-    const keep = w.y;
-    w.y -= 26;
-    w.text("Signature et cachet", MARGIN + boxWidth + 26, 8.5, font, MUTED);
+    // « Reçu par » (accusé de réception papier), à gauche
+    signatures(w, data.signer, "Reçu par (nom, date et signature)");
+  }
+  return pdf.save();
+}
+
+/** Signature et cachet du signataire, à droite ; zone d'accusé ou d'accord du destinataire, à gauche. */
+function signatures(w: Writer, signer: LetterSigner, counterpart: string | null) {
+  w.ensure(120);
+  w.y -= 24;
+  const boxWidth = (WIDTH - 2 * MARGIN - 20) / 2;
+  if (counterpart) {
+    w.box(MARGIN, boxWidth, 90, counterpart);
+  }
+  w.box(MARGIN + boxWidth + 20, boxWidth, 90, `${signer.name}${signer.jobTitle ? ` — ${signer.jobTitle}` : ""}`);
+  const keep = w.y;
+  w.y -= 26;
+  w.text("Signature et cachet", MARGIN + boxWidth + 26, 8.5, w.font, MUTED);
+  if (counterpart) {
     w.y = keep - 26;
-    w.text("Nom :", MARGIN + 6, 8.5, font, MUTED);
+    w.text("Nom :", MARGIN + 6, 8.5, w.font, MUTED);
     w.y -= 16;
-    w.text("Date :", MARGIN + 6, 8.5, font, MUTED);
-    w.y = keep - 90;
+    w.text("Date :", MARGIN + 6, 8.5, w.font, MUTED);
+  }
+  w.y = keep - 90;
+}
+
+/** Courrier type mis en page : textes déjà rendus, tableau des valeurs facultatif. */
+export type LetterDocument = {
+  /** Titre du PDF (métadonnées). */
+  title: string;
+  organization: LetterOrganization;
+  recipient: Recipient;
+  signer: LetterSigner;
+  place: string;
+  date: string;
+  reference: string;
+  subject: string;
+  body: string;
+  closing: string;
+  table?: { title: string; columns: Column[]; rows: string[][]; footer?: string[] };
+  /** Zone signée par le destinataire (accord, accusé de réception), à gauche de la signature. */
+  counterpart?: string;
+  /** Mention en petits caractères, en bas de la lettre. */
+  notice?: string;
+};
+
+/** Courrier type A4 (opposition, demande de prorogation, de relevé, relance). */
+export async function letterPdf(doc: LetterDocument): Promise<Uint8Array> {
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(doc.title);
+  pdf.setCreator("MesValeurs");
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const w = new Writer(pdf, font, bold, doc.reference);
+  await header(w, pdf, doc);
+  w.y -= 24;
+  w.paragraph(`Objet : ${doc.subject}`, 10.5, bold);
+  w.y -= 8;
+  w.paragraph(doc.body);
+  w.y -= 10;
+  if (doc.table) {
+    w.paragraph(doc.table.title, 10, bold);
+    w.table(doc.table.columns, doc.table.rows, doc.table.footer);
+  }
+  w.y -= 8;
+  w.paragraph(doc.closing);
+  signatures(w, doc.signer, doc.counterpart ?? null);
+  if (doc.notice) {
+    w.y -= 18;
+    w.paragraph(doc.notice, 7.5, font);
   }
   return pdf.save();
 }

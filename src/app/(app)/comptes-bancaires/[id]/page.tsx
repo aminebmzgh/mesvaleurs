@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, BookOpenIcon } from "lucide-react";
+import { ArrowLeftIcon, BookOpenIcon, FileTextIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,8 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
-import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
-import { getBankAccount, listBanks } from "@/lib/bank-accounts/queries";
+import { ACCOUNT_MANAGER_ROLES, WRITER_ROLES } from "@/lib/auth/roles";
+import { getBankAccount, listBanks, listStopOrders } from "@/lib/bank-accounts/queries";
+import { todayIso } from "@/lib/dates";
+import { LEGAL_DISCLAIMER, STOP_ORDER_REASON_LABELS } from "@/lib/labels";
 import { defaultTemplateFor } from "@/lib/printing/default-templates";
 import { listTemplates } from "@/lib/printing/queries";
 import {
@@ -22,6 +24,7 @@ import {
   LOW_STOCK_THRESHOLD,
 } from "@/lib/checkbooks";
 import { formatDate, formatMAD } from "@/lib/format";
+import { StopBlankFormsDialog } from "../../paiements/opposition-dialogs";
 import { updateBankAccount } from "../actions";
 import { BankAccountForm } from "../bank-account-form";
 import { AccountActiveToggle, CheckbookArchiveButton } from "./account-actions";
@@ -49,16 +52,29 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
-  const [organization, account, banks, templates] = await Promise.all([
+  const [organization, account, banks, templates, stopOrders] = await Promise.all([
     requireActiveOrganization(),
     getBankAccount(id),
     listBanks(),
     listTemplates(),
+    listStopOrders(id),
   ]);
   if (!account) {
     notFound();
   }
   const canManage = ACCOUNT_MANAGER_ROLES.includes(organization.role);
+  const canWrite = WRITER_ROLES.includes(organization.role);
+  const today = todayIso();
+  // Carnets dont des formules vierges restent à utiliser (opposition possible)
+  const blankCheckbooks = account.checkbooks
+    .filter((book) => book.next_number! <= book.last_number!)
+    .map((book) => ({
+      id: book.id!,
+      label: `${INSTRUMENT_LABELS[book.type!]} ${formatInstrumentNumber(book.first_number!, book.number_width ?? 7)} → ${formatInstrumentNumber(book.last_number!, book.number_width ?? 7)}`,
+      nextNumber: book.next_number!,
+      lastNumber: book.last_number!,
+      numberWidth: book.number_width ?? 7,
+    }));
   const bankShortName = banks.find((bank) => bank.id === account.bank_id)?.short_name ?? null;
   const update = updateBankAccount.bind(null, account.id);
 
@@ -123,6 +139,9 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
                           <span className={low ? "font-medium text-destructive" : undefined}>
                             {book.remaining_count} / {book.total_count}
                           </span>
+                          {(book.stopped_blank_count ?? 0) > 0 && (
+                            <span className="block text-xs text-muted-foreground">{book.stopped_blank_count} en opposition</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-end tabular-nums">{book.cancelled_count}</TableCell>
                         <TableCell>{book.received_at ? formatDate(book.received_at) : "—"}</TableCell>
@@ -168,6 +187,78 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
             </div>
           )}
           {canManage && account.is_active && <CheckbookForm accountId={account.id} />}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Oppositions</CardTitle>
+          <CardDescription>
+            Perte ou vol d&apos;un chèque, d&apos;une LCN ou de formules vierges : la lettre confirme l&apos;opposition par écrit à la
+            banque. {LEGAL_DISCLAIMER}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {stopOrders.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aucune opposition. Pour un chèque ou une LCN déjà émis, utilisez l&apos;action « Opposition » de la liste des paiements.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Valeurs</TableHead>
+                    <TableHead>Motif</TableHead>
+                    <TableHead>Constaté le</TableHead>
+                    <TableHead>Déclaré le</TableHead>
+                    <TableHead className="text-end">Lettre</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stopOrders.map((stop) => {
+                    const width = stop.checkbooks?.number_width ?? 7;
+                    const kind = stop.checkbooks?.type === "lcn" ? "LCN" : "Chèque";
+                    const numbers =
+                      stop.first_number === stop.last_number
+                        ? `n° ${formatInstrumentNumber(stop.first_number, width)}`
+                        : `n° ${formatInstrumentNumber(stop.first_number, width)} à ${formatInstrumentNumber(stop.last_number, width)}`;
+                    return (
+                      <TableRow key={stop.id}>
+                        <TableCell>
+                          {stop.payments ? `${kind} ${numbers}` : `Formules vierges ${numbers}`}
+                          {stop.payments && (
+                            <span className="block text-xs text-muted-foreground">
+                              {stop.payments.payee_name} · {formatMAD(stop.payments.amount)}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>{STOP_ORDER_REASON_LABELS[stop.reason]}</TableCell>
+                        <TableCell>{formatDate(stop.occurred_on)}</TableCell>
+                        <TableCell>{formatDate(stop.declared_on)}</TableCell>
+                        <TableCell className="text-end">
+                          <a
+                            href={`/paiements/oppositions/${stop.id}/lettre`}
+                            target="_blank"
+                            rel="noopener"
+                            className={buttonVariants({ variant: "ghost", size: "sm" })}
+                          >
+                            <FileTextIcon aria-hidden />
+                            PDF
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {canWrite && blankCheckbooks.length > 0 && (
+            <div>
+              <StopBlankFormsDialog checkbooks={blankCheckbooks} today={today} />
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { CalendarPlusIcon, Loader2Icon } from "lucide-react";
+import { CalendarPlusIcon, FileTextIcon, Loader2Icon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,10 @@ import { addDays } from "@/lib/dates";
 import { formatDate } from "@/lib/format";
 import { postponeLcn } from "./actions";
 
-/** Report de l'échéance d'une LCN : nouvelle échéance, motif, accord du fournisseur. */
+/**
+ * Report de l'échéance d'une LCN : nouvelle échéance, motif, accord du fournisseur. La
+ * demande de prorogation (PDF) se prépare avec les mêmes champs, avant l'accord.
+ */
 export function PostponeDialog({ paymentId, label, dueDate, today }: { paymentId: string; label: string; dueDate: string; today: string }) {
   const [open, setOpen] = useState(false);
   const [newDue, setNewDue] = useState(addDays(dueDate, 30));
@@ -61,6 +64,17 @@ export function PostponeDialog({ paymentId, label, dueDate, today }: { paymentId
           <FieldDescription>Un report d&apos;échéance suppose l&apos;accord du bénéficiaire de la LCN.</FieldDescription>
         </Field>
         <DialogFooter>
+          {newDue > dueDate && (
+            <a
+              href={`/paiements/${paymentId}/prorogation?${new URLSearchParams({ echeance: newDue, motif: reason.trim() })}`}
+              target="_blank"
+              rel="noopener"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <FileTextIcon aria-hidden />
+              Demande de prorogation (PDF)
+            </a>
+          )}
           <Button
             disabled={pending || !newDue || newDue <= dueDate || reason.trim().length < 3 || !agreedAt}
             onClick={() =>

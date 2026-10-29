@@ -18,6 +18,7 @@ export const ACTION_LABELS: Record<string, string> = {
   reject: "Rejet",
   regularize: "Régularisation",
   postpone: "Report d'échéance",
+  stop: "Opposition",
 };
 
 /** Regroupements proposés dans le filtre « Action ». */
@@ -33,6 +34,7 @@ export const ACTION_FILTERS = [
   "reject",
   "regularize",
   "postpone",
+  "stop",
 ] as const;
 
 export const TABLE_LABELS: Record<string, string> = {
@@ -52,6 +54,7 @@ export const TABLE_LABELS: Record<string, string> = {
   statement_column_mappings: "Correspondance de colonnes",
   statement_lines: "Ligne de relevé",
   letter_templates: "Modèle de lettre",
+  stop_orders: "Opposition",
 };
 
 export function actionLabel(action: string): string {

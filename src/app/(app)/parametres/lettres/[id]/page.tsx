@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireRole } from "@/lib/auth/dal";
 import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
-import { findLetterTemplate } from "@/lib/letters/queries";
+import { findCustomTemplate } from "@/lib/letters/queries";
 import { updateLetterTemplate } from "../actions";
 import { LetterTemplateForm } from "../template-form";
 
@@ -25,9 +25,9 @@ export default function LetterTemplatePage({ params }: PageProps<"/parametres/le
 async function Form({ params }: Pick<PageProps<"/parametres/lettres/[id]">, "params">) {
   await requireRole(ACCOUNT_MANAGER_ROLES);
   const { id } = await params;
-  const template = /^[0-9a-f-]{36}$/i.test(id) ? await findLetterTemplate(id) : null;
+  const template = await findCustomTemplate(id);
   if (!template) {
     notFound();
   }
-  return <LetterTemplateForm action={updateLetterTemplate.bind(null, id)} template={template} submitLabel="Enregistrer" />;
+  return <LetterTemplateForm action={updateLetterTemplate.bind(null, id)} kind={template.kind} template={template} submitLabel="Enregistrer" />;
 }

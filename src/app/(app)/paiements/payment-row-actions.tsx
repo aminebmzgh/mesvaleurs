@@ -1,9 +1,9 @@
 "use client";
 
-import { BanIcon, CircleCheckIcon, HandshakeIcon, Loader2Icon, type LucideIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
+import { BanIcon, CircleCheckIcon, FileTextIcon, HandshakeIcon, Loader2Icon, type LucideIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -25,12 +25,13 @@ import {
   markGuaranteeDestroyed,
   markGuaranteeReturned,
 } from "./actions";
+import { StopPaymentDialog } from "./opposition-dialogs";
 import { PostponeDialog } from "./postpone-dialog";
 import { RegularizeDialog, RejectDialog } from "./rejection-dialogs";
 
 /**
  * Actions sur un paiement : remise au fournisseur (chèque, LCN), débit d'un virement
- * en attente, annulation avec motif.
+ * en attente, rejet, report, opposition, annulation avec motif.
  */
 export function PaymentRowActions({
   paymentId,
@@ -39,6 +40,8 @@ export function PaymentRowActions({
   status,
   regularized = false,
   dueDate = null,
+  issueDate,
+  stopOrderId = null,
   today,
 }: {
   paymentId: string;
@@ -49,6 +52,9 @@ export function PaymentRowActions({
   regularized?: boolean;
   /** Échéance actuelle (LCN). */
   dueDate?: string | null;
+  issueDate?: string;
+  /** Opposition enregistrée (paiement en opposition) : lien vers la lettre à la banque. */
+  stopOrderId?: string | null;
   today: string;
 }) {
   const canDeliver = status === "issued" && type !== "transfer";
@@ -57,9 +63,11 @@ export function PaymentRowActions({
   const canReject = (type === "check" || type === "lcn") && ["issued", "delivered", "paid"].includes(status);
   const canRegularize = status === "rejected" && !regularized;
   const canPostpone = type === "lcn" && (status === "issued" || status === "delivered") && dueDate !== null;
+  const canStop = type !== "transfer" && (status === "issued" || status === "delivered");
+  const stopLetter = status === "stopped" && stopOrderId ? `/paiements/oppositions/${stopOrderId}/lettre` : null;
   // Un chèque de garantie se clôt par restitution ou destruction, pas par annulation
   const canCancel = type !== "guarantee_check" && ["issued", "delivered", "rejected", "lost", "stopped"].includes(status);
-  if (!canDeliver && !canDebit && !canReject && !canRegularize && !canPostpone && !canCancel) {
+  if (!canDeliver && !canDebit && !canReject && !canRegularize && !canPostpone && !canStop && !stopLetter && !canCancel) {
     return null;
   }
   return (
@@ -122,6 +130,13 @@ export function PaymentRowActions({
       )}
       {canRegularize && <RegularizeDialog paymentId={paymentId} label={label} today={today} />}
       {canPostpone && dueDate && <PostponeDialog paymentId={paymentId} label={label} dueDate={dueDate} today={today} />}
+      {stopLetter && (
+        <a href={stopLetter} target="_blank" rel="noopener" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <FileTextIcon aria-hidden />
+          Lettre d&apos;opposition
+        </a>
+      )}
+      {canStop && <StopPaymentDialog paymentId={paymentId} label={label} isLcn={type === "lcn"} issueDate={issueDate} today={today} />}
       {canReject && <RejectDialog paymentId={paymentId} label={label} isCheck={type === "check"} today={today} />}
       {canCancel && <CancelDialog paymentId={paymentId} label={label} />}
     </div>

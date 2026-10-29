@@ -1,5 +1,6 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
+import type { StoppedRange } from "@/lib/checkbooks";
 import { paymentLabel } from "@/lib/payments/label";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,6 +10,8 @@ export type AssistantCheckbook = {
   nextNumber: number;
   lastNumber: number;
   numberWidth: number;
+  /** Formules vierges en opposition, sautées à l'émission. */
+  stoppedRanges: StoppedRange[];
   bankAccountId: string;
   accountLabel: string;
   bankName: string;
@@ -34,7 +37,9 @@ export async function getAssistantData() {
   const [checkbooks, circulation, suppliers, org] = await Promise.all([
     supabase
       .from("checkbooks")
-      .select("id, type, next_number, last_number, number_width, bank_accounts!inner ( id, label, current_balance, is_active, banks ( name ) )")
+      .select(
+        "id, type, next_number, last_number, number_width, stop_orders ( first_number, last_number, payment_id ), bank_accounts!inner ( id, label, current_balance, is_active, banks ( name ) )",
+      )
       .eq("organization_id", orgId)
       .eq("status", "active")
       .eq("bank_accounts.is_active", true)
@@ -75,6 +80,7 @@ export async function getAssistantData() {
         nextNumber: book.next_number,
         lastNumber: book.last_number,
         numberWidth: book.number_width,
+        stoppedRanges: book.stop_orders.filter((s) => s.payment_id === null).map((s): StoppedRange => [s.first_number, s.last_number]),
         bankAccountId: book.bank_accounts.id,
         accountLabel: book.bank_accounts.label,
         bankName: book.bank_accounts.banks?.name ?? "",

@@ -26,3 +26,28 @@ export function formatInstrumentNumber(value: number, width: number): string {
 export function remainingCount(nextNumber: number, lastNumber: number): number {
   return Math.max(lastNumber - nextNumber + 1, 0);
 }
+
+/** Plage de formules vierges en opposition, bornes comprises. */
+export type StoppedRange = [first: number, last: number];
+
+const isStopped = (n: number, ranges: StoppedRange[]) => ranges.some(([first, last]) => n >= first && n <= last);
+
+/** Numéros attribuables à la suite (`count` au plus), sans les formules vierges en opposition. */
+export function availableNumbers(nextNumber: number, lastNumber: number, stopped: StoppedRange[], count: number): number[] {
+  const numbers: number[] = [];
+  for (let n = nextNumber; n <= lastNumber && numbers.length < count; n += 1) {
+    if (!isStopped(n, stopped)) {
+      numbers.push(n);
+    }
+  }
+  return numbers;
+}
+
+/** Formules restantes d'un carnet, hors formules vierges en opposition. */
+export function availableCount(nextNumber: number, lastNumber: number, stopped: StoppedRange[]): number {
+  const opposed = stopped.reduce(
+    (sum, [first, last]) => sum + Math.max(Math.min(last, lastNumber) - Math.max(first, nextNumber) + 1, 0),
+    0,
+  );
+  return Math.max(remainingCount(nextNumber, lastNumber) - opposed, 0);
+}

@@ -505,6 +505,50 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     }
                   ]
+                },"stop_orders": {
+                  Row: {
+                    "bank_account_id": string,"checkbook_id": string,"created_at": string,"created_by": string | null,"declared_on": string,"first_number": number,"id": string,"last_number": number,"notes": string | null,"occurred_on": string,"organization_id": string,"payment_id": string | null,"police_report": string | null,"reason": Database["public"]['Enums']["stop_order_reason"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_account_id": string,"checkbook_id": string,"created_at"?: string,"created_by"?: string | null,"declared_on"?: string,"first_number": number,"id"?: string,"last_number": number,"notes"?: string | null,"occurred_on": string,"organization_id": string,"payment_id"?: string | null,"police_report"?: string | null,"reason": Database["public"]['Enums']["stop_order_reason"]
+                  }
+                  Update: {
+                    "bank_account_id"?: string,"checkbook_id"?: string,"created_at"?: string,"created_by"?: string | null,"declared_on"?: string,"first_number"?: number,"id"?: string,"last_number"?: number,"notes"?: string | null,"occurred_on"?: string,"organization_id"?: string,"payment_id"?: string | null,"police_report"?: string | null,"reason"?: Database["public"]['Enums']["stop_order_reason"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stop_orders_organization_id_bank_account_id_fkey"
+      columns: ["organization_id","bank_account_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "stop_orders_organization_id_checkbook_id_fkey"
+      columns: ["organization_id","checkbook_id"]
+isOneToOne: false
+      referencedRelation: "checkbook_summaries"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "stop_orders_organization_id_checkbook_id_fkey"
+      columns: ["organization_id","checkbook_id"]
+isOneToOne: false
+      referencedRelation: "checkbooks"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "stop_orders_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stop_orders_organization_id_payment_id_fkey"
+      columns: ["organization_id","payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
                 },"suppliers": {
                   Row: {
                     "address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
@@ -544,14 +588,14 @@ isOneToOne: false
                   ]
                 },"checkbook_summaries": {
                   Row: {
-                    "bank_account_id": string,"cancelled_count": number | null,"created_at": string,"first_number": number,"id": string,"last_number": number,"next_number": number,"number_width": number,"organization_id": string,"print_template_id": string | null,"received_at": string | null,"remaining_count": number | null,"status": Database["public"]['Enums']["checkbook_status"],"total_count": number | null,"type": Database["public"]['Enums']["instrument_type"]
+                    "bank_account_id": string,"cancelled_count": number | null,"created_at": string,"first_number": number,"id": string,"last_number": number,"next_number": number,"number_width": number,"organization_id": string,"print_template_id": string | null,"received_at": string | null,"remaining_count": number | null,"status": Database["public"]['Enums']["checkbook_status"],"stopped_blank_count": number | null,"total_count": number | null,"type": Database["public"]['Enums']["instrument_type"]
                   }
                   ComputedFields: never
                   Insert: {
-                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"print_template_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
+                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"print_template_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"stopped_blank_count"?: never,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
                          }
                         Update: {
-                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"print_template_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
+                           "bank_account_id"?: string | null,"cancelled_count"?: never,"created_at"?: string | null,"first_number"?: number | null,"id"?: string | null,"last_number"?: number | null,"next_number"?: number | null,"number_width"?: number | null,"organization_id"?: string | null,"print_template_id"?: string | null,"received_at"?: string | null,"remaining_count"?: never,"status"?: Database["public"]['Enums']["checkbook_status"] | null,"stopped_blank_count"?: never,"total_count"?: never,"type"?: Database["public"]['Enums']["instrument_type"] | null
                          }
                         Relationships: [
                     {
@@ -635,12 +679,18 @@ isOneToOne: false
 "set_statement_line_ignored":
 { Args: { "p_ignored": boolean,"p_line_id": string }; Returns: undefined
                            },
+"stop_blank_forms":
+{ Args: { "p_checkbook_id": string,"p_first_number": number,"p_last_number": number,"p_notes"?: string,"p_occurred_on": string,"p_police_report"?: string,"p_reason": Database["public"]['Enums']["stop_order_reason"] }; Returns: string
+                           },
+"stop_payment":
+{ Args: { "p_notes"?: string,"p_occurred_on": string,"p_payment_id": string,"p_police_report"?: string,"p_reason": Database["public"]['Enums']["stop_order_reason"] }; Returns: string
+                           },
 "unmatch_statement_line":
 { Args: { "p_line_id": string }; Returns: undefined
                            }
           }
           Enums: {
-            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored"
+            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored","stop_order_reason": "lost"|"stolen"|"fraudulent_use"|"holder_insolvency"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -756,7 +806,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"]
+            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"],"stop_order_reason": ["lost", "stolen", "fraudulent_use", "holder_insolvency"]
           }
         }
 } as const

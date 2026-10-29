@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
 import { type FormState, toFieldErrors } from "@/lib/forms";
-import { letterTemplateSchema } from "@/lib/letters/schemas";
+import { LETTER_KINDS, letterTemplateSchema } from "@/lib/letters/schemas";
 import { createClient } from "@/lib/supabase/server";
 
 function templateError(error: { code?: string }): FormState {
@@ -18,14 +18,18 @@ function templateError(error: { code?: string }): FormState {
 
 export async function createLetterTemplate(_prev: FormState, formData: FormData): Promise<FormState> {
   const organization = await requireRole(ACCOUNT_MANAGER_ROLES);
+  const kind = z.enum(LETTER_KINDS).safeParse(formData.get("kind"));
   const parsed = letterTemplateSchema.safeParse(Object.fromEntries(formData));
+  if (!kind.success) {
+    return { error: "Type de courrier invalide." };
+  }
   if (!parsed.success) {
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
   const supabase = await createClient();
   const { error } = await supabase
     .from("letter_templates")
-    .insert({ ...parsed.data, kind: "cover_letter", organization_id: organization.organizationId });
+    .insert({ ...parsed.data, kind: kind.data, organization_id: organization.organizationId });
   if (error) {
     return templateError(error);
   }
