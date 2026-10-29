@@ -51,7 +51,7 @@ export async function getBankAccount(id: string) {
     supabase
       .from("bank_accounts")
       .select(
-        "id, bank_id, label, branch, rib, currency, opening_balance, opening_balance_date, current_balance, is_active, banks ( name )",
+        "id, bank_id, label, branch, rib, accounting_code, currency, opening_balance, opening_balance_date, current_balance, is_active, banks ( name )",
       )
       .eq("organization_id", organization.organizationId)
       .eq("id", id)

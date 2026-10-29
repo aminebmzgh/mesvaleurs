@@ -15,6 +15,30 @@ export const LOW_STOCK_DEFAULT = 5;
 /** Seuils proposés dans les paramètres. */
 export const LOW_STOCK_CHOICES = [3, 5, 10, 15, 20] as const;
 
+const accountCode = (fallback: string) => z.string().regex(/^[A-Za-z0-9._-]{1,20}$/).catch(fallback).default(fallback);
+
+/**
+ * Export comptable mensuel (journal des règlements fournisseurs, spec §11.2) : comptes du
+ * plan comptable marocain par défaut, format du fichier, base d'enregistrement.
+ */
+export const accountingExportSchema = z.object({
+  journal: accountCode("BQ"),
+  /** Fournisseurs (4411) ; le code du fournisseur, s'il existe, va en compte auxiliaire. */
+  supplierAccount: accountCode("44110000"),
+  /** Banque (5141), sauf code propre au compte bancaire. */
+  bankAccount: accountCode("51410000"),
+  /** Effets à payer (4415) : LCN enregistrées à l'émission. */
+  billsAccount: accountCode("44150000"),
+  /** « debit » : règlements à leur date de débit ; « issue » : à leur émission (LCN par les effets à payer). */
+  basis: z.enum(["debit", "issue"]).catch("debit").default("debit"),
+  separator: z.enum([";", ",", "tab"]).catch(";").default(";"),
+  dateFormat: z.enum(["dd/mm/yyyy", "yyyy-mm-dd", "ddmmyy"]).catch("dd/mm/yyyy").default("dd/mm/yyyy"),
+  decimal: z.enum([",", "."]).catch(",").default(","),
+  header: z.boolean().catch(true).default(true),
+});
+
+export type AccountingExportSettings = z.infer<typeof accountingExportSchema>;
+
 export const organizationSettingsSchema = z.object({
   /** Double authentification obligatoire pour administrateurs et gestionnaires. */
   require_mfa: z.boolean().catch(false).default(false),
@@ -28,6 +52,8 @@ export const organizationSettingsSchema = z.object({
   approval_threshold: z.number().positive().nullable().catch(null).default(null),
   /** Plafond journalier de l'entreprise (total des paiements datés du jour, DH) ; null = aucun. */
   daily_ceiling: z.number().positive().nullable().catch(null).default(null),
+  /** Absent : valeurs par défaut ; illisible : valeurs par défaut (les champs invalides le sont un à un). */
+  accounting_export: accountingExportSchema.catch(() => accountingExportSchema.parse({})).prefault({}),
 });
 
 export type OrganizationSettings = z.infer<typeof organizationSettingsSchema>;

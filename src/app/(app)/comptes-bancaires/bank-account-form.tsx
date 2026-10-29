@@ -14,6 +14,7 @@ export type BankAccountValues = {
   label: string;
   branch: string | null;
   rib: string | null;
+  accounting_code?: string | null;
   opening_balance: number;
   opening_balance_date: string;
 };
@@ -83,6 +84,19 @@ export function BankAccountForm({
               />
               <FieldDescription>La clé (2 derniers chiffres) est vérifiée automatiquement.</FieldDescription>
               <FieldErrors state={state} name="rib" />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="accounting_code">Code comptable</FieldLabel>
+              <Input
+                id="accounting_code"
+                name="accounting_code"
+                placeholder="Ex. 51410001"
+                defaultValue={account?.accounting_code ?? ""}
+                className="font-mono"
+                {...invalidProps(state, "accounting_code")}
+              />
+              <FieldDescription>Compte de banque de l&apos;export comptable ; à défaut, celui des paramètres.</FieldDescription>
+              <FieldErrors state={state} name="accounting_code" />
             </Field>
             <Field>
               <FieldLabel htmlFor="opening_balance">Solde d&apos;ouverture (DH)</FieldLabel>

@@ -1,7 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { parseOrganizationSettings } from "./settings";
 
-const DEFAULTS = { require_mfa: false, amount_words_rectified: false, uncashed_alert_days: 60, low_stock_threshold: 5, approval_threshold: null, daily_ceiling: null };
+const ACCOUNTING_DEFAULTS = {
+  journal: "BQ",
+  supplierAccount: "44110000",
+  bankAccount: "51410000",
+  billsAccount: "44150000",
+  basis: "debit",
+  separator: ";",
+  dateFormat: "dd/mm/yyyy",
+  decimal: ",",
+  header: true,
+};
+
+const DEFAULTS = {
+  require_mfa: false,
+  amount_words_rectified: false,
+  uncashed_alert_days: 60,
+  low_stock_threshold: 5,
+  approval_threshold: null,
+  daily_ceiling: null,
+  accounting_export: ACCOUNTING_DEFAULTS,
+};
 
 describe("parseOrganizationSettings", () => {
   it("applique les valeurs par défaut", () => {
@@ -17,6 +37,7 @@ describe("parseOrganizationSettings", () => {
       low_stock_threshold: 5,
       approval_threshold: null,
       daily_ceiling: null,
+      accounting_export: ACCOUNTING_DEFAULTS,
     });
     expect(parseOrganizationSettings({ uncashed_alert_days: 2 }).uncashed_alert_days).toBe(60);
     expect(parseOrganizationSettings({ low_stock_threshold: 10 }).low_stock_threshold).toBe(10);
@@ -38,5 +59,14 @@ describe("double signature", () => {
       approval_threshold: null,
       daily_ceiling: null,
     });
+  });
+});
+
+describe("export comptable", () => {
+  it("valeurs enregistrées, champs invalides remplacés un à un", () => {
+    expect(
+      parseOrganizationSettings({ accounting_export: { journal: "BNK", basis: "issue", separator: "|", supplierAccount: "4411 000" } }).accounting_export,
+    ).toEqual({ ...ACCOUNTING_DEFAULTS, journal: "BNK", basis: "issue" });
+    expect(parseOrganizationSettings({ accounting_export: "texte" }).accounting_export).toEqual(ACCOUNTING_DEFAULTS);
   });
 });

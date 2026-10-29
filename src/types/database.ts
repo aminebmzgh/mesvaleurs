@@ -27,14 +27,14 @@ isOneToOne: false
                   ]
                 },"bank_accounts": {
                   Row: {
-                    "bank_id": string,"branch": string | null,"created_at": string,"currency": string,"current_balance": number,"id": string,"is_active": boolean,"label": string,"opening_balance": number,"opening_balance_date": string,"organization_id": string,"rib": string | null,"updated_at": string
+                    "accounting_code": string | null,"bank_id": string,"branch": string | null,"created_at": string,"currency": string,"current_balance": number,"id": string,"is_active": boolean,"label": string,"opening_balance": number,"opening_balance_date": string,"organization_id": string,"rib": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "bank_id": string,"branch"?: string | null,"created_at"?: string,"currency"?: string,"current_balance"?: number,"id"?: string,"is_active"?: boolean,"label": string,"opening_balance"?: number,"opening_balance_date"?: string,"organization_id": string,"rib"?: string | null,"updated_at"?: string
+                    "accounting_code"?: string | null,"bank_id": string,"branch"?: string | null,"created_at"?: string,"currency"?: string,"current_balance"?: number,"id"?: string,"is_active"?: boolean,"label": string,"opening_balance"?: number,"opening_balance_date"?: string,"organization_id": string,"rib"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "bank_id"?: string,"branch"?: string | null,"created_at"?: string,"currency"?: string,"current_balance"?: number,"id"?: string,"is_active"?: boolean,"label"?: string,"opening_balance"?: number,"opening_balance_date"?: string,"organization_id"?: string,"rib"?: string | null,"updated_at"?: string
+                    "accounting_code"?: string | null,"bank_id"?: string,"branch"?: string | null,"created_at"?: string,"currency"?: string,"current_balance"?: number,"id"?: string,"is_active"?: boolean,"label"?: string,"opening_balance"?: number,"opening_balance_date"?: string,"organization_id"?: string,"rib"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -551,14 +551,14 @@ isOneToOne: false
                   ]
                 },"suppliers": {
                   Row: {
-                    "address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"daily_ceiling": number | null,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
+                    "accounting_code": string | null,"address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"daily_ceiling": number | null,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"daily_ceiling"?: number | null,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"notes"?: string | null,"organization_id": string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
+                    "accounting_code"?: string | null,"address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"daily_ceiling"?: number | null,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"notes"?: string | null,"organization_id": string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"daily_ceiling"?: number | null,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"notes"?: string | null,"organization_id"?: string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
+                    "accounting_code"?: string | null,"address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"daily_ceiling"?: number | null,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"notes"?: string | null,"organization_id"?: string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {

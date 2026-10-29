@@ -1,5 +1,6 @@
 import {
   BanknoteIcon,
+  BookOpenCheckIcon,
   BuildingIcon,
   CalendarDaysIcon,
   ChartColumnIcon,
@@ -60,6 +61,12 @@ export const navigation: NavSection[] = [
       { title: "Membres", href: "/parametres/membres", icon: UsersIcon },
       { title: "Sécurité", href: "/parametres/securite", icon: ShieldCheckIcon },
       { title: "Modèles de lettres", href: "/parametres/lettres", icon: MailIcon, roles: ["admin", "manager"] },
+      {
+        title: "Comptabilité",
+        href: "/parametres/comptabilite",
+        icon: BookOpenCheckIcon,
+        roles: ["admin", "manager", "accountant", "external_accountant"],
+      },
       {
         title: "Journal d'audit",
         href: "/journal",

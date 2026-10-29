@@ -83,6 +83,14 @@ async function Report({ searchParams }: { searchParams: Promise<Params> }) {
             <FileTextIcon aria-hidden />
             PDF
           </a>
+          <a
+            href={`/rapports/export-comptable?mois=${month}`}
+            className={buttonVariants({ variant: "outline" })}
+            title="Journal des règlements fournisseurs du mois, au format réglé dans Paramètres › Comptabilité (tous les comptes)"
+          >
+            <FileSpreadsheetIcon aria-hidden />
+            Export comptable (CSV)
+          </a>
         </div>
       </div>
 
