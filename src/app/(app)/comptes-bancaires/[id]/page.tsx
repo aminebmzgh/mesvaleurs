@@ -21,7 +21,7 @@ import {
   CHECKBOOK_STATUS_LABELS,
   formatInstrumentNumber,
   INSTRUMENT_LABELS,
-  LOW_STOCK_THRESHOLD,
+  isLowStock,
 } from "@/lib/checkbooks";
 import { formatDate, formatMAD } from "@/lib/format";
 import { StopBlankFormsDialog } from "../../paiements/opposition-dialogs";
@@ -125,12 +125,22 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
                 <TableBody>
                   {account.checkbooks.map((book) => {
                     const width = book.number_width ?? 7;
-                    const low = book.status === "active" && (book.remaining_count ?? 0) <= LOW_STOCK_THRESHOLD;
+                    // Stock du compte pour ce type de carnet (carnets en service)
+                    const low =
+                      book.status === "active" &&
+                      isLowStock(
+                        account.checkbooks.map((c) => ({ bankAccountId: account.id, type: c.type!, status: c.status!, remaining: c.remaining_count ?? 0 })),
+                        organization.lowStockThreshold,
+                        account.id,
+                        book.type!,
+                      );
                     return (
                       <TableRow key={book.id}>
                         <TableCell>{INSTRUMENT_LABELS[book.type!]}</TableCell>
                         <TableCell className="font-mono tabular-nums">
-                          {formatInstrumentNumber(book.first_number!, width)} → {formatInstrumentNumber(book.last_number!, width)}
+                          <Link href={`/comptes-bancaires/carnets/${book.id}`} className="hover:underline" title="Inventaire du carnet">
+                            {formatInstrumentNumber(book.first_number!, width)} → {formatInstrumentNumber(book.last_number!, width)}
+                          </Link>
                         </TableCell>
                         <TableCell className="font-mono tabular-nums">
                           {book.status === "exhausted" ? "—" : formatInstrumentNumber(book.next_number!, width)}

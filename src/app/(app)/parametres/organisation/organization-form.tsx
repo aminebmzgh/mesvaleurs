@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount } from "@/lib/format";
 import { initialFormState } from "@/lib/forms";
-import { UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import { LOW_STOCK_CHOICES, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { updateOrganization } from "./actions";
 
 type OrganizationValues = {
@@ -27,6 +27,7 @@ type OrganizationValues = {
   require_mfa: boolean;
   amount_words_rectified: boolean;
   uncashed_alert_days: number;
+  low_stock_threshold: number;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -117,6 +118,16 @@ export function OrganizationForm({
                   defaultValue={String(organization.uncashed_alert_days)}
                 />
                 <FieldDescription>Délai depuis l&apos;émission, pour la liste des chèques non encaissés et le tableau de bord.</FieldDescription>
+              </Field>
+              <Field className="max-w-sm">
+                <FieldLabel htmlFor="low_stock_threshold">Signaler un carnet presque épuisé à partir de</FieldLabel>
+                <FormSelect
+                  id="low_stock_threshold"
+                  name="low_stock_threshold"
+                  options={LOW_STOCK_CHOICES.map((count) => ({ value: String(count), label: `${count} formules restantes` }))}
+                  defaultValue={String(organization.low_stock_threshold)}
+                />
+                <FieldDescription>Pour commander un nouveau chéquier ou carnet de LCN à temps.</FieldDescription>
               </Field>
               <Field orientation="horizontal">
                 <input

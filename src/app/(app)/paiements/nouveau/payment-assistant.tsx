@@ -170,6 +170,13 @@ export function PaymentAssistant({
     errors.push("Saisissez le montant à régler.");
   }
   const remainingForms = checkbook ? availableCount(checkbook.nextNumber, checkbook.lastNumber, checkbook.stoppedRanges) : 0;
+  // Stock restant après ce lot sur le compte (tous ses carnets du même type en service)
+  const stockAfter = checkbook
+    ? data.checkbooks
+        .filter((b) => b.type === checkbook.type && b.bankAccountId === checkbook.bankAccountId)
+        .reduce((sum, b) => sum + availableCount(b.nextNumber, b.lastNumber, b.stoppedRanges), 0) - count
+    : 0;
+  const lowStockAfter = checkbook !== undefined && count <= remainingForms && stockAfter <= data.lowStockThreshold;
   // Numéros attribués à l'émission : à la suite, sans les formules vierges en opposition
   const numbers = checkbook ? availableNumbers(checkbook.nextNumber, checkbook.lastNumber, checkbook.stoppedRanges, count) : [];
   if (checkbook && count > remainingForms) {
@@ -290,6 +297,12 @@ export function PaymentAssistant({
                   </option>
                 ))}
               </select>
+              {lowStockAfter && (
+                <FieldDescription className="text-destructive">
+                  Après ce lot, il restera {Math.max(stockAfter, 0)} formule(s) sur ce compte : commandez un nouveau{" "}
+                  {type === "check" ? "chéquier" : "carnet de LCN"} à votre banque.
+                </FieldDescription>
+              )}
             </Field>
           </CardContent>
         </Card>

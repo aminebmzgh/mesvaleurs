@@ -73,6 +73,7 @@ export async function getAssistantData() {
     organizationId: orgId,
     city: org.data?.city ?? "",
     amountWordsRectified: organization.amountWordsRectified,
+    lowStockThreshold: organization.lowStockThreshold,
     checkbooks: (checkbooks.data ?? []).map(
       (book): AssistantCheckbook => ({
         id: book.id,

@@ -1,6 +1,6 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
-import { LOW_STOCK_THRESHOLD } from "@/lib/checkbooks";
+import { stockByAccount } from "@/lib/checkbooks";
 import { paymentLabel, paymentNumber } from "@/lib/payments/label";
 import { regularizationState } from "@/lib/payments/rejections";
 import { addDays, daysBetween, todayIso } from "@/lib/dates";
@@ -48,7 +48,7 @@ export async function getDashboard() {
       .limit(8),
     supabase
       .from("checkbook_summaries")
-      .select("id, type, remaining_count, bank_account_id")
+      .select("id, type, status, remaining_count, bank_account_id")
       .eq("organization_id", orgId)
       .eq("status", "active"),
     // Rejets non régularisés : alerte immédiate (loi 71-24)
@@ -146,13 +146,20 @@ export async function getDashboard() {
         returnDue: g.guarantee_return_due!,
         daysLeft: daysBetween(today, g.guarantee_return_due!),
       })),
-    lowStock: (checkbooks.data ?? [])
-      .filter((book) => (book.remaining_count ?? 0) <= LOW_STOCK_THRESHOLD)
-      .map((book) => ({
-        id: book.id!,
-        type: book.type,
-        remaining: book.remaining_count ?? 0,
-        account: accountRows.find((a) => a.id === book.bank_account_id)?.label ?? "",
+    // Comptes actifs dont le stock de formules (carnets en service) atteint le seuil
+    lowStock: stockByAccount(
+      (checkbooks.data ?? [])
+        .filter((book) => accountRows.some((a) => a.id === book.bank_account_id))
+        .map((book) => ({ bankAccountId: book.bank_account_id!, type: book.type!, status: book.status!, remaining: book.remaining_count ?? 0 })),
+      organization.lowStockThreshold,
+    )
+      .filter((group) => group.low)
+      .map((group) => ({
+        id: `${group.bankAccountId}:${group.type}`,
+        bankAccountId: group.bankAccountId,
+        type: group.type,
+        remaining: group.remaining,
+        account: accountRows.find((a) => a.id === group.bankAccountId)?.label ?? "",
       })),
   };
 }
