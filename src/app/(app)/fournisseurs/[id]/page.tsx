@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
+import { todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
   INVOICE_STATUS_LABELS,
@@ -20,8 +21,10 @@ import {
   PAYMENT_TYPE_LABELS,
   paymentStatusVariant,
 } from "@/lib/labels";
+import { templateOptions } from "@/lib/letters/queries";
 import { paymentNumber } from "@/lib/payments/label";
 import { getSupplier } from "@/lib/suppliers/queries";
+import { LetterDialog } from "../../courriers/letter-dialog";
 import { updateSupplier } from "../actions";
 import { SupplierForm } from "../supplier-form";
 import { SupplierActiveToggle } from "./supplier-actions";
@@ -47,7 +50,11 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
-  const [organization, supplier] = await Promise.all([requireActiveOrganization(), getSupplier(id)]);
+  const [organization, supplier, statementTemplates] = await Promise.all([
+    requireActiveOrganization(),
+    getSupplier(id),
+    templateOptions("statement_request"),
+  ]);
   if (!supplier) {
     notFound();
   }
@@ -73,7 +80,19 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
             {!supplier.is_active && " · Archivé"}
           </>
         }
-        actions={canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
+        actions={
+          <>
+            <LetterDialog
+              trigger="Demande de relevé"
+              title="Demande de relevé de compte"
+              description="Lettre au fournisseur, avec les factures non soldées selon vos livres à la date d'arrêté."
+              href={`/fournisseurs/${supplier.id}/releve`}
+              templates={statementTemplates}
+              date={{ param: "au", label: "Relevé arrêté au", defaultValue: todayIso(), max: todayIso() }}
+            />
+            {canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
+          </>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

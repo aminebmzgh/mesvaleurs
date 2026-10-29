@@ -6,6 +6,7 @@ export type PaymentStatus = Enums["payment_status"];
 export type PaymentType = Enums["payment_type"];
 export type RejectionKind = Enums["rejection_kind"];
 export type RegularizationMethod = Enums["regularization_method"];
+export type StopOrderReason = Enums["stop_order_reason"];
 
 export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   unpaid: "Non payée",
@@ -46,6 +47,21 @@ export const REGULARIZATION_METHOD_LABELS: Record<RegularizationMethod, string> 
   transfer: "Virement",
   other: "Autre moyen",
 };
+
+export const STOP_ORDER_REASON_LABELS: Record<StopOrderReason, string> = {
+  lost: "Perte",
+  stolen: "Vol",
+  fraudulent_use: "Utilisation frauduleuse",
+  holder_insolvency: "Redressement ou liquidation judiciaire du porteur",
+};
+
+/** Motifs d'opposition admis selon la valeur (Code de commerce, à faire valider par un juriste). */
+export function stopOrderReasonsFor(target: "check" | "lcn" | "blank"): StopOrderReason[] {
+  if (target === "blank") {
+    return ["lost", "stolen"];
+  }
+  return target === "lcn" ? ["lost", "stolen", "holder_insolvency"] : ["lost", "stolen", "fraudulent_use", "holder_insolvency"];
+}
 
 /** Mention affichée avec les délais légaux calculés par l'application. */
 export const LEGAL_DISCLAIMER = "Informations indicatives, ne constituent pas un conseil juridique.";

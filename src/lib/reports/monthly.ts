@@ -135,19 +135,26 @@ export async function getMonthlyReport(month: string, accountId?: string): Promi
   }
   const paidGroups = [...groups.values()].sort((a, b) => b.total - a.total);
 
-  // Numéros sautés : attribuables (avant le prochain numéro) mais absents des paiements
-  const { data: usedNumbers } = await supabase
-    .from("payments")
-    .select("checkbook_id, number")
-    .eq("organization_id", orgId)
-    .in("checkbook_id", (checkbooks.data ?? []).map((c) => c.id))
-    .not("number", "is", null);
+  // Numéros sautés : attribuables (avant le prochain numéro) mais absents des paiements ;
+  // les formules vierges en opposition ne sont pas des sauts
+  const bookIds = (checkbooks.data ?? []).map((c) => c.id);
+  const [{ data: usedNumbers }, { data: stoppedBlanks }] = await Promise.all([
+    supabase.from("payments").select("checkbook_id, number").eq("organization_id", orgId).in("checkbook_id", bookIds).not("number", "is", null),
+    supabase
+      .from("stop_orders")
+      .select("checkbook_id, first_number, last_number")
+      .eq("organization_id", orgId)
+      .in("checkbook_id", bookIds)
+      .is("payment_id", null),
+  ]);
   const missing = (checkbooks.data ?? []).flatMap((book) => {
-    const numbers = missingNumbers(
-      book.first_number,
-      book.next_number,
-      (usedNumbers ?? []).filter((p) => p.checkbook_id === book.id).map((p) => p.number!),
-    );
+    const used = (usedNumbers ?? []).filter((p) => p.checkbook_id === book.id).map((p) => p.number!);
+    for (const range of (stoppedBlanks ?? []).filter((s) => s.checkbook_id === book.id)) {
+      for (let n = range.first_number; n <= range.last_number && n < book.next_number; n += 1) {
+        used.push(n);
+      }
+    }
+    const numbers = missingNumbers(book.first_number, book.next_number, used);
     return numbers.length > 0
       ? [
           {

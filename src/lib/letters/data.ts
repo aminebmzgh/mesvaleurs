@@ -8,20 +8,23 @@ import { settlementReference } from "./reference";
 export type LetterInvoice = { number: string; issueDate: string; amountInclTax: number; settled: number; remaining: number };
 export type LetterInstrument = { label: string; bank: string; amount: number; dueDate: string | null };
 
+export type LetterOrganization = {
+  name: string;
+  address: string | null;
+  city: string | null;
+  phone: string | null;
+  email: string | null;
+  ice: string | null;
+  taxId: string | null;
+  tradeRegister: string | null;
+  logo: { bytes: Uint8Array; type: "png" | "jpg" } | null;
+};
+export type LetterSigner = { name: string; jobTitle: string | null };
+
 export type CoverLetterData = {
-  organization: {
-    name: string;
-    address: string | null;
-    city: string | null;
-    phone: string | null;
-    email: string | null;
-    ice: string | null;
-    taxId: string | null;
-    tradeRegister: string | null;
-    logo: { bytes: Uint8Array; type: "png" | "jpg" } | null;
-  };
+  organization: LetterOrganization;
   supplier: { name: string; address: string | null; city: string | null; ice: string | null };
-  signer: { name: string; jobTitle: string | null };
+  signer: LetterSigner;
   place: string;
   issueDate: string;
   reference: string;
@@ -33,16 +36,54 @@ export type CoverLetterData = {
   printCoverLetter: boolean;
 };
 
+/** En-tête des courriers : identité de l'entreprise active (avec son logo) et signataire (l'utilisateur). */
+export async function getLetterhead(): Promise<{ organization: LetterOrganization; signer: LetterSigner }> {
+  const organization = await requireActiveOrganization();
+  const user = await requireUser();
+  const supabase = await createClient();
+  const [org, profile] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select("name, address, city, phone, email, ice, tax_id, trade_register, logo_path")
+      .eq("id", organization.organizationId)
+      .single(),
+    supabase.from("profiles").select("full_name, job_title").eq("id", user.id).maybeSingle(),
+  ]);
+  if (org.error) {
+    throw new Error("Impossible de préparer la lettre.", { cause: org.error });
+  }
+
+  let logo: LetterOrganization["logo"] = null;
+  if (org.data.logo_path) {
+    const { data: file } = await supabase.storage.from("logos").download(org.data.logo_path);
+    if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
+      logo = { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type === "image/png" ? "png" : "jpg" };
+    }
+  }
+  return {
+    organization: {
+      name: org.data.name,
+      address: org.data.address,
+      city: org.data.city,
+      phone: org.data.phone,
+      email: org.data.email,
+      ice: org.data.ice,
+      taxId: org.data.tax_id,
+      tradeRegister: org.data.trade_register,
+      logo,
+    },
+    signer: { name: profile.data?.full_name || user.fullName || user.email, jobTitle: profile.data?.job_title ?? null },
+  };
+}
 
 /** Données de la lettre d'accompagnement et du bordereau d'un lot. */
 export async function getCoverLetterData(batchId: string): Promise<CoverLetterData | null> {
   const organization = await requireActiveOrganization();
-  const user = await requireUser();
   const supabase = await createClient();
   const orgId = organization.organizationId;
 
-  const [org, payments, profile] = await Promise.all([
-    supabase.from("organizations").select("name, address, city, phone, email, ice, tax_id, trade_register, logo_path").eq("id", orgId).single(),
+  const [letterhead, payments] = await Promise.all([
+    getLetterhead(),
     supabase
       .from("payments")
       .select(
@@ -55,10 +96,9 @@ export async function getCoverLetterData(batchId: string): Promise<CoverLetterDa
       .eq("print_batch_id", batchId)
       .neq("status", "cancelled")
       .order("number"),
-    supabase.from("profiles").select("full_name, job_title").eq("id", user.id).maybeSingle(),
   ]);
-  if (org.error || payments.error) {
-    throw new Error("Impossible de préparer la lettre.", { cause: org.error ?? payments.error });
+  if (payments.error) {
+    throw new Error("Impossible de préparer la lettre.", { cause: payments.error });
   }
   const rows = payments.data ?? [];
   if (rows.length === 0 || !rows[0].suppliers) {
@@ -84,31 +124,13 @@ export async function getCoverLetterData(batchId: string): Promise<CoverLetterDa
     }
   }
 
-  let logo: CoverLetterData["organization"]["logo"] = null;
-  if (org.data.logo_path) {
-    const { data: file } = await supabase.storage.from("logos").download(org.data.logo_path);
-    if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
-      logo = { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type === "image/png" ? "png" : "jpg" };
-    }
-  }
-
   const first = rows[0];
   const sortedInvoices = [...invoices.values()].sort((a, b) => a.issueDate.localeCompare(b.issueDate) || a.number.localeCompare(b.number));
   return {
-    organization: {
-      name: org.data.name,
-      address: org.data.address,
-      city: org.data.city,
-      phone: org.data.phone,
-      email: org.data.email,
-      ice: org.data.ice,
-      taxId: org.data.tax_id,
-      tradeRegister: org.data.trade_register,
-      logo,
-    },
+    organization: letterhead.organization,
     supplier: { name: first.suppliers!.name, address: first.suppliers!.address, city: first.suppliers!.city, ice: first.suppliers!.ice },
-    signer: { name: profile.data?.full_name || user.fullName || user.email, jobTitle: profile.data?.job_title ?? null },
-    place: first.issue_place ?? org.data.city ?? "",
+    signer: letterhead.signer,
+    place: first.issue_place ?? letterhead.organization.city ?? "",
     issueDate: first.issue_date,
     reference: settlementReference(first.issue_date, first.number),
     invoices: sortedInvoices,

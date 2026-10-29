@@ -41,6 +41,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Modèles de lettres de l'entreprise (paramètres, direction) : copie d'un modèle intégré,
   objet, corps et formule de politesse avec variables, aperçu immédiat ; proposés sur la page
   de chaque lot.
+- Oppositions : déclaration sur un chèque ou une LCN en circulation (perte, vol, utilisation
+  frauduleuse, redressement ou liquidation du porteur, selon la valeur), ou sur des formules
+  vierges d'un chéquier ou d'un carnet (perte ou vol) ; récépissé de déclaration ; le
+  paiement passe « en opposition » et ses factures redeviennent à payer ; les formules
+  vierges en opposition ne sont plus attribuées à l'émission ni comptées comme restantes ou
+  sautées ; liste des oppositions sur la page du compte ; action tracée au journal d'audit.
+- Courriers types (PDF, en-tête de l'entreprise) : lettre d'opposition à la banque, demande de
+  prorogation d'une LCN (zone « Bon pour accord »), demande de relevé de compte au
+  fournisseur (factures non soldées selon vos livres), lettre de relance d'un client (saisie
+  libre) ; page « Courriers types ».
+- Modèles de lettres : un modèle de l'entreprise pour chaque type de courrier, avec ses
+  variables et son aperçu ; le premier modèle d'un type remplace le modèle intégré par défaut.
 
 ## [1.0.0] — Phase 1 : MVP
 

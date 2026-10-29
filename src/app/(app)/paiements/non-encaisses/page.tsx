@@ -139,6 +139,7 @@ async function UncashedList({ searchParams }: Pick<PageProps<"/paiements/non-enc
                             label={label.toLowerCase()}
                             type={check.type}
                             status={check.status}
+                            issueDate={check.issue_date}
                             today={today}
                           />
                         </TableCell>

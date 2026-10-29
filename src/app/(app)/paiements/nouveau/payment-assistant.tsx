@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fromCents, parseAmount, toCents } from "@/lib/amount";
 import { amountInWords } from "@/lib/amount-in-words";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
+import { availableCount, availableNumbers, formatInstrumentNumber } from "@/lib/checkbooks";
 import { formatAmount, formatDate, formatMAD } from "@/lib/format";
 import type { AssistantData, OpenInvoice, ReplacedPayment } from "@/lib/payments/queries";
 import { checkCustomSplit, MAX_INSTRUMENTS, scheduleDueDates, splitEqual } from "@/lib/payments/split";
@@ -169,7 +169,9 @@ export function PaymentAssistant({
   if (totalCents <= 0) {
     errors.push("Saisissez le montant à régler.");
   }
-  const remainingForms = checkbook ? checkbook.lastNumber - checkbook.nextNumber + 1 : 0;
+  const remainingForms = checkbook ? availableCount(checkbook.nextNumber, checkbook.lastNumber, checkbook.stoppedRanges) : 0;
+  // Numéros attribués à l'émission : à la suite, sans les formules vierges en opposition
+  const numbers = checkbook ? availableNumbers(checkbook.nextNumber, checkbook.lastNumber, checkbook.stoppedRanges, count) : [];
   if (checkbook && count > remainingForms) {
     errors.push(`Il ne reste que ${remainingForms} formule(s) dans ce carnet.`);
   }
@@ -284,7 +286,7 @@ export function PaymentAssistant({
                 {checkbooks.map((book) => (
                   <option key={book.id} value={book.id}>
                     {book.accountLabel} · {book.bankName} · prochain n° {formatInstrumentNumber(book.nextNumber, book.numberWidth)} (
-                    {book.lastNumber - book.nextNumber + 1} restantes)
+                    {availableCount(book.nextNumber, book.lastNumber, book.stoppedRanges)} restantes)
                   </option>
                 ))}
               </select>
@@ -512,7 +514,7 @@ export function PaymentAssistant({
                   {parts.map((cents, i) => (
                     <TableRow key={i}>
                       <TableCell className="font-mono tabular-nums">
-                        {checkbook ? formatInstrumentNumber(checkbook.nextNumber + i, checkbook.numberWidth) : "—"}
+                        {checkbook && numbers[i] !== undefined ? formatInstrumentNumber(numbers[i], checkbook.numberWidth) : "—"}
                       </TableCell>
                       <TableCell className="text-end">
                         {mode === "custom" ? (
@@ -605,7 +607,7 @@ export function PaymentAssistant({
                 key={i}
                 type={type}
                 bankName={checkbook?.bankName ?? ""}
-                number={checkbook ? checkbook.nextNumber + i : null}
+                number={numbers[i] ?? null}
                 numberWidth={checkbook?.numberWidth ?? 7}
                 amount={fromCents(cents)}
                 payee={payeeName}

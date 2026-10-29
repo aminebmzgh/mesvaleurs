@@ -21,6 +21,7 @@ import {
   PAYMENT_STATUS_LABELS,
   PAYMENT_TYPE_LABELS,
   REJECTION_KIND_LABELS,
+  STOP_ORDER_REASON_LABELS,
   type RejectionKind,
   type PaymentStatus,
   type PaymentType,
@@ -190,6 +191,11 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                             {payment.cancellation_reason}
                           </span>
                         )}
+                        {payment.status === "stopped" && payment.stop_orders[0] && (
+                          <span className="block text-xs text-muted-foreground">
+                            {STOP_ORDER_REASON_LABELS[payment.stop_orders[0].reason]} constaté(e) le {formatDate(payment.stop_orders[0].occurred_on)}
+                          </span>
+                        )}
                         {payment.status === "rejected" && payment.rejection_kind && (
                           <RejectionInfo
                             kind={payment.rejection_kind}
@@ -229,6 +235,8 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                             status={payment.status}
                             regularized={payment.regularized_at !== null}
                             dueDate={payment.due_date}
+                            issueDate={payment.issue_date}
+                            stopOrderId={payment.stop_orders[0]?.id ?? null}
                             today={today}
                           />
                         </TableCell>

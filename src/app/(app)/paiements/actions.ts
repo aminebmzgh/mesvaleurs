@@ -174,3 +174,67 @@ export async function markGuaranteeReturned(paymentId: string, date: string) {
 export async function markGuaranteeDestroyed(paymentId: string, date: string) {
   return closeGuarantee(paymentId, "destroyed", date);
 }
+
+const STOP_ORDER_REASONS = ["lost", "stolen", "fraudulent_use", "holder_insolvency"] as const;
+const stopOrderInput = z.object({
+  reason: z.enum(STOP_ORDER_REASONS),
+  occurredOn: isoDate,
+  policeReport: z.string().trim().max(120),
+  notes: z.string().trim().max(500),
+});
+
+export type StopOrderInput = z.input<typeof stopOrderInput>;
+export type StopOrderResult = ActionResult & { stopOrderId?: string };
+
+/** Opposition sur un chèque ou une LCN en circulation (perte, vol…) : le paiement passe en opposition. */
+export async function stopPayment(paymentId: string, details: StopOrderInput): Promise<StopOrderResult> {
+  await requireRole(WRITER_ROLES);
+  const id = z.uuid().safeParse(paymentId);
+  const input = stopOrderInput.safeParse(details);
+  if (!id.success || !input.success) {
+    return { error: "Motif ou date du constat invalide." };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("stop_payment", {
+    p_payment_id: id.data,
+    p_reason: input.data.reason,
+    p_occurred_on: input.data.occurredOn,
+    p_police_report: input.data.policeReport,
+    p_notes: input.data.notes,
+  });
+  revalidatePath("/", "layout");
+  return error ? readableRpc(error, "Impossible d'enregistrer l'opposition.") : { stopOrderId: data };
+}
+
+/** Opposition sur des formules vierges d'un carnet (perte ou vol du chéquier, de formules). */
+export async function stopBlankForms(
+  checkbookId: string,
+  firstNumber: number,
+  lastNumber: number,
+  details: StopOrderInput,
+): Promise<StopOrderResult> {
+  await requireRole(WRITER_ROLES);
+  const range = z
+    .object({ id: z.uuid(), first: z.int().nonnegative(), last: z.int().nonnegative() })
+    .refine((r) => r.last >= r.first)
+    .safeParse({ id: checkbookId, first: firstNumber, last: lastNumber });
+  const input = stopOrderInput.safeParse(details);
+  if (!range.success) {
+    return { error: "Numéros de formules invalides." };
+  }
+  if (!input.success) {
+    return { error: "Motif ou date du constat invalide." };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("stop_blank_forms", {
+    p_checkbook_id: range.data.id,
+    p_first_number: range.data.first,
+    p_last_number: range.data.last,
+    p_reason: input.data.reason,
+    p_occurred_on: input.data.occurredOn,
+    p_police_report: input.data.policeReport,
+    p_notes: input.data.notes,
+  });
+  revalidatePath("/", "layout");
+  return error ? readableRpc(error, "Impossible d'enregistrer l'opposition.") : { stopOrderId: data };
+}

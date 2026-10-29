@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { BUILTIN_LETTER_TEMPLATES, LETTER_VARIABLES, type LetterValues, renderLetterText, suggestedTemplateKey } from "./templates";
+import {
+  BUILTIN_TEMPLATES,
+  findBuiltinTemplate,
+  LETTER_KIND_VARIABLES,
+  type LetterKind,
+  type LetterValues,
+  renderLetterText,
+  suggestedTemplateKey,
+} from "./templates";
 
 const values: LetterValues = {
   fournisseur: "Sotrama Matériaux SARL",
@@ -26,14 +34,24 @@ describe("renderLetterText", () => {
     expect(renderLetterText("Bonjour {contact}", values)).toBe("Bonjour {contact}");
   });
 
-  it("les modèles intégrés n'utilisent que des variables connues", () => {
-    for (const template of BUILTIN_LETTER_TEMPLATES) {
-      for (const text of [template.subject, template.body, template.closing]) {
-        for (const [, name] of text.matchAll(/\{([a-z_]+)\}/g)) {
-          expect(Object.keys(LETTER_VARIABLES), `${template.key} : {${name}}`).toContain(name);
+  it("les modèles intégrés n'utilisent que les variables de leur type de courrier", () => {
+    for (const [kind, templates] of Object.entries(BUILTIN_TEMPLATES) as [LetterKind, typeof BUILTIN_TEMPLATES.cover_letter][]) {
+      expect(templates.length, kind).toBeGreaterThan(0);
+      for (const template of templates) {
+        for (const text of [template.subject, template.body, template.closing]) {
+          for (const [, name] of text.matchAll(/\{([a-z_]+)\}/g)) {
+            expect(Object.keys(LETTER_KIND_VARIABLES[kind]), `${template.key} : {${name}}`).toContain(name);
+          }
         }
       }
     }
+  });
+
+  it("les clés des modèles intégrés sont uniques, tous types confondus", () => {
+    const keys = Object.values(BUILTIN_TEMPLATES).flat().map((t) => t.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(findBuiltinTemplate("prorogation")?.kind).toBe("postponement_request");
+    expect(findBuiltinTemplate("inconnu")).toBeNull();
   });
 });
 

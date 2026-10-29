@@ -6,6 +6,7 @@ import {
   FileTextIcon,
   GitCompareArrowsIcon,
   LandmarkIcon,
+  LetterTextIcon,
   LayoutDashboardIcon,
   MailIcon,
   ScrollTextIcon,
@@ -33,6 +34,7 @@ export const navigation: NavSection[] = [
       { title: "Non encaissés", href: "/paiements/non-encaisses", icon: ClockAlertIcon },
       { title: "Factures", href: "/factures", icon: FileTextIcon },
       { title: "Fournisseurs", href: "/fournisseurs", icon: TruckIcon },
+      { title: "Courriers types", href: "/courriers", icon: LetterTextIcon },
     ],
   },
   {

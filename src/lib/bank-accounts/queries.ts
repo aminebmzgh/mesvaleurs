@@ -74,3 +74,22 @@ export async function getBankAccount(id: string) {
   }
   return { ...account.data, checkbooks: checkbooks.data };
 }
+
+/** Oppositions d'un compte (paiements émis et formules vierges), les plus récentes d'abord. */
+export async function listStopOrders(bankAccountId: string) {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("stop_orders")
+    .select(
+      "id, reason, occurred_on, declared_on, police_report, first_number, last_number, payment_id, checkbooks ( type, number_width ), payments ( type, amount, payee_name )",
+    )
+    .eq("organization_id", organization.organizationId)
+    .eq("bank_account_id", bankAccountId)
+    .order("declared_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    throw new Error("Impossible de charger les oppositions.", { cause: error });
+  }
+  return data;
+}
