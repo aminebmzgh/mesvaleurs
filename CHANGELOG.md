@@ -72,6 +72,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   (deux traits parallèles) imprimés si le modèle prévoit leur zone, visibles dans l'éditeur et
   l'impression test ; enveloppes (DL, C5, C6) avec expéditeur et destinataire, depuis la fiche
   fournisseur et la page d'un lot.
+- Prévision de trésorerie sur 90 jours : solde actuel − chèques en circulation − LCN et
+  virements à leur date (chèques de garantie exclus), par compte ou pour tous les comptes,
+  factures à payer en option à leur échéance légale ; courbe avec infobulle (souris et
+  clavier), solde à 90 jours, point bas, débits prévus jour par jour ; alerte de solde
+  prévisionnel négatif, aussi sur le tableau de bord.
+- Calendrier des échéances (vues mois et semaine) : LCN, dates limites des factures et
+  restitutions des chèques de garantie, état payé / en attente / en retard (couleur, icône et
+  libellé), totaux de la période, liste par jour sur téléphone.
 
 ### Sécurité
 

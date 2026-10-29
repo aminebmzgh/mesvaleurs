@@ -1,6 +1,8 @@
 import {
   BanknoteIcon,
   BuildingIcon,
+  CalendarDaysIcon,
+  ChartLineIcon,
   ClockAlertIcon,
   FileBarChartIcon,
   FileTextIcon,
@@ -43,6 +45,8 @@ export const navigation: NavSection[] = [
     label: "Banque",
     items: [
       { title: "Comptes et chéquiers", href: "/comptes-bancaires", icon: LandmarkIcon },
+      { title: "Prévision de trésorerie", href: "/tresorerie", icon: ChartLineIcon },
+      { title: "Calendrier", href: "/calendrier", icon: CalendarDaysIcon },
       { title: "Rapprochement", href: "/rapprochement", icon: GitCompareArrowsIcon },
       { title: "Rapports", href: "/rapports", icon: FileBarChartIcon },
     ],

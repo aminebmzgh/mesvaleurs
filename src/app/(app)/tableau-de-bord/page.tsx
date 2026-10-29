@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDashboard } from "@/lib/dashboard/queries";
+import { getForecast } from "@/lib/forecast/queries";
 import { formatDate, formatMAD } from "@/lib/format";
 import { LEGAL_DISCLAIMER, REJECTION_KIND_LABELS } from "@/lib/labels";
 import { countdownLabel } from "@/lib/payments/rejections";
@@ -44,7 +45,9 @@ async function AccessDeniedNotice({ searchParams }: Pick<PageProps<"/tableau-de-
 }
 
 async function Dashboard() {
-  const data = await getDashboard();
+  const [data, { forecast }] = await Promise.all([getDashboard(), getForecast({ includeInvoices: false })]);
+  // Solde prévisionnel négatif à venir (LCN à leur échéance), si la provision suffit aujourd'hui
+  const negativeAhead = data.insufficientAccounts.length === 0 ? forecast.firstNegative : null;
   const lcn7 = data.lcnDue.filter((p) => p.daysLeft <= 7);
   const overdueTotal = data.overdue.reduce((sum, invoice) => sum + invoice.remaining, 0);
 
@@ -76,6 +79,7 @@ async function Dashboard() {
         data.guaranteesToRecover.length > 0 ||
         data.uncashed.count > 0 ||
         data.insufficientAccounts.length > 0 ||
+        negativeAhead !== null ||
         data.lowStock.length > 0) && (
         <div className="flex flex-col gap-3">
           {data.pendingBatchCount > 0 && (
@@ -174,6 +178,18 @@ async function Dashboard() {
               </AlertDescription>
             </Alert>
           ))}
+          {negativeAhead && (
+            <Alert variant="destructive">
+              <TriangleAlertIcon aria-hidden />
+              <AlertTitle>Solde prévisionnel négatif le {formatDate(negativeAhead.date)}</AlertTitle>
+              <AlertDescription>
+                {formatMAD(negativeAhead.balance)} ce jour-là, avec les LCN et virements à échoir.{" "}
+                <Link href="/tresorerie" className="underline">
+                  Voir la prévision de trésorerie
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
           {data.lowStock.map((book) => (
             <Alert key={book.id}>
               <BookOpenIcon aria-hidden />
