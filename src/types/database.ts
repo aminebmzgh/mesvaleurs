@@ -5,7 +5,27 @@ export type Database = {
   
   "public": {
           Tables: {
-            "audit_log": {
+            "alert_digests": {
+                  Row: {
+                    "alert_count": number,"created_at": string,"digest_date": string,"error": string | null,"id": string,"organization_id": string,"recipient_count": number,"status": Database["public"]['Enums']["alert_digest_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alert_count"?: number,"created_at"?: string,"digest_date": string,"error"?: string | null,"id"?: string,"organization_id": string,"recipient_count"?: number,"status"?: Database["public"]['Enums']["alert_digest_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "alert_count"?: number,"created_at"?: string,"digest_date"?: string,"error"?: string | null,"id"?: string,"organization_id"?: string,"recipient_count"?: number,"status"?: Database["public"]['Enums']["alert_digest_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "alert_digests_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"audit_log": {
                   Row: {
                     "action": string,"actor_id": string | null,"after": Json | null,"before": Json | null,"created_at": string,"details": Json | null,"id": number,"organization_id": string,"record_id": string | null,"table_name": string | null
                   }
@@ -217,14 +237,14 @@ isOneToOne: false
                   ]
                 },"memberships": {
                   Row: {
-                    "created_at": string,"daily_ceiling": number | null,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
+                    "created_at": string,"daily_ceiling": number | null,"email_alerts": boolean,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"daily_ceiling"?: number | null,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"daily_ceiling"?: number | null,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -682,6 +702,9 @@ isOneToOne: false
 "reject_payment":
 { Args: { "p_kind": Database["public"]['Enums']["rejection_kind"],"p_payment_id": string,"p_reason": string,"p_rejected_on": string }; Returns: undefined
                            },
+"set_email_alerts":
+{ Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined
+                           },
 "set_statement_line_ignored":
 { Args: { "p_ignored": boolean,"p_line_id": string }; Returns: undefined
                            },
@@ -696,7 +719,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","batch_approval_status": "not_required"|"pending"|"approved"|"refused","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored","stop_order_reason": "lost"|"stolen"|"fraudulent_use"|"holder_insolvency"
+            "alert_digest_status": "pending"|"sent"|"no_alerts"|"no_recipients"|"disabled"|"failed","app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","batch_approval_status": "not_required"|"pending"|"approved"|"refused","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored","stop_order_reason": "lost"|"stolen"|"fraudulent_use"|"holder_insolvency"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -812,7 +835,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"batch_approval_status": ["not_required", "pending", "approved", "refused"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"],"stop_order_reason": ["lost", "stolen", "fraudulent_use", "holder_insolvency"]
+            "alert_digest_status": ["pending", "sent", "no_alerts", "no_recipients", "disabled", "failed"],"app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"batch_approval_status": ["not_required", "pending", "approved", "refused"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"],"stop_order_reason": ["lost", "stolen", "fraudulent_use", "holder_insolvency"]
           }
         }
 } as const

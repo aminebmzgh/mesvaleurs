@@ -36,6 +36,10 @@ export type ActiveOrganization = OrganizationMembership & {
   uncashedAlertDays: number;
   /** Seuil d'alerte « carnet presque épuisé » (formules restantes). */
   lowStockThreshold: number;
+  /** Délai d'alerte des LCN à échoir (jours). */
+  lcnAlertDays: number;
+  /** Délai d'alerte des factures proches de la date limite légale (jours). */
+  invoiceAlertDays: number;
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -164,6 +168,8 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     amountWordsRectified: settings.amount_words_rectified,
     uncashedAlertDays: settings.uncashed_alert_days,
     lowStockThreshold: settings.low_stock_threshold,
+    lcnAlertDays: settings.lcn_alert_days,
+    invoiceAlertDays: settings.invoice_alert_days,
   };
 });
 

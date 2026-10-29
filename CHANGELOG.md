@@ -92,6 +92,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   auxiliaire) et par compte bancaire ; base « date de débit » ou « date d'émission » (LCN par
   les effets à payer) ; séparateur, format de date, séparateur décimal et en-tête réglables
   (Paramètres › Comptabilité, administrateur).
+- Alertes : page Alertes (LCN à échoir, factures proches de la date limite légale ou en
+  retard, paiements rejetés, provision insuffisante, chèques de garantie, chèques non
+  encaissés, carnets presque épuisés, lots à valider), délais d'alerte des LCN et des factures
+  réglables ; récapitulatif quotidien par e-mail (Resend) envoyé chaque matin par une tâche
+  planifiée Vercel Cron protégée par `CRON_SECRET`, rejouable sans doublon, avec
+  historique des envois ; chaque membre peut s'en désabonner. L'envoi réel attend un domaine
+  vérifié (`RESEND_API_KEY` et `EMAIL_FROM`).
 
 ### Sécurité
 

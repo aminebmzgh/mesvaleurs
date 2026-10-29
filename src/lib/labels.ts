@@ -7,6 +7,7 @@ export type PaymentType = Enums["payment_type"];
 export type RejectionKind = Enums["rejection_kind"];
 export type RegularizationMethod = Enums["regularization_method"];
 export type StopOrderReason = Enums["stop_order_reason"];
+export type AlertDigestStatus = Enums["alert_digest_status"];
 
 export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   unpaid: "Non payée",
@@ -39,6 +40,15 @@ export const REJECTION_KIND_LABELS: Record<RejectionKind, string> = {
   stop_order: "Opposition",
   irregularity: "Irrégularité de la formule",
   other: "Autre motif",
+};
+
+export const ALERT_DIGEST_STATUS_LABELS: Record<AlertDigestStatus, string> = {
+  pending: "En cours",
+  sent: "Envoyé",
+  no_alerts: "Aucune alerte",
+  no_recipients: "Aucun destinataire",
+  disabled: "Envoi non configuré",
+  failed: "Échec",
 };
 
 export const REGULARIZATION_METHOD_LABELS: Record<RegularizationMethod, string> = {

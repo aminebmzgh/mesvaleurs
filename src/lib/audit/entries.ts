@@ -132,6 +132,7 @@ const FIELD_LABELS: Record<string, string> = {
   current_balance: "Solde courant",
   opening_balance: "Solde d'ouverture",
   print_count: "Impressions",
+  email_alerts: "Alertes par e-mail",
 };
 
 export function fieldLabel(field: string): string {

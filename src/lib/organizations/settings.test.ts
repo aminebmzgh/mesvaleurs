@@ -18,6 +18,8 @@ const DEFAULTS = {
   amount_words_rectified: false,
   uncashed_alert_days: 60,
   low_stock_threshold: 5,
+  lcn_alert_days: 7,
+  invoice_alert_days: 7,
   approval_threshold: null,
   daily_ceiling: null,
   accounting_export: ACCOUNTING_DEFAULTS,
@@ -35,6 +37,8 @@ describe("parseOrganizationSettings", () => {
       amount_words_rectified: false,
       uncashed_alert_days: 90,
       low_stock_threshold: 5,
+      lcn_alert_days: 7,
+      invoice_alert_days: 7,
       approval_threshold: null,
       daily_ceiling: null,
       accounting_export: ACCOUNTING_DEFAULTS,
@@ -46,6 +50,13 @@ describe("parseOrganizationSettings", () => {
 
   it("ignore un JSON qui n'est pas un objet", () => {
     expect(parseOrganizationSettings([1, 2])).toEqual(DEFAULTS);
+  });
+});
+
+describe("délais d'alerte", () => {
+  it("LCN à échoir et factures proches de la date limite légale", () => {
+    expect(parseOrganizationSettings({ lcn_alert_days: 15, invoice_alert_days: 30 })).toMatchObject({ lcn_alert_days: 15, invoice_alert_days: 30 });
+    expect(parseOrganizationSettings({ lcn_alert_days: 0, invoice_alert_days: "bientôt" })).toMatchObject({ lcn_alert_days: 7, invoice_alert_days: 7 });
   });
 });
 

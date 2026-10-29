@@ -28,6 +28,12 @@ export default defineConfig({
     url: `http://localhost:${PORT}/connexion`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
-    env: { NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}` },
+    env: {
+      NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
+      // Tâche planifiée appelée par les tests ; aucun e-mail réel n'est envoyé
+      CRON_SECRET: "e2e-cron-secret-0123456789",
+      RESEND_API_KEY: "",
+      EMAIL_FROM: "",
+    },
   },
 });

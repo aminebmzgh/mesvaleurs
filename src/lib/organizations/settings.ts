@@ -15,6 +15,13 @@ export const LOW_STOCK_DEFAULT = 5;
 /** Seuils proposés dans les paramètres. */
 export const LOW_STOCK_CHOICES = [3, 5, 10, 15, 20] as const;
 
+/** Alerte « LCN à échoir » par défaut : échéance dans les N jours (spec §8). */
+export const LCN_ALERT_DEFAULT = 7;
+/** Alerte « facture proche de la date limite légale » par défaut (loi 69-21). */
+export const INVOICE_ALERT_DEFAULT = 7;
+/** Délais d'alerte proposés dans les paramètres (jours). */
+export const DUE_ALERT_CHOICES = [3, 7, 15, 30] as const;
+
 const accountCode = (fallback: string) => z.string().regex(/^[A-Za-z0-9._-]{1,20}$/).catch(fallback).default(fallback);
 
 /**
@@ -48,6 +55,10 @@ export const organizationSettingsSchema = z.object({
   uncashed_alert_days: z.number().int().min(15).max(365).catch(UNCASHED_ALERT_DEFAULT).default(UNCASHED_ALERT_DEFAULT),
   /** Formules restantes à partir desquelles un carnet est signalé « presque épuisé ». */
   low_stock_threshold: z.number().int().min(1).max(100).catch(LOW_STOCK_DEFAULT).default(LOW_STOCK_DEFAULT),
+  /** Alerte des LCN dont l'échéance tombe dans ce délai (jours). */
+  lcn_alert_days: z.number().int().min(1).max(60).catch(LCN_ALERT_DEFAULT).default(LCN_ALERT_DEFAULT),
+  /** Alerte des factures dont la date limite légale tombe dans ce délai (jours). */
+  invoice_alert_days: z.number().int().min(1).max(60).catch(INVOICE_ALERT_DEFAULT).default(INVOICE_ALERT_DEFAULT),
   /** Double signature : validation exigée pour toute formule au-delà de ce montant (DH) ; null = désactivée. */
   approval_threshold: z.number().positive().nullable().catch(null).default(null),
   /** Plafond journalier de l'entreprise (total des paiements datés du jour, DH) ; null = aucun. */
