@@ -34,6 +34,8 @@ export type ActiveOrganization = OrganizationMembership & {
   amountWordsRectified: boolean;
   /** Délai d'alerte d'un chèque non encaissé (jours). */
   uncashedAlertDays: number;
+  /** Seuil d'alerte « carnet presque épuisé » (formules restantes). */
+  lowStockThreshold: number;
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -161,6 +163,7 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     mfaRequired: settings.require_mfa && MFA_ELIGIBLE_ROLES.includes(active.role),
     amountWordsRectified: settings.amount_words_rectified,
     uncashedAlertDays: settings.uncashed_alert_days,
+    lowStockThreshold: settings.low_stock_threshold,
   };
 });
 

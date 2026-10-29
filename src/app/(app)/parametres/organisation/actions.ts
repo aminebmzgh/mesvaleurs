@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
-import { parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import { LOW_STOCK_CHOICES, parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { emailSchema, iceSchema, optionalAmountSchema, optionalText, requiredText } from "@/lib/validation";
 
 const organizationSchema = z.object({
@@ -23,6 +23,7 @@ const organizationSchema = z.object({
   require_mfa: z.literal("on").optional(),
   amount_words_rectified: z.literal("on").optional(),
   uncashed_alert_days: z.coerce.number().pipe(z.union(UNCASHED_ALERT_CHOICES.map((days) => z.literal(days)))),
+  low_stock_threshold: z.coerce.number().pipe(z.union(LOW_STOCK_CHOICES.map((count) => z.literal(count)))),
 });
 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -32,7 +33,7 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
-  const { require_mfa, amount_words_rectified, uncashed_alert_days, ...fields } = parsed.data;
+  const { require_mfa, amount_words_rectified, uncashed_alert_days, low_stock_threshold, ...fields } = parsed.data;
   const supabase = await createClient();
 
   const { data: current } = await supabase
@@ -45,6 +46,7 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     require_mfa: require_mfa === "on",
     amount_words_rectified: amount_words_rectified === "on",
     uncashed_alert_days,
+    low_stock_threshold,
   };
 
   const { error } = await supabase

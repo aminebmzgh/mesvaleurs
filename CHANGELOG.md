@@ -53,6 +53,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   libre) ; page « Courriers types ».
 - Modèles de lettres : un modèle de l'entreprise pour chaque type de courrier, avec ses
   variables et son aperçu ; le premier modèle d'un type remplace le modèle intégré par défaut.
+- Stock de chéquiers : seuil d'alerte « presque épuisé » réglable dans les paramètres de
+  l'entreprise (3 à 20 formules, 5 par défaut) ; stock calculé par compte et par type de
+  carnet (un carnet qui s'achève n'alerte pas si un autre carnet en service prend le relais) ;
+  avertissement dans l'assistant de paiement quand le lot fait passer le stock sous le seuil ;
+  lien vers le compte depuis l'alerte du tableau de bord.
+- Inventaire d'un carnet : chaque formule utilisée, annulée (avec le motif), en opposition,
+  restante ou non attribuée, avec le paiement correspondant.
 
 ### Corrigé
 

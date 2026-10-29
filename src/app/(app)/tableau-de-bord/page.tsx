@@ -165,7 +165,11 @@ async function Dashboard() {
               <BookOpenIcon aria-hidden />
               <AlertTitle>{book.type === "lcn" ? "Carnet de LCN" : "Chéquier"} presque épuisé</AlertTitle>
               <AlertDescription>
-                {book.account} : {book.remaining} formule(s) restante(s). Commandez un nouveau carnet à votre banque.
+                {book.account} : {book.remaining} formule(s) restante(s). Commandez un nouveau carnet à votre banque, puis{" "}
+                <Link href={`/comptes-bancaires/${book.bankAccountId}`} className="underline">
+                  enregistrez-le
+                </Link>
+                .
               </AlertDescription>
             </Alert>
           ))}
