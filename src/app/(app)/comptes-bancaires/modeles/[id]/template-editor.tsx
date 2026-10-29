@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PRINT_FIELD_LABELS, PRINT_FIELDS, type PrintField, type PrintZone } from "@/lib/printing/fields";
-import { layoutInstrument, type PrintData } from "@/lib/printing/layout";
+import { crossingSegments, layoutInstrument, type PrintData } from "@/lib/printing/layout";
 import { measureFor } from "@/lib/printing/measure";
 import { BACKGROUND_MAX_BYTES, BACKGROUND_MIME_TYPES, backgroundPath, type TemplateInput } from "@/lib/printing/schemas";
 import { createClient } from "@/lib/supabase/client";
@@ -242,7 +242,9 @@ export function TemplateEditor({
               </p>
             )}
             {draft.zones.map((z, index) => {
-              const heightMm = z.fontSize * PT_TO_MM;
+              // Barrement : zone tracée (deux traits obliques), sa hauteur suit sa largeur
+              const crossing = z.field === "crossing";
+              const heightMm = crossing ? z.width * 0.35 : z.fontSize * PT_TO_MM;
               const placed = preview.texts.find((t) => t.zone === z);
               const overflowing = preview.overflow.includes(z.field);
               return (
@@ -258,10 +260,25 @@ export function TemplateEditor({
                     left: (z.x + draft.offsetXMm) * zoom,
                     top: (z.y + draft.offsetYMm - heightMm) * zoom,
                     width: z.width * zoom,
-                    height: heightMm * zoom * 1.15,
+                    height: heightMm * zoom * (crossing ? 1 : 1.15),
                   }}
                   title={PRINT_FIELD_LABELS[z.field]}
                 >
+                  {crossing && (
+                    <svg className="pointer-events-none absolute inset-0 size-full overflow-visible" aria-hidden>
+                      {crossingSegments(z).map((segment, i) => (
+                        <line
+                          key={i}
+                          x1={(segment.x1 - z.x) * zoom}
+                          y1={(segment.y1 - z.y + heightMm) * zoom}
+                          x2={(segment.x2 - z.x) * zoom}
+                          y2={(segment.y2 - z.y + heightMm) * zoom}
+                          stroke="#b91c1c"
+                          strokeWidth={1.5}
+                        />
+                      ))}
+                    </svg>
+                  )}
                   <span
                     className="pointer-events-none absolute bottom-0 whitespace-nowrap leading-none text-red-700"
                     style={{

@@ -67,6 +67,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   que le préparateur avant toute impression ou lettre ; refus avec motif (paiements annulés,
   numéros conservés) ; page « Lots à valider », alerte sur le tableau de bord, validations et
   refus tracés au journal d'audit.
+- Impression complémentaire : zones de talon (bénéficiaire, montant, date, échéance,
+  factures réglées) pour les formules avec souche ; mention « NON ENDOSSABLE » et barrement
+  (deux traits parallèles) imprimés si le modèle prévoit leur zone, visibles dans l'éditeur et
+  l'impression test ; enveloppes (DL, C5, C6) avec expéditeur et destinataire, depuis la fiche
+  fournisseur et la page d'un lot.
 
 ### Sécurité
 

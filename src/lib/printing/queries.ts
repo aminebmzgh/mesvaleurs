@@ -3,6 +3,7 @@ import { requireActiveOrganization } from "@/lib/auth/dal";
 import { formatRib } from "@/lib/rib";
 import { createClient } from "@/lib/supabase/server";
 import { defaultTemplateFor } from "./default-templates";
+import type { EnvelopeAddress } from "./envelope";
 import { parseTemplateOptions, parseZones, type PrintTemplate } from "./fields";
 import type { PrintData } from "./layout";
 import type { Background } from "./pdf";
@@ -174,4 +175,43 @@ export function sampleData(type: "check" | "lcn", rectified: boolean, org: { nam
     cause: "Factures F-2026-0412, F-2026-0498",
     rectified,
   };
+}
+
+/** Expéditeur (l'entreprise) et destinataire (un fournisseur) d'une enveloppe ; null si le fournisseur n'existe pas. */
+export async function getEnvelopeAddresses(supplierId: string): Promise<{ sender: EnvelopeAddress; recipient: EnvelopeAddress } | null> {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const orgId = organization.organizationId;
+  const [org, supplier] = await Promise.all([
+    supabase.from("organizations").select("name, address, city").eq("id", orgId).single(),
+    supabase.from("suppliers").select("name, contact_name, address, city").eq("organization_id", orgId).eq("id", supplierId).maybeSingle(),
+  ]);
+  if (org.error || supplier.error) {
+    throw new Error("Impossible de préparer l'enveloppe.", { cause: org.error ?? supplier.error });
+  }
+  if (!supplier.data) {
+    return null;
+  }
+  return {
+    sender: { name: org.data.name, lines: [org.data.address ?? "", org.data.city ?? ""] },
+    recipient: {
+      name: supplier.data.name,
+      attention: supplier.data.contact_name,
+      lines: [supplier.data.address ?? "", supplier.data.city ?? ""],
+    },
+  };
+}
+
+/** Fournisseur d'un lot (pour son enveloppe). */
+export async function getBatchSupplierId(batchId: string): Promise<string | null> {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("supplier_id")
+    .eq("organization_id", organization.organizationId)
+    .eq("print_batch_id", batchId)
+    .limit(1)
+    .maybeSingle();
+  return data?.supplier_id ?? null;
 }
