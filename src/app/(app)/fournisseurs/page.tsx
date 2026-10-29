@@ -4,6 +4,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ExportLinks } from "@/components/export-menu";
 import { PageHeader } from "@/components/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,6 +76,7 @@ async function SupplierList({ searchParams }: { searchParams: SearchParams }) {
             {archived ? "Voir les fournisseurs actifs" : "Voir les fournisseurs archivés"}
           </Link>
         </div>
+        <ExportLinks list="fournisseurs" params={{ q: search, archives: archived ? "1" : undefined }} />
 
         {suppliers.length === 0 ? (
           <EmptyState

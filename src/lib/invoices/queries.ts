@@ -14,10 +14,13 @@ export async function listInvoices({
   search,
   status = "open",
   supplierId,
+  limit = LIST_LIMIT,
 }: {
   search?: string;
   status?: InvoiceFilter;
   supplierId?: string;
+  /** Nombre maximal de lignes (exports : davantage que l'écran). */
+  limit?: number;
 }) {
   const organization = await requireActiveOrganization();
   const supabase = await createClient();
@@ -31,7 +34,7 @@ export async function listInvoices({
     .eq("organization_id", organization.organizationId)
     .order("issue_date", { ascending: false })
     .order("number")
-    .limit(LIST_LIMIT);
+    .limit(limit);
   if (status === "open") {
     query = query.in("status", ["unpaid", "partially_paid"]);
   } else if (status !== "all") {
@@ -48,7 +51,7 @@ export async function listInvoices({
   if (error) {
     throw new Error("Impossible de charger les factures.", { cause: error });
   }
-  return { invoices: data, truncated: data.length === LIST_LIMIT };
+  return { invoices: data, truncated: data.length === limit };
 }
 
 /** Fournisseurs actifs, pour les listes déroulantes. */

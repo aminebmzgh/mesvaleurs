@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { FormSelect } from "@/components/form-select";
+import { ExportLinks } from "@/components/export-menu";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -116,6 +117,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
             Filtrer
           </Button>
         </Form>
+        <ExportLinks list="paiements" params={{ statut: status, type, numero: numberText }} />
 
         {payments.length === 0 ? (
           <EmptyState

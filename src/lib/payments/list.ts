@@ -18,10 +18,13 @@ export async function listPayments({
   status = "circulation",
   type,
   number,
+  limit = LIST_LIMIT,
 }: {
   status?: PaymentFilter;
   type?: PaymentType;
   number?: number;
+  /** Nombre maximal de lignes (exports : davantage que l'écran). */
+  limit?: number;
 }) {
   const organization = await requireActiveOrganization();
   const supabase = await createClient();
@@ -32,7 +35,7 @@ export async function listPayments({
     .neq("status", "draft")
     .order("issue_date", { ascending: false })
     .order("number", { ascending: false })
-    .limit(LIST_LIMIT);
+    .limit(limit);
   if (status === "circulation") {
     query = query.in("status", ["issued", "delivered"]);
   } else if (status !== "all") {
@@ -48,7 +51,7 @@ export async function listPayments({
   if (error) {
     throw new Error("Impossible de charger les paiements.", { cause: error });
   }
-  return { payments: data, truncated: data.length === LIST_LIMIT };
+  return { payments: data, truncated: data.length === limit };
 }
 
 /** Lot émis par l'assistant, avec ses formules et les factures réglées. */

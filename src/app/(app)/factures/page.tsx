@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { FormSelect } from "@/components/form-select";
+import { ExportLinks } from "@/components/export-menu";
 import { PageHeader } from "@/components/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -103,6 +104,7 @@ async function InvoiceList({ searchParams }: Pick<PageProps<"/factures">, "searc
             Filtrer
           </Button>
         </Form>
+        <ExportLinks list="factures" params={{ q: search, statut: status, fournisseur: supplierId }} />
 
         {invoices.length === 0 ? (
           <EmptyState

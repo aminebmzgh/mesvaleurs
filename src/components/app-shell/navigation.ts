@@ -2,6 +2,7 @@ import {
   BanknoteIcon,
   BuildingIcon,
   CalendarDaysIcon,
+  ChartColumnIcon,
   ChartLineIcon,
   ClockAlertIcon,
   FileBarChartIcon,
@@ -49,6 +50,7 @@ export const navigation: NavSection[] = [
       { title: "Calendrier", href: "/calendrier", icon: CalendarDaysIcon },
       { title: "Rapprochement", href: "/rapprochement", icon: GitCompareArrowsIcon },
       { title: "Rapports", href: "/rapports", icon: FileBarChartIcon },
+      { title: "Statistiques", href: "/statistiques", icon: ChartColumnIcon },
     ],
   },
   {
