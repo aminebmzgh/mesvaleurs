@@ -1,4 +1,4 @@
-import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, CircleXIcon, ShieldAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
+import { BookOpenIcon, CalendarClockIcon, HourglassIcon, CircleAlertIcon, CircleXIcon, ShieldAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -71,12 +71,26 @@ async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {(data.rejected.length > 0 ||
+      {(data.pendingBatchCount > 0 ||
+        data.rejected.length > 0 ||
         data.guaranteesToRecover.length > 0 ||
         data.uncashed.count > 0 ||
         data.insufficientAccounts.length > 0 ||
         data.lowStock.length > 0) && (
         <div className="flex flex-col gap-3">
+          {data.pendingBatchCount > 0 && (
+            <Alert>
+              <HourglassIcon aria-hidden />
+              <AlertTitle>
+                {data.pendingBatchCount} lot{data.pendingBatchCount > 1 ? "s" : ""} à valider avant impression
+              </AlertTitle>
+              <AlertDescription>
+                <Link href="/paiements/a-valider" className="underline">
+                  Voir les lots à valider
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
           {data.rejected.length > 0 && (
             <Alert variant="destructive">
               <CircleXIcon aria-hidden />

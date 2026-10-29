@@ -60,6 +60,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   lien vers le compte depuis l'alerte du tableau de bord.
 - Inventaire d'un carnet : chaque formule utilisée, annulée (avec le motif), en opposition,
   restante ou non attribuée, avec le paiement correspondant.
+- Double signature et plafonds : seuil de validation par formule et plafond journalier de
+  l'entreprise (paramètres), plafond journalier par membre (page Membres) et par fournisseur
+  (fiche fournisseur) ; au-delà, le lot est préparé (numéros réservés, paiements en brouillon,
+  factures non réglées) et doit être validé par un gestionnaire ou un administrateur autre
+  que le préparateur avant toute impression ou lettre ; refus avec motif (paiements annulés,
+  numéros conservés) ; page « Lots à valider », alerte sur le tableau de bord, validations et
+  refus tracés au journal d'audit.
+
+### Sécurité
+
+- Paiements et lots d'impression : création, validation et suppression réservées aux
+  fonctions de la base (plus d'écriture directe) ; plafond d'un fournisseur modifiable
+  seulement par un gestionnaire ou un administrateur.
 
 ### Corrigé
 

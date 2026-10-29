@@ -217,14 +217,14 @@ isOneToOne: false
                   ]
                 },"memberships": {
                   Row: {
-                    "created_at": string,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
+                    "created_at": string,"daily_ceiling": number | null,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -351,14 +351,14 @@ isOneToOne: false
                   ]
                 },"print_batches": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"organization_id": string,"print_count": number,"printed_at": string | null
+                    "approval_reasons": NonNullable<Json>,"approval_status": Database["public"]['Enums']["batch_approval_status"],"created_at": string,"created_by": string | null,"decided_at": string | null,"decided_by": string | null,"id": string,"organization_id": string,"print_count": number,"printed_at": string | null,"refusal_reason": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id": string,"print_count"?: number,"printed_at"?: string | null
+                    "approval_reasons"?: NonNullable<Json>,"approval_status"?: Database["public"]['Enums']["batch_approval_status"],"created_at"?: string,"created_by"?: string | null,"decided_at"?: string | null,"decided_by"?: string | null,"id"?: string,"organization_id": string,"print_count"?: number,"printed_at"?: string | null,"refusal_reason"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id"?: string,"print_count"?: number,"printed_at"?: string | null
+                    "approval_reasons"?: NonNullable<Json>,"approval_status"?: Database["public"]['Enums']["batch_approval_status"],"created_at"?: string,"created_by"?: string | null,"decided_at"?: string | null,"decided_by"?: string | null,"id"?: string,"organization_id"?: string,"print_count"?: number,"printed_at"?: string | null,"refusal_reason"?: string | null
                   }
                   Relationships: [
                     {
@@ -551,14 +551,14 @@ isOneToOne: false
                   ]
                 },"suppliers": {
                   Row: {
-                    "address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
+                    "address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"daily_ceiling": number | null,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"notes"?: string | null,"organization_id": string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
+                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"daily_ceiling"?: number | null,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"notes"?: string | null,"organization_id": string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"notes"?: string | null,"organization_id"?: string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
+                    "address"?: string | null,"city"?: string | null,"contact_name"?: string | null,"created_at"?: string,"daily_ceiling"?: number | null,"email"?: string | null,"ice"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"notes"?: string | null,"organization_id"?: string,"payee_name"?: string | null,"payment_terms_days"?: number | null,"phone"?: string | null,"print_cover_letter"?: boolean,"rib"?: string | null,"tax_id"?: string | null,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -641,6 +641,9 @@ isOneToOne: false
 "apply_statement_matches":
 { Args: { "p_import_id": string,"p_matches": Json }; Returns: undefined
                            },
+"approve_batch":
+{ Args: { "p_batch_id": string }; Returns: undefined
+                           },
 "close_guarantee":
 { Args: { "p_closed_on": string,"p_outcome": Database["public"]['Enums']["guarantee_outcome"],"p_payment_id": string }; Returns: undefined
                            },
@@ -670,6 +673,9 @@ isOneToOne: false
 "record_transfer":
 { Args: { "p_allocations"?: Json,"p_amount": number,"p_bank_account_id": string,"p_debited": boolean,"p_notes"?: string,"p_organization_id": string,"p_reference": string,"p_supplier_id": string,"p_transfer_date": string }; Returns: string
                            },
+"refuse_batch":
+{ Args: { "p_batch_id": string,"p_reason": string }; Returns: undefined
+                           },
 "regularize_payment":
 { Args: { "p_method": Database["public"]['Enums']["regularization_method"],"p_notes"?: string,"p_payment_id": string,"p_regularized_on": string,"p_replacement_payment_id"?: string }; Returns: undefined
                            },
@@ -690,7 +696,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored","stop_order_reason": "lost"|"stolen"|"fraudulent_use"|"holder_insolvency"
+            "app_role": "admin"|"manager"|"preparer"|"accountant"|"external_accountant","batch_approval_status": "not_required"|"pending"|"approved"|"refused","checkbook_status": "active"|"exhausted"|"archived","guarantee_outcome": "returned"|"destroyed","instrument_type": "check"|"lcn","invoice_status": "unpaid"|"partially_paid"|"paid"|"disputed","letter_kind": "cover_letter"|"opposition"|"postponement_request"|"statement_request"|"reminder","payment_status": "draft"|"issued"|"delivered"|"paid"|"rejected"|"cancelled"|"lost"|"stopped","payment_type": "check"|"lcn"|"guarantee_check"|"transfer","regularization_method": "new_provision"|"replacement"|"transfer"|"other","rejection_kind": "insufficient_funds"|"signature"|"stop_order"|"irregularity"|"other","statement_format": "csv"|"excel"|"pdf_text"|"pdf_scan","statement_import_status": "pending"|"processing"|"review"|"completed"|"failed","statement_line_status": "auto_matched"|"manually_matched"|"to_confirm"|"unmatched"|"ignored","stop_order_reason": "lost"|"stolen"|"fraudulent_use"|"holder_insolvency"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -806,7 +812,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"],"stop_order_reason": ["lost", "stolen", "fraudulent_use", "holder_insolvency"]
+            "app_role": ["admin", "manager", "preparer", "accountant", "external_accountant"],"batch_approval_status": ["not_required", "pending", "approved", "refused"],"checkbook_status": ["active", "exhausted", "archived"],"guarantee_outcome": ["returned", "destroyed"],"instrument_type": ["check", "lcn"],"invoice_status": ["unpaid", "partially_paid", "paid", "disputed"],"letter_kind": ["cover_letter", "opposition", "postponement_request", "statement_request", "reminder"],"payment_status": ["draft", "issued", "delivered", "paid", "rejected", "cancelled", "lost", "stopped"],"payment_type": ["check", "lcn", "guarantee_check", "transfer"],"regularization_method": ["new_provision", "replacement", "transfer", "other"],"rejection_kind": ["insufficient_funds", "signature", "stop_order", "irregularity", "other"],"statement_format": ["csv", "excel", "pdf_text", "pdf_scan"],"statement_import_status": ["pending", "processing", "review", "completed", "failed"],"statement_line_status": ["auto_matched", "manually_matched", "to_confirm", "unmatched", "ignored"],"stop_order_reason": ["lost", "stolen", "fraudulent_use", "holder_insolvency"]
           }
         }
 } as const

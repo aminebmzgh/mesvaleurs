@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /** Émission d'un chèque de garantie : numéro attribué dans le chéquier, aucune facture réglée. */
-export async function issueGuarantee(request: GuaranteeRequest): Promise<Result<{ batchId: string }>> {
+export async function issueGuarantee(request: GuaranteeRequest): Promise<Result<{ batchId: string; pendingApproval: boolean }>> {
   const organization = await requireRole(WRITER_ROLES);
   const parsed = guaranteeRequestSchema.safeParse(request);
   if (!parsed.success) {
@@ -34,5 +34,7 @@ export async function issueGuarantee(request: GuaranteeRequest): Promise<Result<
     return { ok: false, error: readable ? error.message : "L'émission a échoué. Aucun numéro n'a été consommé." };
   }
   revalidatePath("/", "layout");
-  return { ok: true, data: { batchId } };
+  // Double signature : lot au-delà du seuil ou d'un plafond, à valider avant impression
+  const { data: batch } = await supabase.from("print_batches").select("approval_status").eq("id", batchId).single();
+  return { ok: true, data: { batchId, pendingApproval: batch?.approval_status === "pending" } };
 }

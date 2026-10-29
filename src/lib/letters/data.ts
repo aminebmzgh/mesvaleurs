@@ -94,7 +94,8 @@ export async function getCoverLetterData(batchId: string): Promise<CoverLetterDa
       )
       .eq("organization_id", orgId)
       .eq("print_batch_id", batchId)
-      .neq("status", "cancelled")
+      // Ni annulés, ni en attente de validation (brouillons)
+      .not("status", "in", "(cancelled,draft)")
       .order("number"),
   ]);
   if (payments.error) {

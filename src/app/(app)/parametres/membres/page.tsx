@@ -7,8 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization, requireUser } from "@/lib/auth/dal";
 import { ROLE_LABELS } from "@/lib/auth/roles";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatMAD } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { CeilingDialog } from "@/components/ceiling-dialog";
+import { setMemberCeiling } from "./actions";
 import { InvitationActions, MemberActions } from "./member-actions";
 import { InviteMemberForm } from "./invite-member-form";
 
@@ -33,7 +35,7 @@ async function Members() {
   const [{ data: members }, { data: invitations }] = await Promise.all([
     supabase
       .from("memberships")
-      .select("id, role, user_id, created_at, profiles ( full_name, email )")
+      .select("id, role, user_id, created_at, daily_ceiling, profiles ( full_name, email )")
       .eq("organization_id", organization.organizationId)
       .order("created_at"),
     // Lisibles uniquement par les administrateurs (RLS) : liste vide sinon
@@ -73,6 +75,7 @@ async function Members() {
                 <TableHead>E-mail</TableHead>
                 <TableHead>Rôle</TableHead>
                 <TableHead>Depuis le</TableHead>
+                <TableHead>Plafond / jour</TableHead>
                 {isAdmin && <TableHead className="text-end">Actions</TableHead>}
               </TableRow>
             </TableHeader>
@@ -90,6 +93,21 @@ async function Members() {
                   <TableCell>{member.profiles?.email}</TableCell>
                   <TableCell>{ROLE_LABELS[member.role]}</TableCell>
                   <TableCell>{formatDate(member.created_at)}</TableCell>
+                  <TableCell>
+                    {isAdmin ? (
+                      <CeilingDialog
+                        id={member.id}
+                        name={member.profiles?.full_name || member.profiles?.email || "ce membre"}
+                        ceiling={member.daily_ceiling}
+                        description="Au-delà de ce total de paiements préparés et datés du même jour, ses lots sont validés par une autre personne avant impression."
+                        action={setMemberCeiling.bind(null, member.id)}
+                      />
+                    ) : member.daily_ceiling != null ? (
+                      formatMAD(member.daily_ceiling)
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
                   {isAdmin && (
                     <TableCell className="text-end">
                       <MemberActions membershipId={member.id} role={member.role} isSelf={member.user_id === user.id} />

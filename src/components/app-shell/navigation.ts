@@ -5,6 +5,7 @@ import {
   FileBarChartIcon,
   FileTextIcon,
   GitCompareArrowsIcon,
+  HourglassIcon,
   LandmarkIcon,
   LetterTextIcon,
   LayoutDashboardIcon,
@@ -31,6 +32,7 @@ export const navigation: NavSection[] = [
     items: [
       { title: "Nouveau paiement", href: "/paiements/nouveau", icon: SquarePenIcon },
       { title: "Chèques et LCN", href: "/paiements", icon: BanknoteIcon },
+      { title: "Lots à valider", href: "/paiements/a-valider", icon: HourglassIcon, roles: ["admin", "manager", "preparer"] },
       { title: "Non encaissés", href: "/paiements/non-encaisses", icon: ClockAlertIcon },
       { title: "Factures", href: "/factures", icon: FileTextIcon },
       { title: "Fournisseurs", href: "/fournisseurs", icon: TruckIcon },
