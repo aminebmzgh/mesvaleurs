@@ -22,13 +22,14 @@ import {
   parseRows,
   statementPeriod,
 } from "@/lib/statements/parse";
-import { headerSignature, readStatementFile } from "@/lib/statements/read-file";
+import { PdfStatementError } from "@/lib/statements/pdf/parsers";
+import { headerSignature, readStatementFile, type StatementFile } from "@/lib/statements/read-file";
 import { MAX_STATEMENT_LINES, STATEMENT_MAX_BYTES, statementFilePath } from "@/lib/statements/schemas";
 import { createClient } from "@/lib/supabase/client";
 import { importStatement, loadColumnMapping } from "../actions";
 
 type Account = { id: string; label: string; bankName: string };
-type Loaded = { file: File; rows: Cell[][]; format: "csv" | "excel"; hash: string };
+type Loaded = StatementFile & { file: File };
 
 const SELECT_CLASS = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30";
 const cellText = (cell: Cell) => (cell === null || cell === undefined ? "" : cell instanceof Date ? cell.toLocaleDateString("fr-FR") : String(cell));
@@ -81,8 +82,12 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
           setMapping(guessMapping(result.rows[header] ?? []));
           setMappingSource("guessed");
         }
-      } catch {
-        setReadError("Impossible de lire ce fichier. Exportez le relevé en Excel (.xlsx) ou en CSV depuis votre banque en ligne.");
+      } catch (error) {
+        setReadError(
+          error instanceof PdfStatementError
+            ? error.message
+            : "Impossible de lire ce fichier. Téléchargez le relevé en PDF, Excel (.xlsx) ou CSV depuis votre banque en ligne.",
+        );
       }
     });
   };
@@ -127,7 +132,8 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
         <CardHeader>
           <CardTitle>1. Relevé</CardTitle>
           <CardDescription>
-            Export Excel (.xlsx, .xls) ou CSV téléchargé depuis votre banque en ligne. Le format est mémorisé par banque.
+            Relevé PDF, export Excel (.xlsx, .xls) ou CSV téléchargé depuis votre banque en ligne. Le format est mémorisé par
+            banque. Les PDF scannés ne sont pas encore lus.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -146,7 +152,7 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
             <input
               id="statement-file"
               type="file"
-              accept=".csv,.txt,.xls,.xlsx"
+              accept=".pdf,.csv,.txt,.xls,.xlsx"
               className="text-sm file:me-3 file:rounded-md file:border file:bg-muted file:px-3 file:py-1"
               disabled={!accountId || pending}
               onChange={(event) => {
@@ -172,6 +178,7 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
             <CardHeader>
               <CardTitle>2. Colonnes</CardTitle>
               <CardDescription>
+                {loaded.parser && `Relevé PDF lu (${loaded.parser}). `}
                 {mappingSource === "saved"
                   ? "Correspondance reprise du dernier relevé de cette banque."
                   : "Correspondance proposée d'après l'en-tête : vérifiez-la."}

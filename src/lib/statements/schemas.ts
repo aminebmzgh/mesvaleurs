@@ -6,6 +6,7 @@ export const MAX_STATEMENT_LINES = 5000;
 
 /** Fichiers de relevé acceptés (bucket `releves`). */
 export const STATEMENT_MIME_TYPES = [
+  "application/pdf",
   "text/csv",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -30,7 +31,7 @@ export const parsedLineSchema = z
 
 export const importRequestSchema = z.object({
   bankAccountId: z.uuid({ error: "Choisissez le compte bancaire." }),
-  format: z.enum(["csv", "excel"]),
+  format: z.enum(["csv", "excel", "pdf_text"]),
   /** Empreinte SHA-256 du fichier, calculée dans le navigateur : détecte un relevé déjà importé. */
   fileHash: z.string().regex(/^[0-9a-f]{64}$/),
   filePath: z.string().max(300).nullable(),

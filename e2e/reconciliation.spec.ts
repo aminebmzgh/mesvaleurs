@@ -149,6 +149,55 @@ test("un export Excel est lu : dates Excel, montant signé, numéro de LCN", asy
   await expect(page.getByRole("cell", { name: /^40\s000,00\sDH$/ })).toBeVisible();
 });
 
+/** Relevé PDF « texte » : lignes de [x, texte], une ligne tous les 14 points. */
+async function statementPdf(lines: [number, string][][], pageCount = 1): Promise<Buffer> {
+  const { PDFDocument, StandardFonts } = await import("pdf-lib");
+  const document = await PDFDocument.create();
+  const font = await document.embedFont(StandardFonts.Helvetica);
+  for (let index = 0; index < pageCount; index += 1) {
+    const page = document.addPage([595, 842]);
+    lines.forEach((parts, row) => {
+      for (const [x, text] of parts) {
+        page.drawText(text, { x, y: 800 - row * 14, size: 9, font });
+      }
+    });
+  }
+  return Buffer.from(await document.save());
+}
+
+test("un relevé PDF texte est lu et rapproché", async ({ page }) => {
+  await login(page, "gestionnaire@demo.ma");
+  const number = await issueCheck(page, `PDF-${uniqueSuffix()}`, "4 444,44");
+  const pdf = await statementPdf([
+    [[40, "ATTIJARIWAFA BANK - Relevé de compte"]],
+    [],
+    [[40, "Date"], [110, "Valeur"], [180, "Libellé"], [420, "Débit"], [500, "Crédit"]],
+    [[40, "Solde précédent"], [490, "100 000,00"]],
+    [[40, "29/10/2026"], [110, "29/10/2026"], [180, `CHQ ${number}`], [410, "4 444,44"]],
+    [[180, "SOTRAMA MATERIAUX"]],
+    [[40, "29/10/2026"], [110, "29/10/2026"], [180, `FRAIS TENUE ${uniqueSuffix()}`], [420, "35,00"]],
+  ]);
+
+  await page.goto("/rapprochement/importer");
+  await page.getByLabel("Compte bancaire").selectOption({ label: "Compte principal · Attijariwafa bank" });
+  await page.getByLabel("Fichier").setInputFiles({ name: `releve-${uniqueSuffix()}.pdf`, mimeType: "application/pdf", buffer: pdf });
+  await expect(page.getByText(/Relevé PDF lu \(Lecture générique\)/)).toBeVisible();
+  await expect(page.getByText(/2 mouvement\(s\) du 29\/10\/2026 au 29\/10\/2026/)).toBeVisible();
+  await expect(page.getByRole("cell", { name: `CHQ ${number} SOTRAMA MATERIAUX`, exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /Importer et rapprocher 2 mouvement/ }).click();
+  await expect(page.getByText(/1 rapprochée\(s\), 0 à confirmer/)).toBeVisible();
+  await page.getByRole("tab", { name: /Rapprochées/ }).click();
+  await expect(page.getByLabel(`Ligne CHQ ${number} SOTRAMA MATERIAUX`).getByText("Rapprochée")).toBeVisible();
+});
+
+test("un PDF scanné est refusé avec une explication", async ({ page }) => {
+  await login(page, "gestionnaire@demo.ma");
+  await page.goto("/rapprochement/importer");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Fichier").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: await statementPdf([], 2) });
+  await expect(page.getByText(/Ce PDF ne contient pas de texte/)).toBeVisible();
+});
+
 test("le comptable consulte le rapprochement sans pouvoir le modifier", async ({ page }) => {
   await login(page, "comptable@demo.ma");
   await page.goto("/rapprochement");

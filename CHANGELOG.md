@@ -99,6 +99,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   planifiée Vercel Cron protégée par `CRON_SECRET`, rejouable sans doublon, avec
   historique des envois ; chaque membre peut s'en désabonner. L'envoi réel attend un domaine
   vérifié (`RESEND_API_KEY` et `EMAIL_FROM`).
+- Import de relevés PDF « texte » (téléchargés depuis la banque en ligne) : tableau
+  reconstitué d'après la position du texte, libellés sur plusieurs lignes, en-têtes répétés
+  sur chaque page, puis même assistant de correspondance des colonnes que l'Excel et le CSV ;
+  architecture d'analyseurs par banque avec un analyseur générique de secours ; PDF scannés
+  signalés (lecture par OCR plus tard).
 
 ### Sécurité
 

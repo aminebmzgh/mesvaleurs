@@ -54,16 +54,17 @@ const KEYWORDS: Record<MappingKey, RegExp> = {
 
 const text = (cell: Cell) => (cell === null || cell === undefined ? "" : String(cell).trim());
 
+/** Ligne d'en-tête probable : au moins deux libellés connus, dont une date. */
+export function isHeaderRow(row: Cell[]): boolean {
+  const labels = row.map((cell) => normalizeLabel(text(cell)));
+  const hits = MAPPING_KEYS.filter((key) => labels.some((label) => KEYWORDS[key].test(label)));
+  return hits.length >= 2 && hits.some((key) => key === "operationDate" || key === "valueDate");
+}
+
 /** Ligne d'en-tête : la première des 30 premières lignes qui contient au moins deux libellés connus. */
 export function detectHeaderRow(rows: Cell[][]): number {
-  for (let index = 0; index < Math.min(rows.length, 30); index += 1) {
-    const labels = rows[index].map((cell) => normalizeLabel(text(cell)));
-    const hits = MAPPING_KEYS.filter((key) => labels.some((label) => KEYWORDS[key].test(label)));
-    if (hits.length >= 2 && hits.some((key) => key === "operationDate" || key === "valueDate")) {
-      return index;
-    }
-  }
-  return 0;
+  const index = rows.slice(0, 30).findIndex(isHeaderRow);
+  return Math.max(index, 0);
 }
 
 /** Correspondance proposée à partir des libellés d'en-tête. */
