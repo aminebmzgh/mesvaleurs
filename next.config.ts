@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
         ],
       },
+      {
+        // OCR : moteur et modèle de langue (plusieurs Mo), gardés une semaine par le navigateur
+        source: "/ocr/:file*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
+      },
     ];
   },
   turbopack: {

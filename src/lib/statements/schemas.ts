@@ -31,7 +31,7 @@ export const parsedLineSchema = z
 
 export const importRequestSchema = z.object({
   bankAccountId: z.uuid({ error: "Choisissez le compte bancaire." }),
-  format: z.enum(["csv", "excel", "pdf_text"]),
+  format: z.enum(["csv", "excel", "pdf_text", "pdf_scan"]),
   /** Empreinte SHA-256 du fichier, calculée dans le navigateur : détecte un relevé déjà importé. */
   fileHash: z.string().regex(/^[0-9a-f]{64}$/),
   filePath: z.string().max(300).nullable(),
