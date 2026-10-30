@@ -110,6 +110,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Paiements et lots d'impression : création, validation et suppression réservées aux
   fonctions de la base (plus d'écriture directe) ; plafond d'un fournisseur modifiable
   seulement par un gestionnaire ou un administrateur.
+- Connexion : verrouillage pendant 15 minutes après 5 mots de passe erronés en 15 minutes
+  pour une même adresse e-mail (le bon mot de passe est alors refusé aussi), et après
+  30 échecs depuis une même adresse IP ; adresses conservées sous forme d'empreinte ;
+  compteur remis à zéro à la connexion réussie.
 
 ### Corrigé
 

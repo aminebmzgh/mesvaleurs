@@ -235,6 +235,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"login_lockouts": {
+                  Row: {
+                    "failures": number,"key": string,"locked_until": string | null,"updated_at": string,"window_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "failures"?: number,"key": string,"locked_until"?: string | null,"updated_at"?: string,"window_start"?: string
+                  }
+                  Update: {
+                    "failures"?: number,"key"?: string,"locked_until"?: string | null,"updated_at"?: string,"window_start"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"daily_ceiling": number | null,"email_alerts": boolean,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
@@ -664,6 +678,9 @@ isOneToOne: false
 "approve_batch":
 { Args: { "p_batch_id": string }; Returns: undefined
                            },
+"clear_login_failures":
+{ Args: { "p_key": string }; Returns: undefined
+                           },
 "close_guarantee":
 { Args: { "p_closed_on": string,"p_outcome": Database["public"]['Enums']["guarantee_outcome"],"p_payment_id": string }; Returns: undefined
                            },
@@ -679,6 +696,9 @@ isOneToOne: false
 "log_audit_event":
 { Args: { "p_action": string,"p_details"?: Json,"p_organization_id": string,"p_record_id"?: string,"p_table_name"?: string }; Returns: undefined
                            },
+"login_locked_until":
+{ Args: { "p_keys": (string)[] }; Returns: string
+                           },
 "my_pending_invitations":
 { Args: Record<PropertyKey, never>; Returns: {
               "expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["app_role"]
@@ -689,6 +709,9 @@ isOneToOne: false
                            },
 "record_batch_print":
 { Args: { "p_batch_id": string }; Returns: number
+                           },
+"record_login_failure":
+{ Args: { "p_key": string,"p_lock": string,"p_max_failures": number,"p_window": string }; Returns: string
                            },
 "record_transfer":
 { Args: { "p_allocations"?: Json,"p_amount": number,"p_bank_account_id": string,"p_debited": boolean,"p_notes"?: string,"p_organization_id": string,"p_reference": string,"p_supplier_id": string,"p_transfer_date": string }; Returns: string

@@ -1,8 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { translateAuthError } from "@/lib/auth/errors";
+import { clientIp, lockoutMessage } from "@/lib/auth/lockout";
+import { clearLoginFailures, loginLockedUntil, recordLoginFailure } from "@/lib/auth/lockout.server";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import { publicEnv } from "@/lib/env";
 import { type FormState, toFieldErrors } from "@/lib/forms";
@@ -20,11 +23,26 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
+  // Verrouillage après plusieurs échecs : le mot de passe n'est même pas vérifié
+  const target = { email: parsed.data.email, ip: clientIp(await headers()) };
+  const lockedUntil = await loginLockedUntil(target);
+  if (lockedUntil) {
+    return { error: lockoutMessage(lockedUntil) };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
+    // Compté que le compte existe ou non, pour ne pas révéler les adresses inscrites
+    if (error.code === "invalid_credentials") {
+      const locked = await recordLoginFailure(target);
+      if (locked) {
+        return { error: lockoutMessage(locked) };
+      }
+    }
     return { error: translateAuthError(error) };
   }
+  await clearLoginFailures(parsed.data.email);
 
   redirect(safeRedirectPath(formData.get("suivant")));
 }
