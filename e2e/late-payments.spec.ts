@@ -25,13 +25,14 @@ test("facture payée hors délai : dans l'état trimestriel avec son amende, exp
   const options = await checkbook.locator("option").allTextContents();
   await checkbook.selectOption({ label: options.find((label) => label.startsWith("Compte principal"))! });
   await page.getByLabel("Fournisseur", { exact: true }).selectOption({ label: "Bureau Pro Fournitures" });
+  // Factures du fournisseur chargées : seule la nôtre reste cochée (les autres servent à d'autres tests)
+  await expect(page.getByLabel(`Régler la facture ${number}`)).toBeChecked();
   for (const box of await page.getByRole("checkbox", { name: /^Régler la facture / }).all()) {
-    if ((await box.getAttribute("aria-label")) !== `Régler la facture ${number}`) {
+    if ((await box.getAttribute("aria-label")) !== `Régler la facture ${number}` && (await box.isChecked())) {
       await box.uncheck();
-    } else {
-      await box.check();
     }
   }
+  await expect(page.getByLabel("Montant à régler (DH)")).toHaveValue(/^1\s200,00$/);
   page.once("dialog", (dialog) => dialog.accept());
   await confirmFundsIfNeeded(page);
   await page.getByRole("button", { name: "Émettre 1 chèque" }).click();
