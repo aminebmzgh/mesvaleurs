@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { signOut } from "@/lib/auth/actions";
+import { clearOfflinePages } from "@/lib/pwa/cache";
 
 function initials(name: string) {
   return name
@@ -72,7 +73,10 @@ export function UserMenu({ fullName, email }: { fullName: string | null; email: 
               </DropdownMenuRadioGroup>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => startTransition(() => signOut())}>
+            <DropdownMenuItem onClick={() => startTransition(async () => {
+              await clearOfflinePages();
+              await signOut();
+            })}>
               <LogOutIcon aria-hidden />
               Se déconnecter
             </DropdownMenuItem>

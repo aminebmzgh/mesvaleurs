@@ -104,6 +104,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   sur chaque page, puis même assistant de correspondance des colonnes que l'Excel et le CSV ;
   architecture d'analyseurs par banque avec un analyseur générique de secours ; PDF scannés
   signalés (lecture par OCR plus tard).
+- Application installable (PWA) sur téléphone, tablette et PC : manifeste, icônes, raccourcis
+  (nouveau paiement, calendrier, alertes). Consultation hors connexion des pages ouvertes ces
+  7 derniers jours (60 au plus), avec bandeau « Hors connexion · données du … » et boutons
+  d'enregistrement désactivés ; page « Pas de connexion » pour les autres ; pages gardées
+  effacées à la déconnexion, au changement d'entreprise et à la fin de session.
 
 ### Sécurité
 

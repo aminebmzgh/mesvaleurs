@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   "/auth",
   "/mentions-legales",
   "/confidentialite",
+  // Application installable : page « Pas de connexion » gardée par le service worker
+  "/hors-ligne",
   // Tâches planifiées : protégées par CRON_SECRET dans la route
   "/api/cron",
 ];

@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+/* Hors connexion (bandeau de l'application installable) : consultation seule */
+html[data-offline] main button[type="submit"],
+html[data-offline] main form button:not([type="button"]) {
+  pointer-events: none;
+  opacity: 0.5;
+}

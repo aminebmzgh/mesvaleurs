@@ -16,6 +16,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import type { OrganizationMembership } from "@/lib/auth/dal";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 import { switchOrganization } from "@/lib/organizations/actions";
+import { clearOfflinePages } from "@/lib/pwa/cache";
 
 export function OrganizationSwitcher({
   active,
@@ -52,7 +53,10 @@ export function OrganizationSwitcher({
                   disabled={pending}
                   onClick={() => {
                     if (membership.organizationId !== active.organizationId) {
-                      startTransition(() => switchOrganization(membership.organizationId));
+                      startTransition(async () => {
+                        await clearOfflinePages();
+                        await switchOrganization(membership.organizationId);
+                      });
                     }
                   }}
                 >
