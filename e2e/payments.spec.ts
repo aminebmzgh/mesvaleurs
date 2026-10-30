@@ -71,7 +71,7 @@ test("LCN échelonnées à 30/60/90 jours avec montants personnalisés", async (
 
   await page.getByRole("radio", { name: "LCN" }).click();
   await page.getByLabel("Fournisseur", { exact: true }).selectOption({ label: "Maghreb Emballages SA" });
-  await quickInvoice(page, number, "90 000,00");
+  await quickInvoice(page, number, "900 000,00");
 
   await page.getByLabel("Date d'émission").fill("2026-11-02");
   await page.getByLabel("Nombre de LCN").fill("3");
@@ -81,14 +81,14 @@ test("LCN échelonnées à 30/60/90 jours avec montants personnalisés", async (
 
   // Répartition personnalisée incomplète : refus explicite
   await page.getByRole("radio", { name: "Montants personnalisés" }).click();
-  await page.getByLabel("Montant de la formule 1").fill("40 000");
-  await page.getByLabel("Montant de la formule 2").fill("30 000");
-  await page.getByLabel("Montant de la formule 3").fill("10 000");
-  await expect(page.getByText(/diffère du total de 10\s000,00\sDH \(reste à répartir\)/)).toBeVisible();
+  await page.getByLabel("Montant de la formule 1").fill("400 000");
+  await page.getByLabel("Montant de la formule 2").fill("300 000");
+  await page.getByLabel("Montant de la formule 3").fill("100 000");
+  await expect(page.getByText(/diffère du total de 100\s000,00\sDH \(reste à répartir\)/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Émettre 3 LCN" })).toBeDisabled();
 
-  await page.getByLabel("Montant de la formule 3").fill("20 000");
-  // Compte LCN sans provision suffisante : émission à confirmer (prévention des rejets)
+  await page.getByLabel("Montant de la formule 3").fill("200 000");
+  // Montant supérieur à la provision du compte LCN (140 000 DH au départ) : émission à confirmer, quel que soit l'ordre des tests
   await expect(page.getByText(/^Provision insuffisante :/).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Émettre 3 LCN" })).toBeDisabled();
   await page.getByLabel(/J'émets quand même/).check();
@@ -98,7 +98,7 @@ test("LCN échelonnées à 30/60/90 jours avec montants personnalisés", async (
   await expect(page.getByText("Numéros attribués")).toBeVisible();
   await expect(page.getByRole("cell", { name: "02/12/2026" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "31/01/2027" })).toBeVisible();
-  await expect(page.getByRole("cell", { name: /^40\s000,00\sDH$/ })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^400\s000,00\sDH$/ })).toBeVisible();
 });
 
 test("un dépassement du reste dû doit être confirmé", async ({ page }) => {
