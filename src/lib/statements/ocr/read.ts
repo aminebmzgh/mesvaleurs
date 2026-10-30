@@ -1,9 +1,7 @@
 import type { StatementTable } from "../pdf/layout";
 import { PdfStatementError } from "../pdf/parsers";
+import { createCanvas, createOcrWorker, imageCanvas } from "@/lib/ocr/worker";
 import { itemsFromOcr, tableFromOcr } from "./items";
-
-/** Fichiers de Tesseract servis par l'application (copiés par scripts/ocr-assets.mjs). */
-export const OCR_ASSETS_PATH = "/ocr";
 
 /** Largeur des pages envoyées à Tesseract : environ 300 ppp pour une page A4. */
 const TARGET_WIDTH = 2480;
@@ -27,19 +25,9 @@ export async function readScannedStatement(
   onProgress?: (progress: OcrProgress) => void,
 ): Promise<ScannedStatement> {
   const canvases = /\.pdf$/i.test(file.name) || file.type === "application/pdf" ? await renderPdf(buffer) : [await renderImage(file)];
-  const { createWorker, OEM, PSM } = await import("tesseract.js");
-  const base = new URL(OCR_ASSETS_PATH, window.location.origin).href;
+  const { PSM } = await import("tesseract.js");
   let current = 1;
-  const worker = await createWorker("fra", OEM.LSTM_ONLY, {
-    workerPath: `${base}/worker.min.js`,
-    corePath: base,
-    langPath: base,
-    logger: (message) => {
-      if (message.status === "recognizing text") {
-        onProgress?.({ page: current, pages: canvases.length, ratio: message.progress });
-      }
-    },
-  });
+  const worker = await createOcrWorker((ratio) => onProgress?.({ page: current, pages: canvases.length, ratio }));
   try {
     // Tableau : un seul bloc de texte, lignes complètes de la page
     await worker.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, preserve_interword_spaces: "1", user_defined_dpi: "300" });
@@ -83,29 +71,11 @@ async function renderPdf(buffer: ArrayBuffer): Promise<HTMLCanvasElement[]> {
   }
 }
 
-/** Photo ou image : orientation de l'appareil respectée, ramenée à une largeur lisible par l'OCR. */
 async function renderImage(file: File): Promise<HTMLCanvasElement> {
-  let bitmap: ImageBitmap;
-  try {
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-  } catch {
+  const canvas = await imageCanvas(file, MIN_WIDTH, MAX_WIDTH);
+  if (!canvas) {
     throw new PdfStatementError("unreadable", "Image illisible : importez une photo au format JPEG ou PNG.");
   }
-  const width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, bitmap.width));
-  const scale = width / bitmap.width;
-  const canvas = createCanvas(width, bitmap.height * scale);
-  const context = canvas.getContext("2d")!;
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas;
-}
-
-function createCanvas(width: number, height: number): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(width);
-  canvas.height = Math.round(height);
   return canvas;
 }
 
