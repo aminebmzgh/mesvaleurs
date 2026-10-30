@@ -196,7 +196,7 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
               </Table>
             </div>
           )}
-          {canManage && account.is_active && <CheckbookForm accountId={account.id} />}
+          {canManage && account.is_active && <CheckbookForm accountId={account.id} accountRib={account.rib} />}
         </CardContent>
       </Card>
 

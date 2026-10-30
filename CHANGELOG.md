@@ -21,6 +21,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   l'application. Écran de vérification obligatoire : chaque mouvement est corrigeable à côté
   de l'image du relevé, les lectures incertaines sont surlignées, lignes ajoutables ou
   supprimables, et l'import exige la confirmation « J'ai vérifié chaque ligne ».
+- Nouveau carnet : photo du premier chèque ou de la première LCN (appareil photo sur
+  téléphone) lue dans le navigateur. Le numéro imprimé en clair et la bande CMC7 sont
+  recoupés, le RIB est comparé à celui du compte (alerte s'il diffère) et une LCN est
+  reconnue ; le premier numéro est pré-rempli, toujours à confirmer. Le dernier numéro est
+  calculé d'après la taille du carnet (25, 50 ou 100 formules, ou saisie libre).
 
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 
