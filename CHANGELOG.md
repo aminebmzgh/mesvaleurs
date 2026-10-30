@@ -26,6 +26,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   recoupés, le RIB est comparé à celui du compte (alerte s'il diffère) et une LCN est
   reconnue ; le premier numéro est pré-rempli, toujours à confirmer. Le dernier numéro est
   calculé d'après la taille du carnet (25, 50 ou 100 formules, ou saisie libre).
+- Rapprochement avec le relevé d'un fournisseur (fiche fournisseur › « Rapprocher son
+  relevé ») : relevé Excel, CSV, PDF, scanné ou photographié, lu dans le navigateur et
+  comparé à nos livres sur sa période. Factures retrouvées par numéro (séparateurs et zéros
+  ignorés), règlements par numéro de chèque, de LCN ou référence de virement, sinon d'après
+  le montant et la date ; écarts signalés (montant différent, absent de nos livres, absent
+  du relevé, règlement pas encore remis), soldes de la période comparés. Facture manquante
+  créée en un clic (saisie pré-remplie) ; rapport exportable en Excel, PDF et CSV. Rien
+  n'est enregistré.
 
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 

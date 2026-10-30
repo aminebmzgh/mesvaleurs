@@ -33,7 +33,7 @@ type AmountKey = "excl" | "vat" | "incl";
  * 20 %. Les montants calculés restent modifiables (autre taux, arrondi du fournisseur) ;
  * modifier la TVA recalcule le montant non saisi.
  */
-function AmountFields({ state, invoice }: { state: FormState; invoice?: InvoiceValues }) {
+function AmountFields({ state, invoice }: { state: FormState; invoice?: Partial<InvoiceValues> }) {
   const [values, setValues] = useState<Record<AmountKey, string>>({
     excl: amount(invoice?.amount_excl_tax),
     vat: amount(invoice?.vat_amount),
@@ -118,7 +118,7 @@ export function InvoiceForm({
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   suppliers: SelectOption[];
-  invoice?: InvoiceValues;
+  invoice?: Partial<InvoiceValues>;
   defaultSupplierId?: string;
   submitLabel: string;
   readOnly?: boolean;
