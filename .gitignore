@@ -53,3 +53,6 @@ supabase/signing_keys.json
 
 # Formules d'exemple (images de tiers, servent uniquement au calibrage local)
 /exemples/
+
+# OCR : fichiers de Tesseract copiés depuis node_modules (scripts/ocr-assets.mjs)
+/public/ocr/

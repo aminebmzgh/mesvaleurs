@@ -15,6 +15,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   le récapitulatif du matin. Paramètres légaux modifiables (amende : 2,25 % le premier mois
   puis 0,85 % par mois, seuil de chiffre d'affaires, délai de déclaration) ; date de paiement
   retenue et délai du rappel réglables dans les paramètres de l'entreprise. Calculs indicatifs.
+- Relevés scannés et photographiés : un PDF sans texte, une image JPEG ou PNG, ou une photo
+  prise avec le téléphone est lu par reconnaissance de caractères (Tesseract, français)
+  directement dans le navigateur, sans service tiers : moteur et modèle de langue servis par
+  l'application. Écran de vérification obligatoire : chaque mouvement est corrigeable à côté
+  de l'image du relevé, les lectures incertaines sont surlignées, lignes ajoutables ou
+  supprimables, et l'import exige la confirmation « J'ai vérifié chaque ligne ».
 
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 

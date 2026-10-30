@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Fichiers de Tesseract copiés depuis node_modules (scripts/ocr-assets.mjs)
+    "public/ocr/**",
   ]),
 ]);
 
