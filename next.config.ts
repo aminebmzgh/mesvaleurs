@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
     },
   },
   partialPrefetching: true,
+  async headers() {
+    return [
+      {
+        // Service worker : toujours revalidé, pour que les mises à jour soient prises en compte
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {
