@@ -51,7 +51,7 @@ export async function getBankAccount(id: string) {
     supabase
       .from("bank_accounts")
       .select(
-        "id, bank_id, label, branch, rib, currency, opening_balance, opening_balance_date, current_balance, is_active, banks ( name )",
+        "id, bank_id, label, branch, rib, accounting_code, currency, opening_balance, opening_balance_date, current_balance, is_active, banks ( name )",
       )
       .eq("organization_id", organization.organizationId)
       .eq("id", id)
@@ -73,4 +73,65 @@ export async function getBankAccount(id: string) {
     return null;
   }
   return { ...account.data, checkbooks: checkbooks.data };
+}
+
+/** Oppositions d'un compte (paiements émis et formules vierges), les plus récentes d'abord. */
+export async function listStopOrders(bankAccountId: string) {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("stop_orders")
+    .select(
+      "id, reason, occurred_on, declared_on, police_report, first_number, last_number, payment_id, checkbooks ( type, number_width ), payments ( type, amount, payee_name )",
+    )
+    .eq("organization_id", organization.organizationId)
+    .eq("bank_account_id", bankAccountId)
+    .order("declared_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    throw new Error("Impossible de charger les oppositions.", { cause: error });
+  }
+  return data;
+}
+
+/** Carnet, ses paiements numérotés et ses formules vierges en opposition (inventaire). */
+export async function getCheckbookInventoryData(checkbookId: string) {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const orgId = organization.organizationId;
+  const [book, payments, stops] = await Promise.all([
+    supabase
+      .from("checkbook_summaries")
+      .select("id, type, first_number, last_number, next_number, number_width, status, received_at, bank_account_id")
+      .eq("organization_id", orgId)
+      .eq("id", checkbookId)
+      .maybeSingle(),
+    supabase
+      .from("payments")
+      .select("id, type, status, number, amount, issue_date, cancellation_reason, guarantee_outcome, print_batch_id, suppliers ( name )")
+      .eq("organization_id", orgId)
+      .eq("checkbook_id", checkbookId)
+      .not("number", "is", null)
+      .order("number"),
+    supabase
+      .from("stop_orders")
+      .select("first_number, last_number")
+      .eq("organization_id", orgId)
+      .eq("checkbook_id", checkbookId)
+      .is("payment_id", null),
+  ]);
+  const error = book.error ?? payments.error ?? stops.error;
+  if (error) {
+    throw new Error("Impossible de charger l'inventaire du carnet.", { cause: error });
+  }
+  if (!book.data) {
+    return null;
+  }
+  const account = await supabase
+    .from("bank_accounts")
+    .select("id, label, banks ( name )")
+    .eq("organization_id", orgId)
+    .eq("id", book.data.bank_account_id!)
+    .maybeSingle();
+  return { book: book.data, account: account.data, payments: payments.data ?? [], stops: stops.data ?? [] };
 }

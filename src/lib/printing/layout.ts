@@ -1,6 +1,6 @@
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount, formatDate } from "@/lib/format";
-import type { PrintField, PrintZone, TemplateOptions } from "./fields";
+import { NON_ENDORSABLE_TEXT, type PrintField, type PrintZone, type TemplateOptions } from "./fields";
 
 /** Informations imprimées sur une formule. */
 export type PrintData = {
@@ -55,7 +55,31 @@ export function fieldValues(data: PrintData, options: TemplateOptions): Partial<
     bank_branch: data.bankBranch,
     bank_city: data.bankCity,
     cause: data.cause,
+    stub_payee: data.payee,
+    stub_amount: `${digits} DH`,
+    stub_date: date,
+    stub_due_date: data.dueDate ? formatDate(data.dueDate) : "",
+    stub_cause: data.cause,
+    non_endorsable: NON_ENDORSABLE_TEXT,
+    // Le barrement est tracé, pas écrit (voir crossingSegments)
+    crossing: "",
   };
+}
+
+/** Écart entre les deux traits du barrement, en millimètres. */
+const CROSSING_GAP_MM = 4;
+
+/**
+ * Barrement : deux traits parallèles obliques dans la zone, de la ligne de base (en bas
+ * à gauche) vers le haut à droite ; hauteur proportionnelle à la largeur.
+ */
+export function crossingSegments(zone: PrintZone): { x1: number; y1: number; x2: number; y2: number }[] {
+  const height = zone.width * 0.35;
+  const gap = Math.min(CROSSING_GAP_MM, zone.width / 3);
+  return [
+    { x1: zone.x, y1: zone.y, x2: zone.x + zone.width - gap, y2: zone.y - height },
+    { x1: zone.x + gap, y1: zone.y, x2: zone.x + zone.width, y2: zone.y - height },
+  ];
 }
 
 /**

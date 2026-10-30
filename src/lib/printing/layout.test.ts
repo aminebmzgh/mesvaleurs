@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_TEMPLATES, defaultTemplateFor, GENERIC_TEMPLATES } from "./default-templates";
 import { parseTemplateOptions, parseZones, type PrintZone } from "./fields";
-import { alignedX, fieldValues, layoutInstrument, type MeasureText, type PrintData, wrapWords } from "./layout";
+import { formatAmount } from "@/lib/format";
+import { alignedX, crossingSegments, fieldValues, layoutInstrument, type MeasureText, type PrintData, wrapWords } from "./layout";
 
 // Mesure simplifiée : chaque caractère vaut 0,2 mm par point de police
 const measure: MeasureText = (text, fontSize) => text.length * fontSize * 0.2;
@@ -156,5 +157,31 @@ describe("parseZones", () => {
   it("ignore les zones invalides", () => {
     expect(parseZones([zone("payee"), { field: "inconnu" }, { ...zone("date"), fontSize: 99 }])).toHaveLength(1);
     expect(parseZones("pas un tableau")).toEqual([]);
+  });
+});
+
+describe("talon et mentions de sécurité", () => {
+  it("talon : bénéficiaire, montant sans encadrement, date, factures", () => {
+    const values = fieldValues(data, options);
+    expect(values.stub_payee).toBe("SOTRAMA MATERIAUX");
+    expect(values.stub_amount).toBe(`${formatAmount(1234.56)} DH`);
+    expect(values.stub_date).toBe("26/10/2026");
+    expect(values.stub_cause).toBe("Factures F-2026-0412");
+    expect(values.non_endorsable).toBe("NON ENDOSSABLE");
+  });
+
+  it("la mention n'est imprimée que si le modèle prévoit sa zone ; le barrement n'est pas un texte", () => {
+    expect(layoutInstrument(data, [zone("payee")], options, measure).texts.map((t) => t.zone.field)).toEqual(["payee"]);
+    const texts = layoutInstrument(data, [zone("non_endorsable"), zone("crossing"), zone("stub_amount", 40)], options, measure).texts;
+    expect(texts.map((t) => [t.zone.field, t.text])).toEqual([
+      ["non_endorsable", "NON ENDOSSABLE"],
+      ["stub_amount", `${formatAmount(1234.56)} DH`],
+    ]);
+  });
+
+  it("barrement : deux traits parallèles qui montent vers la droite", () => {
+    const [first, second] = crossingSegments({ ...zone("crossing", 40), x: 10, y: 30 });
+    expect(first).toEqual({ x1: 10, y1: 30, x2: 46, y2: 16 });
+    expect(second).toEqual({ x1: 14, y1: 30, x2: 50, y2: 16 });
   });
 });

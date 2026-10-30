@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
-import { WRITER_ROLES } from "@/lib/auth/roles";
+import { ACCOUNT_MANAGER_ROLES, WRITER_ROLES } from "@/lib/auth/roles";
 import { type FormState, toFieldErrors } from "@/lib/forms";
+import { parseCeiling } from "@/lib/payments/approvals";
 import { supplierSchema } from "@/lib/suppliers/schemas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -70,4 +71,21 @@ export async function setSupplierActive(supplierId: string, isActive: boolean): 
     .eq("organization_id", organization.organizationId);
   revalidatePath("/fournisseurs", "layout");
   return error ? { error: "Impossible de modifier le fournisseur." } : {};
+}
+
+/** Plafond journalier d'un fournisseur (double signature), réservé aux gestionnaires et administrateurs. */
+export async function setSupplierCeiling(supplierId: string, amount: string): Promise<ActionResult> {
+  const organization = await requireRole(ACCOUNT_MANAGER_ROLES);
+  const ceiling = parseCeiling(amount);
+  if (ceiling === undefined) {
+    return { error: "Plafond invalide (exemple : 50 000,00)." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("suppliers")
+    .update({ daily_ceiling: ceiling })
+    .eq("id", z.uuid().parse(supplierId))
+    .eq("organization_id", organization.organizationId);
+  revalidatePath("/fournisseurs", "layout");
+  return error ? { error: "Impossible d'enregistrer le plafond." } : {};
 }

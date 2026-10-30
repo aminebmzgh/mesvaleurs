@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { FormSelect } from "@/components/form-select";
+import { ExportLinks } from "@/components/export-menu";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -14,17 +15,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { daysBetween, todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
+  LEGAL_DISCLAIMER,
   PAYMENT_STATUS_LABELS,
   PAYMENT_TYPE_LABELS,
+  REJECTION_KIND_LABELS,
+  STOP_ORDER_REASON_LABELS,
+  type RejectionKind,
   type PaymentStatus,
   type PaymentType,
   paymentStatusVariant,
 } from "@/lib/labels";
+import { paymentNumber } from "@/lib/payments/label";
 import { listPayments, type PaymentFilter } from "@/lib/payments/list";
+import { countdownLabel, type RegularizationState, regularizationState } from "@/lib/payments/rejections";
 import { PaymentRowActions } from "./payment-row-actions";
 
 export const metadata: Metadata = { title: "Chèques et LCN" };
@@ -67,17 +73,27 @@ async function NewPaymentButton() {
     return null;
   }
   return (
-    <Link href="/paiements/nouveau" className={buttonVariants()}>
-      <PlusIcon aria-hidden />
-      Nouveau paiement
-    </Link>
+    <>
+      <Link href="/paiements/garantie" className={buttonVariants({ variant: "outline" })}>
+        <PlusIcon aria-hidden />
+        Chèque de garantie
+      </Link>
+      <Link href="/paiements/virement" className={buttonVariants({ variant: "outline" })}>
+        <PlusIcon aria-hidden />
+        Nouveau virement
+      </Link>
+      <Link href="/paiements/nouveau" className={buttonVariants()}>
+        <PlusIcon aria-hidden />
+        Nouveau paiement
+      </Link>
+    </>
   );
 }
 
 async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "searchParams">) {
   const params = await searchParams;
   const status = STATUS_FILTERS.some((f) => f.value === params.statut) ? (params.statut as PaymentFilter) : "circulation";
-  const type = params.type === "check" || params.type === "lcn" || params.type === "guarantee_check" ? params.type : undefined;
+  const type = TYPE_FILTERS.some((f) => f.value !== "tous" && f.value === params.type) ? (params.type as PaymentType) : undefined;
   const numberText = typeof params.numero === "string" ? params.numero.trim() : "";
   const number = /^\d{1,12}$/.test(numberText) ? Number(numberText) : undefined;
 
@@ -101,6 +117,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
             Filtrer
           </Button>
         </Form>
+        <ExportLinks list="paiements" params={{ statut: status, type, numero: numberText }} />
 
         {payments.length === 0 ? (
           <EmptyState
@@ -130,8 +147,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
               </TableHeader>
               <TableBody>
                 {payments.map((payment) => {
-                  const formatted =
-                    payment.number != null ? formatInstrumentNumber(payment.number, payment.checkbooks?.number_width ?? 7) : "—";
+                  const formatted = paymentNumber(payment) || "—";
                   const age = daysBetween(payment.issue_date, today);
                   const inCirculation = payment.status === "issued" || payment.status === "delivered";
                   return (
@@ -158,13 +174,54 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                         {formatDate(payment.issue_date)}
                         {inCirculation && age > 0 && <span className="block text-xs text-muted-foreground">il y a {age} j</span>}
                       </TableCell>
-                      <TableCell>{payment.due_date ? formatDate(payment.due_date) : "—"}</TableCell>
+                      <TableCell>
+                        {payment.due_date ? formatDate(payment.due_date) : "—"}
+                        {payment.lcn_postponements.length > 0 && (
+                          <span className="block text-xs text-muted-foreground">
+                            Reportée{payment.lcn_postponements.length > 1 ? ` ${payment.lcn_postponements.length} fois` : ""} · initiale le{" "}
+                            {formatDate(
+                              [...payment.lcn_postponements].sort((a, b) => a.created_at.localeCompare(b.created_at))[0].previous_due_date,
+                            )}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-end tabular-nums">{formatMAD(payment.amount)}</TableCell>
                       <TableCell>
                         <Badge variant={paymentStatusVariant(payment.status)}>{PAYMENT_STATUS_LABELS[payment.status]}</Badge>
                         {payment.status === "cancelled" && payment.cancellation_reason && (
                           <span className="block max-w-48 truncate text-xs text-muted-foreground" title={payment.cancellation_reason}>
                             {payment.cancellation_reason}
+                          </span>
+                        )}
+                        {payment.status === "stopped" && payment.stop_orders[0] && (
+                          <span className="block text-xs text-muted-foreground">
+                            {STOP_ORDER_REASON_LABELS[payment.stop_orders[0].reason]} constaté(e) le {formatDate(payment.stop_orders[0].occurred_on)}
+                          </span>
+                        )}
+                        {payment.status === "rejected" && payment.rejection_kind && (
+                          <RejectionInfo
+                            kind={payment.rejection_kind}
+                            rejectedAt={payment.rejected_at}
+                            state={regularizationState(payment, today)}
+                          />
+                        )}
+                        {payment.regularized_at && payment.regularization_method && payment.status !== "rejected" && (
+                          <span className="block text-xs text-muted-foreground">
+                            Rejet régularisé le {formatDate(payment.regularized_at)}
+                          </span>
+                        )}
+                        {payment.type === "guarantee_check" && inCirculation && payment.guarantee_return_due && (
+                          <span
+                            className={
+                              payment.guarantee_return_due < today ? "block text-xs font-medium text-destructive" : "block text-xs text-muted-foreground"
+                            }
+                          >
+                            Restitution prévue le {formatDate(payment.guarantee_return_due)}
+                          </span>
+                        )}
+                        {payment.type === "guarantee_check" && payment.guarantee_purpose && (
+                          <span className="block max-w-48 truncate text-xs text-muted-foreground" title={payment.guarantee_purpose}>
+                            {payment.guarantee_purpose}
                           </span>
                         )}
                         {payment.status === "delivered" && payment.delivered_at && (
@@ -176,7 +233,12 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                           <PaymentRowActions
                             paymentId={payment.id}
                             label={`${PAYMENT_TYPE_LABELS[payment.type].toLowerCase()} n° ${formatted}`}
+                            type={payment.type}
                             status={payment.status}
+                            regularized={payment.regularized_at !== null}
+                            dueDate={payment.due_date}
+                            issueDate={payment.issue_date}
+                            stopOrderId={payment.stop_orders[0]?.id ?? null}
                             today={today}
                           />
                         </TableCell>
@@ -198,5 +260,25 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
         {truncated && <p className="text-xs text-muted-foreground">Seuls les 300 paiements les plus récents sont affichés.</p>}
       </CardContent>
     </Card>
+  );
+}
+
+/** Motif du rejet et compte à rebours de régularisation (loi 71-24). */
+function RejectionInfo({ kind, rejectedAt, state }: { kind: RejectionKind; rejectedAt: string | null; state: RegularizationState }) {
+  return (
+    <span className="block text-xs text-muted-foreground" title={LEGAL_DISCLAIMER}>
+      {REJECTION_KIND_LABELS[kind]}
+      {rejectedAt && ` le ${formatDate(rejectedAt)}`}
+      <span
+        className={
+          state.kind === "overdue" || (state.kind === "pending" && state.daysLeft <= 7)
+            ? "block font-medium text-destructive"
+            : "block font-medium text-foreground"
+        }
+      >
+        {countdownLabel(state)}
+        {(state.kind === "pending" || state.kind === "overdue") && ` · avant le ${formatDate(state.dueDate)}`}
+      </span>
+    </span>
   );
 }

@@ -5,6 +5,128 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+## [1.1.0] — Phase 2 : Trésorerie et confort
+
+### Ajouté
+
+- Journal d'audit : écran de consultation (direction et comptabilité) avec filtres par période,
+  auteur, objet et action, détail des champs modifiés (avant → après), lien vers l'objet,
+  pagination et export CSV ; journalisation étendue aux invitations, banques ajoutées,
+  relevés importés et correspondances de colonnes.
+- Navigation : liens réservés à certains rôles.
+- Virements fournisseurs : nouveau mode de paiement (compte débité, référence, date, factures
+  réglées), saisi déjà débité ou en attente puis marqué débité ou rapproché ; référence
+  affichée partout à la place du numéro de formule.
+- Chèques et LCN rejetés (loi 71-24) : déclaration du rejet (motif, date), compte à rebours de
+  régularisation (délai paramétrable, un mois par défaut), alerte sur le tableau de bord,
+  régularisation par nouvelle provision, chèque ou LCN de remplacement, virement ou autre
+  moyen ; détection des libellés d'impayé dans le rapprochement ; mention « informations
+  indicatives ».
+- Assistant de paiement : émission sans provision suffisante soumise à confirmation explicite.
+- Chèques de garantie : émission depuis le chéquier (objet, restitution prévue), sans
+  règlement de facture ; rappel de restitution et indicateur « risque d'encaissement » sur le
+  tableau de bord ; clôture par restitution, destruction ou encaissement ; exclus des
+  prévisions.
+- Report d'échéance des LCN : nouvelle échéance, motif et accord du fournisseur, historique
+  des reports (échéance initiale affichée), action tracée au journal d'audit.
+- Journal d'audit : rejets, régularisations et reports désignés par le numéro du paiement.
+- Chèques non encaissés depuis longtemps : liste au-delà d'un délai (30 à 120 jours, réglable
+  dans les paramètres de l'entreprise, 60 par défaut), contact du fournisseur, relance par
+  e-mail pré-rédigée, total bloqué ; alerte sur le tableau de bord.
+- Lettre d'accompagnement de règlement (PDF A4) : en-tête de l'entreprise avec logo,
+  destinataire, référence, factures réglées (réglé, reste dû), paiements joints, total en
+  chiffres et en lettres, mention du reste à payer, signataire, zone « Reçu par » ; modèles
+  standard, LCN échelonnées, acompte et solde ; double exemplaire ; partage depuis un mobile.
+  Case « Imprimer la lettre d'accompagnement » dans l'assistant, selon le fournisseur.
+- Bordereau de remise des valeurs au fournisseur (PDF, deux exemplaires, accusé de réception).
+- Paramètres de l'entreprise : logo (PNG ou JPEG).
+- Modèles de lettres de l'entreprise (paramètres, direction) : copie d'un modèle intégré,
+  objet, corps et formule de politesse avec variables, aperçu immédiat ; proposés sur la page
+  de chaque lot.
+- Oppositions : déclaration sur un chèque ou une LCN en circulation (perte, vol, utilisation
+  frauduleuse, redressement ou liquidation du porteur, selon la valeur), ou sur des formules
+  vierges d'un chéquier ou d'un carnet (perte ou vol) ; récépissé de déclaration ; le
+  paiement passe « en opposition » et ses factures redeviennent à payer ; les formules
+  vierges en opposition ne sont plus attribuées à l'émission ni comptées comme restantes ou
+  sautées ; liste des oppositions sur la page du compte ; action tracée au journal d'audit.
+- Courriers types (PDF, en-tête de l'entreprise) : lettre d'opposition à la banque, demande de
+  prorogation d'une LCN (zone « Bon pour accord »), demande de relevé de compte au
+  fournisseur (factures non soldées selon vos livres), lettre de relance d'un client (saisie
+  libre) ; page « Courriers types ».
+- Modèles de lettres : un modèle de l'entreprise pour chaque type de courrier, avec ses
+  variables et son aperçu ; le premier modèle d'un type remplace le modèle intégré par défaut.
+- Stock de chéquiers : seuil d'alerte « presque épuisé » réglable dans les paramètres de
+  l'entreprise (3 à 20 formules, 5 par défaut) ; stock calculé par compte et par type de
+  carnet (un carnet qui s'achève n'alerte pas si un autre carnet en service prend le relais) ;
+  avertissement dans l'assistant de paiement quand le lot fait passer le stock sous le seuil ;
+  lien vers le compte depuis l'alerte du tableau de bord.
+- Inventaire d'un carnet : chaque formule utilisée, annulée (avec le motif), en opposition,
+  restante ou non attribuée, avec le paiement correspondant.
+- Double signature et plafonds : seuil de validation par formule et plafond journalier de
+  l'entreprise (paramètres), plafond journalier par membre (page Membres) et par fournisseur
+  (fiche fournisseur) ; au-delà, le lot est préparé (numéros réservés, paiements en brouillon,
+  factures non réglées) et doit être validé par un gestionnaire ou un administrateur autre
+  que le préparateur avant toute impression ou lettre ; refus avec motif (paiements annulés,
+  numéros conservés) ; page « Lots à valider », alerte sur le tableau de bord, validations et
+  refus tracés au journal d'audit.
+- Impression complémentaire : zones de talon (bénéficiaire, montant, date, échéance,
+  factures réglées) pour les formules avec souche ; mention « NON ENDOSSABLE » et barrement
+  (deux traits parallèles) imprimés si le modèle prévoit leur zone, visibles dans l'éditeur et
+  l'impression test ; enveloppes (DL, C5, C6) avec expéditeur et destinataire, depuis la fiche
+  fournisseur et la page d'un lot.
+- Prévision de trésorerie sur 90 jours : solde actuel − chèques en circulation − LCN et
+  virements à leur date (chèques de garantie exclus), par compte ou pour tous les comptes,
+  factures à payer en option à leur échéance légale ; courbe avec infobulle (souris et
+  clavier), solde à 90 jours, point bas, débits prévus jour par jour ; alerte de solde
+  prévisionnel négatif, aussi sur le tableau de bord.
+- Calendrier des échéances (vues mois et semaine) : LCN, dates limites des factures et
+  restitutions des chèques de garantie, état payé / en attente / en retard (couleur, icône et
+  libellé), totaux de la période, liste par jour sur téléphone.
+- Statistiques (12 derniers mois ou année civile) : total réglé, répartition chèques / LCN /
+  virements, dépenses par mois (avec tableau des valeurs) et par fournisseur, délai moyen de
+  paiement par fournisseur (de la facture à la remise, pondéré par les montants).
+- Exports des listes Chèques et LCN, Factures et Fournisseurs en CSV (séparateur « ; »,
+  virgule décimale, accents lus par Excel), Excel (montants et dates réels) et PDF (A4
+  paysage), avec les filtres affichés.
+- Export comptable mensuel (Rapports) : journal des règlements fournisseurs en CSV, deux
+  lignes par règlement ; comptes par défaut du plan comptable marocain (4411 fournisseurs,
+  5141 banque, 4415 effets à payer), code comptable facultatif par fournisseur (compte
+  auxiliaire) et par compte bancaire ; base « date de débit » ou « date d'émission » (LCN par
+  les effets à payer) ; séparateur, format de date, séparateur décimal et en-tête réglables
+  (Paramètres › Comptabilité, administrateur).
+- Alertes : page Alertes (LCN à échoir, factures proches de la date limite légale ou en
+  retard, paiements rejetés, provision insuffisante, chèques de garantie, chèques non
+  encaissés, carnets presque épuisés, lots à valider), délais d'alerte des LCN et des factures
+  réglables ; récapitulatif quotidien par e-mail (Resend) envoyé chaque matin par une tâche
+  planifiée Vercel Cron protégée par `CRON_SECRET`, rejouable sans doublon, avec
+  historique des envois ; chaque membre peut s'en désabonner. L'envoi réel attend un domaine
+  vérifié (`RESEND_API_KEY` et `EMAIL_FROM`).
+- Import de relevés PDF « texte » (téléchargés depuis la banque en ligne) : tableau
+  reconstitué d'après la position du texte, libellés sur plusieurs lignes, en-têtes répétés
+  sur chaque page, puis même assistant de correspondance des colonnes que l'Excel et le CSV ;
+  architecture d'analyseurs par banque avec un analyseur générique de secours ; PDF scannés
+  signalés (lecture par OCR plus tard).
+- Application installable (PWA) sur téléphone, tablette et PC : manifeste, icônes, raccourcis
+  (nouveau paiement, calendrier, alertes). Consultation hors connexion des pages ouvertes ces
+  7 derniers jours (60 au plus), avec bandeau « Hors connexion · données du … » et boutons
+  d'enregistrement désactivés ; page « Pas de connexion » pour les autres ; pages gardées
+  effacées à la déconnexion, au changement d'entreprise et à la fin de session.
+
+### Sécurité
+
+- Paiements et lots d'impression : création, validation et suppression réservées aux
+  fonctions de la base (plus d'écriture directe) ; plafond d'un fournisseur modifiable
+  seulement par un gestionnaire ou un administrateur.
+- Connexion : verrouillage pendant 15 minutes après 5 mots de passe erronés en 15 minutes
+  pour une même adresse e-mail (le bon mot de passe est alors refusé aussi), et après
+  30 échecs depuis une même adresse IP ; adresses conservées sous forme d'empreinte ;
+  compteur remis à zéro à la connexion réussie.
+
+### Corrigé
+
+- Rejet, régularisation, report de LCN et clôture d'un chèque de garantie : une date du jour
+  saisie entre minuit et 1 h (heure du Maroc) n'est plus refusée comme « dans le futur ».
+
 ## [1.0.0] — Phase 1 : MVP
 
 ### Ajouté

@@ -108,3 +108,14 @@ export const dateSchema = (label: string) =>
     .string({ error: `${label} est obligatoire.` })
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, { error: `${label} est obligatoire.` });
+
+/** Code comptable facultatif (compte ou compte auxiliaire) : vide → null. */
+export const accountingCodeSchema = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || /^[A-Za-z0-9._-]{1,20}$/.test(value), {
+    error: "Code comptable : 1 à 20 caractères (lettres, chiffres, . _ -).",
+  })
+  .transform((value) => (value === "" ? null : value))
+  .nullable()
+  .optional();

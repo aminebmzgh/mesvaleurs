@@ -68,8 +68,9 @@ Nouvelle migration : `pnpm exec supabase migration new <nom>`, puis `pnpm db:res
 | `NEXT_PUBLIC_SUPABASE_URL` | public | URL du projet Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Clé anon (ou publishable) Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | **serveur** | Clé service_role : invitations, tâches planifiées. Jamais exposée au navigateur |
-| `RESEND_API_KEY` | **serveur** | E-mails transactionnels (Phase 2) |
-| `CRON_SECRET` | **serveur** | Protection des tâches planifiées (Phase 2) |
+| `RESEND_API_KEY` | **serveur** | Clé API Resend : récapitulatif quotidien des alertes |
+| `EMAIL_FROM` | **serveur** | Expéditeur des e-mails, sur un domaine vérifié chez Resend. Sans lui (ou sans clé), aucun e-mail n'est envoyé |
+| `CRON_SECRET` | **serveur** | Secret des tâches planifiées (`vercel.json`) : Vercel l'envoie en `Authorization: Bearer …` à `/api/cron/alertes` (tous les jours à 7 h UTC, 8 h au Maroc) |
 
 ## Déploiement
 

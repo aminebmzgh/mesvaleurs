@@ -2,12 +2,14 @@
 
 import { useActionState } from "react";
 import { ActionForm, FieldErrors, FormMessage, invalidProps, SubmitButton } from "@/components/forms";
+import { FormSelect } from "@/components/form-select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount } from "@/lib/format";
 import { initialFormState } from "@/lib/forms";
+import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { updateOrganization } from "./actions";
 
 type OrganizationValues = {
@@ -24,6 +26,12 @@ type OrganizationValues = {
   annual_revenue: number | null;
   require_mfa: boolean;
   amount_words_rectified: boolean;
+  uncashed_alert_days: number;
+  low_stock_threshold: number;
+  lcn_alert_days: number;
+  invoice_alert_days: number;
+  approval_threshold: number | null;
+  daily_ceiling: number | null;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -105,6 +113,82 @@ export function OrganizationForm({
                   </FieldDescription>
                 </FieldContent>
               </Field>
+              <Field className="max-w-sm">
+                <FieldLabel htmlFor="uncashed_alert_days">Signaler un chèque non encaissé après</FieldLabel>
+                <FormSelect
+                  id="uncashed_alert_days"
+                  name="uncashed_alert_days"
+                  options={UNCASHED_ALERT_CHOICES.map((days) => ({ value: String(days), label: `${days} jours` }))}
+                  defaultValue={String(organization.uncashed_alert_days)}
+                />
+                <FieldDescription>Délai depuis l&apos;émission, pour la liste des chèques non encaissés et le tableau de bord.</FieldDescription>
+              </Field>
+              <Field className="max-w-sm">
+                <FieldLabel htmlFor="low_stock_threshold">Signaler un carnet presque épuisé à partir de</FieldLabel>
+                <FormSelect
+                  id="low_stock_threshold"
+                  name="low_stock_threshold"
+                  options={LOW_STOCK_CHOICES.map((count) => ({ value: String(count), label: `${count} formules restantes` }))}
+                  defaultValue={String(organization.low_stock_threshold)}
+                />
+                <FieldDescription>Pour commander un nouveau chéquier ou carnet de LCN à temps.</FieldDescription>
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="lcn_alert_days">Signaler une LCN à échoir</FieldLabel>
+                  <FormSelect
+                    id="lcn_alert_days"
+                    name="lcn_alert_days"
+                    options={DUE_ALERT_CHOICES.map((days) => ({ value: String(days), label: `${days} jours avant` }))}
+                    defaultValue={String(organization.lcn_alert_days)}
+                  />
+                  <FieldDescription>Pour provisionner le compte avant l&apos;échéance.</FieldDescription>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="invoice_alert_days">Signaler une facture à payer</FieldLabel>
+                  <FormSelect
+                    id="invoice_alert_days"
+                    name="invoice_alert_days"
+                    options={DUE_ALERT_CHOICES.map((days) => ({ value: String(days), label: `${days} jours avant` }))}
+                    defaultValue={String(organization.invoice_alert_days)}
+                  />
+                  <FieldDescription>Avant la date limite légale (loi 69-21). Alertes : page Alertes et e-mail du matin.</FieldDescription>
+                </Field>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="approval_threshold">Double signature au-delà de (DH)</FieldLabel>
+                  <Input
+                    id="approval_threshold"
+                    name="approval_threshold"
+                    inputMode="decimal"
+                    placeholder="Désactivée"
+                    defaultValue={organization.approval_threshold != null ? formatAmount(organization.approval_threshold) : ""}
+                    {...invalidProps(state, "approval_threshold")}
+                  />
+                  <FieldDescription>
+                    Une formule plus élevée est validée par un gestionnaire ou un administrateur, autre que le préparateur, avant
+                    impression.
+                  </FieldDescription>
+                  <FieldErrors state={state} name="approval_threshold" />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="daily_ceiling">Plafond journalier de l&apos;entreprise (DH)</FieldLabel>
+                  <Input
+                    id="daily_ceiling"
+                    name="daily_ceiling"
+                    inputMode="decimal"
+                    placeholder="Aucun"
+                    defaultValue={organization.daily_ceiling != null ? formatAmount(organization.daily_ceiling) : ""}
+                    {...invalidProps(state, "daily_ceiling")}
+                  />
+                  <FieldDescription>
+                    Au-delà, pour le total des paiements datés du jour, le lot passe en validation. Plafonds par membre et par
+                    fournisseur : pages Membres et fiche fournisseur.
+                  </FieldDescription>
+                  <FieldErrors state={state} name="daily_ceiling" />
+                </Field>
+              </div>
               <Field orientation="horizontal">
                 <input
                   id="amount_words_rectified"

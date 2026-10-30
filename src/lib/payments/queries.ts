@@ -1,5 +1,7 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
+import type { StoppedRange } from "@/lib/checkbooks";
+import { paymentLabel } from "@/lib/payments/label";
 import { createClient } from "@/lib/supabase/server";
 
 export type AssistantCheckbook = {
@@ -8,6 +10,8 @@ export type AssistantCheckbook = {
   nextNumber: number;
   lastNumber: number;
   numberWidth: number;
+  /** Formules vierges en opposition, sautées à l'émission. */
+  stoppedRanges: StoppedRange[];
   bankAccountId: string;
   accountLabel: string;
   bankName: string;
@@ -33,7 +37,9 @@ export async function getAssistantData() {
   const [checkbooks, circulation, suppliers, org] = await Promise.all([
     supabase
       .from("checkbooks")
-      .select("id, type, next_number, last_number, number_width, bank_accounts!inner ( id, label, current_balance, is_active, banks ( name ) )")
+      .select(
+        "id, type, next_number, last_number, number_width, stop_orders ( first_number, last_number, payment_id ), bank_accounts!inner ( id, label, current_balance, is_active, banks ( name ) )",
+      )
       .eq("organization_id", orgId)
       .eq("status", "active")
       .eq("bank_accounts.is_active", true)
@@ -67,6 +73,7 @@ export async function getAssistantData() {
     organizationId: orgId,
     city: org.data?.city ?? "",
     amountWordsRectified: organization.amountWordsRectified,
+    lowStockThreshold: organization.lowStockThreshold,
     checkbooks: (checkbooks.data ?? []).map(
       (book): AssistantCheckbook => ({
         id: book.id,
@@ -74,6 +81,7 @@ export async function getAssistantData() {
         nextNumber: book.next_number,
         lastNumber: book.last_number,
         numberWidth: book.number_width,
+        stoppedRanges: book.stop_orders.filter((s) => s.payment_id === null).map((s): StoppedRange => [s.first_number, s.last_number]),
         bankAccountId: book.bank_accounts.id,
         accountLabel: book.bank_accounts.label,
         bankName: book.bank_accounts.banks?.name ?? "",
@@ -114,4 +122,54 @@ export async function listOpenInvoices(supplierId: string): Promise<OpenInvoice[
     amountInclTax: invoice.amount_incl_tax,
     amountPaid: invoice.amount_paid,
   }));
+}
+
+/** Données du formulaire de virement : comptes en service et fournisseurs actifs. */
+export async function getTransferFormData() {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const orgId = organization.organizationId;
+  const [accounts, suppliers] = await Promise.all([
+    supabase.from("bank_accounts").select("id, label, banks ( name )").eq("organization_id", orgId).eq("is_active", true).order("label"),
+    supabase.from("suppliers").select("id, name").eq("organization_id", orgId).eq("is_active", true).order("name"),
+  ]);
+  const error = accounts.error ?? suppliers.error;
+  if (error) {
+    throw new Error("Impossible de charger le formulaire de virement.", { cause: error });
+  }
+  return {
+    accounts: (accounts.data ?? []).map((account) => ({ id: account.id, label: account.label, bankName: account.banks?.name ?? "" })),
+    suppliers: suppliers.data ?? [],
+  };
+}
+
+export type TransferFormData = Awaited<ReturnType<typeof getTransferFormData>>;
+
+export type ReplacedPayment = { id: string; label: string; supplierId: string; amount: number; invoiceIds: string[] };
+
+/** Paiement rejeté, non régularisé, à remplacer (nouveau chèque, LCN ou virement). */
+export async function getPaymentToReplace(paymentId: string | undefined): Promise<ReplacedPayment | null> {
+  if (!paymentId || !/^[0-9a-f-]{36}$/i.test(paymentId)) {
+    return null;
+  }
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("id, type, number, reference, amount, supplier_id, checkbooks ( number_width ), payment_allocations ( invoice_id )")
+    .eq("organization_id", organization.organizationId)
+    .eq("id", paymentId)
+    .eq("status", "rejected")
+    .is("regularized_at", null)
+    .maybeSingle();
+  if (!data) {
+    return null;
+  }
+  return {
+    id: data.id,
+    label: paymentLabel(data),
+    supplierId: data.supplier_id,
+    amount: data.amount,
+    invoiceIds: data.payment_allocations.map((allocation) => allocation.invoice_id),
+  };
 }

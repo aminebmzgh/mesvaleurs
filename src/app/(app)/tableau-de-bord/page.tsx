@@ -1,4 +1,4 @@
-import { BookOpenIcon, CalendarClockIcon, CircleAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
+import { BookOpenIcon, CalendarClockIcon, HourglassIcon, CircleAlertIcon, CircleXIcon, ShieldAlertIcon, ClockAlertIcon, LandmarkIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -9,7 +9,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDashboard } from "@/lib/dashboard/queries";
+import { getForecast } from "@/lib/forecast/queries";
 import { formatDate, formatMAD } from "@/lib/format";
+import { LEGAL_DISCLAIMER, REJECTION_KIND_LABELS } from "@/lib/labels";
+import { countdownLabel } from "@/lib/payments/rejections";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -42,7 +45,9 @@ async function AccessDeniedNotice({ searchParams }: Pick<PageProps<"/tableau-de-
 }
 
 async function Dashboard() {
-  const data = await getDashboard();
+  const [data, { forecast }] = await Promise.all([getDashboard(), getForecast({ includeInvoices: false })]);
+  // Solde prévisionnel négatif à venir (LCN à leur échéance), si la provision suffit aujourd'hui
+  const negativeAhead = data.insufficientAccounts.length === 0 ? forecast.firstNegative : null;
   const lcn7 = data.lcnDue.filter((p) => p.daysLeft <= 7);
   const overdueTotal = data.overdue.reduce((sum, invoice) => sum + invoice.remaining, 0);
 
@@ -56,12 +61,113 @@ async function Dashboard() {
       danger: data.projected < 0,
     },
     { label: "Reste à payer", value: data.remaining, hint: `${data.openInvoiceCount} facture(s) non soldée(s)` },
+    ...(data.guaranteeCount > 0
+      ? [
+          {
+            label: "Risque d'encaissement",
+            value: data.guaranteeRisk,
+            hint: `${data.guaranteeCount} chèque(s) de garantie chez les fournisseurs, hors prévisions`,
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      {(data.insufficientAccounts.length > 0 || data.lowStock.length > 0) && (
+      {(data.pendingBatchCount > 0 ||
+        data.rejected.length > 0 ||
+        data.guaranteesToRecover.length > 0 ||
+        data.uncashed.count > 0 ||
+        data.insufficientAccounts.length > 0 ||
+        negativeAhead !== null ||
+        data.lowStock.length > 0) && (
         <div className="flex flex-col gap-3">
+          {data.pendingBatchCount > 0 && (
+            <Alert>
+              <HourglassIcon aria-hidden />
+              <AlertTitle>
+                {data.pendingBatchCount} lot{data.pendingBatchCount > 1 ? "s" : ""} à valider avant impression
+              </AlertTitle>
+              <AlertDescription>
+                <Link href="/paiements/a-valider" className="underline">
+                  Voir les lots à valider
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
+          {data.rejected.length > 0 && (
+            <Alert variant="destructive">
+              <CircleXIcon aria-hidden />
+              <AlertTitle>
+                {data.rejected.length} paiement{data.rejected.length > 1 ? "s" : ""} rejeté{data.rejected.length > 1 ? "s" : ""} à régulariser
+              </AlertTitle>
+              <AlertDescription>
+                <ul className="flex flex-col gap-1">
+                  {data.rejected.map((payment) => (
+                    <li key={payment.id} className="flex flex-wrap items-center gap-x-2">
+                      <span className="font-medium">{payment.label}</span>
+                      <span>
+                        {payment.supplier} · {formatMAD(payment.amount)}
+                        {payment.kind && ` · ${REJECTION_KIND_LABELS[payment.kind].toLowerCase()}`}
+                      </span>
+                      <Badge variant={payment.state.kind === "overdue" ? "destructive" : "secondary"}>
+                        {countdownLabel(payment.state)}
+                        {(payment.state.kind === "pending" || payment.state.kind === "overdue") && ` · ${formatDate(payment.state.dueDate)}`}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                <span className="mt-2 block">
+                  <Link href="/paiements?statut=rejected" className="font-medium underline">
+                    Régulariser
+                  </Link>{" "}
+                  · {LEGAL_DISCLAIMER}
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
+          {data.guaranteesToRecover.length > 0 && (
+            <Alert>
+              <ShieldAlertIcon aria-hidden />
+              <AlertTitle>Chèques de garantie à récupérer</AlertTitle>
+              <AlertDescription>
+                <ul className="flex flex-col gap-1">
+                  {data.guaranteesToRecover.map((guarantee) => (
+                    <li key={guarantee.id} className="flex flex-wrap items-center gap-x-2">
+                      <span className="font-medium">{guarantee.label}</span>
+                      <span>
+                        {guarantee.supplier} · {formatMAD(guarantee.amount)}
+                        {guarantee.purpose && ` · ${guarantee.purpose}`}
+                      </span>
+                      <Badge variant={guarantee.daysLeft < 0 ? "destructive" : "secondary"}>
+                        {guarantee.daysLeft < 0
+                          ? `restitution dépassée de ${-guarantee.daysLeft} j`
+                          : `restitution le ${formatDate(guarantee.returnDue)}`}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/paiements?type=guarantee_check" className="mt-2 block font-medium underline">
+                  Voir les chèques de garantie
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
+          {data.uncashed.count > 0 && (
+            <Alert>
+              <ClockAlertIcon aria-hidden />
+              <AlertTitle>
+                {data.uncashed.count} chèque{data.uncashed.count > 1 ? "s" : ""} non encaissé{data.uncashed.count > 1 ? "s" : ""} depuis plus de{" "}
+                {data.uncashed.days} jours
+              </AlertTitle>
+              <AlertDescription>
+                {formatMAD(data.uncashed.total)} restent bloqués dans le solde prévisionnel.{" "}
+                <Link href="/paiements/non-encaisses" className="font-medium underline">
+                  Relancer les fournisseurs
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
           {data.insufficientAccounts.map((account) => (
             <Alert key={account.id} variant="destructive">
               <TriangleAlertIcon aria-hidden />
@@ -72,19 +178,35 @@ async function Dashboard() {
               </AlertDescription>
             </Alert>
           ))}
+          {negativeAhead && (
+            <Alert variant="destructive">
+              <TriangleAlertIcon aria-hidden />
+              <AlertTitle>Solde prévisionnel négatif le {formatDate(negativeAhead.date)}</AlertTitle>
+              <AlertDescription>
+                {formatMAD(negativeAhead.balance)} ce jour-là, avec les LCN et virements à échoir.{" "}
+                <Link href="/tresorerie" className="underline">
+                  Voir la prévision de trésorerie
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
           {data.lowStock.map((book) => (
             <Alert key={book.id}>
               <BookOpenIcon aria-hidden />
               <AlertTitle>{book.type === "lcn" ? "Carnet de LCN" : "Chéquier"} presque épuisé</AlertTitle>
               <AlertDescription>
-                {book.account} : {book.remaining} formule(s) restante(s). Commandez un nouveau carnet à votre banque.
+                {book.account} : {book.remaining} formule(s) restante(s). Commandez un nouveau carnet à votre banque, puis{" "}
+                <Link href={`/comptes-bancaires/${book.bankAccountId}`} className="underline">
+                  enregistrez-le
+                </Link>
+                .
               </AlertDescription>
             </Alert>
           ))}
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={cn("grid gap-4 sm:grid-cols-2", cards.length > 4 ? "lg:grid-cols-3 2xl:grid-cols-5" : "xl:grid-cols-4")}>
         {cards.map((card) => (
           <Card key={card.label}>
             <CardHeader>

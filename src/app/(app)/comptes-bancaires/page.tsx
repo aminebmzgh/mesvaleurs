@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
 import { listBankAccounts } from "@/lib/bank-accounts/queries";
-import { INSTRUMENT_LABELS, LOW_STOCK_THRESHOLD } from "@/lib/checkbooks";
+import { INSTRUMENT_LABELS, stockByAccount } from "@/lib/checkbooks";
 import { formatMAD } from "@/lib/format";
 import { formatRib } from "@/lib/rib";
 
@@ -79,7 +79,11 @@ async function BankAccountList() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {accounts.map((account) => {
-        const activeBooks = account.checkbooks.filter((c) => c.status === "active");
+        // Stock par type de carnet : somme des carnets en service
+        const stock = stockByAccount(
+          account.checkbooks.map((c) => ({ bankAccountId: account.id, type: c.type!, status: c.status!, remaining: c.remaining_count ?? 0 })),
+          organization.lowStockThreshold,
+        );
         return (
           <Link key={account.id} href={`/comptes-bancaires/${account.id}`} className="rounded-xl focus-visible:outline-2">
             <Card className="h-full transition-colors hover:bg-muted/40">
@@ -97,15 +101,12 @@ async function BankAccountList() {
                 {account.rib && <p className="font-mono text-xs text-muted-foreground">{formatRib(account.rib)}</p>}
                 <p className="text-2xl font-semibold tabular-nums">{formatMAD(account.current_balance)}</p>
                 <div className="flex flex-wrap gap-2">
-                  {activeBooks.length === 0 ? (
+                  {stock.length === 0 ? (
                     <Badge variant="outline">Aucun carnet en service</Badge>
                   ) : (
-                    activeBooks.map((book, index) => (
-                      <Badge
-                        key={index}
-                        variant={(book.remaining_count ?? 0) <= LOW_STOCK_THRESHOLD ? "destructive" : "secondary"}
-                      >
-                        {INSTRUMENT_LABELS[book.type!]} : {book.remaining_count} restante(s)
+                    stock.map((group) => (
+                      <Badge key={group.type} variant={group.low ? "destructive" : "secondary"}>
+                        {INSTRUMENT_LABELS[group.type]} : {group.remaining} restante(s)
                       </Badge>
                     ))
                   )}

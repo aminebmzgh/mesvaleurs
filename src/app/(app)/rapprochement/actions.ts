@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
-import { extractInstrumentNumber } from "@/lib/statements/extract";
+import { extractInstrumentNumber, isRejectionLabel } from "@/lib/statements/extract";
 import { matchLines } from "@/lib/statements/match";
 import { lineKeys, statementPeriod } from "@/lib/statements/parse";
 import { type ImportRequest, importRequestSchema, isStatementPathOf } from "@/lib/statements/schemas";
@@ -97,7 +97,7 @@ export async function importStatement(request: ImportRequest): Promise<Result<Im
   const { data: inserted, error: linesError } = await supabase
     .from("statement_lines")
     .upsert(rows, { onConflict: "bank_account_id,line_hash", ignoreDuplicates: true })
-    .select("id, debit, credit, extracted_number, extracted_kind");
+    .select("id, label, debit, credit, extracted_number, extracted_kind");
   if (linesError) {
     await supabase.from("statement_imports").delete().eq("id", statementImport.id);
     return { ok: false, error: "Impossible d'enregistrer les lignes du relevé." };
@@ -121,7 +121,8 @@ export async function importStatement(request: ImportRequest): Promise<Result<Im
       id: line.id,
       debit: line.debit,
       credit: line.credit,
-      extractedNumber: line.extracted_number,
+      // Ligne d'impayé ou de rejet : jamais rapprochée comme un débit du chèque
+      extractedNumber: isRejectionLabel(line.label) ? null : line.extracted_number,
       kind: (line.extracted_kind as "check" | "lcn" | null) ?? null,
     })),
     (payments ?? []).map((payment) => ({ id: payment.id, number: payment.number!, amount: payment.amount, type: payment.type })),

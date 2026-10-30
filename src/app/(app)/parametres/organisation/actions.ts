@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
-import { parseOrganizationSettings } from "@/lib/organizations/settings";
+import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { emailSchema, iceSchema, optionalAmountSchema, optionalText, requiredText } from "@/lib/validation";
 
 const organizationSchema = z.object({
@@ -22,6 +22,12 @@ const organizationSchema = z.object({
   annual_revenue: optionalAmountSchema("Le chiffre d'affaires"),
   require_mfa: z.literal("on").optional(),
   amount_words_rectified: z.literal("on").optional(),
+  uncashed_alert_days: z.coerce.number().pipe(z.union(UNCASHED_ALERT_CHOICES.map((days) => z.literal(days)))),
+  low_stock_threshold: z.coerce.number().pipe(z.union(LOW_STOCK_CHOICES.map((count) => z.literal(count)))),
+  lcn_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
+  invoice_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
+  approval_threshold: optionalAmountSchema("Le seuil de validation"),
+  daily_ceiling: optionalAmountSchema("Le plafond journalier"),
 });
 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -31,7 +37,17 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
-  const { require_mfa, amount_words_rectified, ...fields } = parsed.data;
+  const {
+    require_mfa,
+    amount_words_rectified,
+    uncashed_alert_days,
+    low_stock_threshold,
+    lcn_alert_days,
+    invoice_alert_days,
+    approval_threshold,
+    daily_ceiling,
+    ...fields
+  } = parsed.data;
   const supabase = await createClient();
 
   const { data: current } = await supabase
@@ -43,6 +59,13 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     ...parseOrganizationSettings(current?.settings),
     require_mfa: require_mfa === "on",
     amount_words_rectified: amount_words_rectified === "on",
+    uncashed_alert_days,
+    low_stock_threshold,
+    lcn_alert_days,
+    invoice_alert_days,
+    // Un montant nul désactive la règle
+    approval_threshold: approval_threshold || null,
+    daily_ceiling: daily_ceiling || null,
   };
 
   const { error } = await supabase
@@ -55,4 +78,24 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
 
   revalidatePath("/", "layout");
   return { success: "Informations de l'entreprise enregistrées." };
+}
+
+/** Logo de l'entreprise (en-tête des lettres) : chemin du fichier envoyé dans le bucket `logos`, ou retrait. */
+export async function setOrganizationLogo(path: string | null): Promise<{ error?: string }> {
+  const organization = await requireRole(["admin"]);
+  if (path !== null && !new RegExp(`^${organization.organizationId}/logo-[0-9a-f-]{36}\.(png|jpg)$`).test(path)) {
+    return { error: "Fichier de logo invalide." };
+  }
+  const supabase = await createClient();
+  const { data: current } = await supabase.from("organizations").select("logo_path").eq("id", organization.organizationId).single();
+  const { error } = await supabase.from("organizations").update({ logo_path: path }).eq("id", organization.organizationId);
+  if (error) {
+    return { error: "Impossible d'enregistrer le logo." };
+  }
+  // L'ancien fichier n'est plus utilisé
+  if (current?.logo_path && current.logo_path !== path) {
+    await supabase.storage.from("logos").remove([current.logo_path]);
+  }
+  revalidatePath("/parametres/organisation");
+  return {};
 }

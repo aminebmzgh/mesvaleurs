@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers";
+import { DEMO_PASSWORD, login, uniqueSuffix } from "./helpers";
 
 test("une page protégée renvoie vers la connexion", async ({ page }) => {
   await page.goto("/fournisseurs");
@@ -12,6 +12,27 @@ test("un mauvais mot de passe affiche une erreur en français", async ({ page })
   await page.getByLabel("Mot de passe").fill("mauvais-mot-de-passe1");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page.getByText("Adresse e-mail ou mot de passe incorrect.")).toBeVisible();
+});
+
+test("compte verrouillé après 5 échecs de connexion, même avec le bon mot de passe", async ({ page }) => {
+  // Adresse propre au test : le verrouillage ne gêne pas les autres tests
+  const email = `verrou-${uniqueSuffix()}@demo.ma`;
+  await page.goto("/connexion");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    await page.getByLabel("Mot de passe").fill(`mauvais-${attempt}`);
+    await page.getByRole("button", { name: "Se connecter" }).click();
+    await expect(page.getByText("Adresse e-mail ou mot de passe incorrect.")).toBeVisible();
+  }
+  await page.getByLabel("Mot de passe").fill("mauvais-5");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page.getByText(/Trop de tentatives de connexion échouées\. Réessayez dans 15 minutes/)).toBeVisible();
+
+  // L'adresse reste verrouillée ; les autres comptes se connectent normalement
+  await page.getByLabel("Mot de passe").fill(DEMO_PASSWORD);
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page.getByText(/Trop de tentatives de connexion échouées/)).toBeVisible();
+  await login(page, "preparateur@demo.ma");
 });
 
 test("chaque entreprise ne voit que ses données", async ({ page }) => {

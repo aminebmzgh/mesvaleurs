@@ -1,14 +1,28 @@
 import { normalizeLabel } from "./extract";
 import type { Cell } from "./parse";
 
+export type StatementFile = {
+  rows: Cell[][];
+  format: "csv" | "excel" | "pdf_text";
+  hash: string;
+  /** Relevé PDF : analyseur qui l'a lu. */
+  parser?: string;
+};
+
 /**
- * Lecture d'un relevé dans le navigateur (SheetJS chargé à la demande).
+ * Lecture d'un relevé dans le navigateur (SheetJS ou pdf.js chargés à la demande).
  * CSV : décodé en UTF-8, sinon en Windows-1252, et lu en texte brut, pour que
  * « 03/10/2026 » ne soit pas interprété à l'américaine (3 octobre, pas 10 mars).
+ * PDF : tableau reconstitué d'après la position du texte (PDF « texte » uniquement).
  */
-export async function readStatementFile(file: File): Promise<{ rows: Cell[][]; format: "csv" | "excel"; hash: string }> {
+export async function readStatementFile(file: File): Promise<StatementFile> {
   const buffer = await file.arrayBuffer();
   const hash = await sha256Hex(buffer);
+  if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
+    const { readPdfStatement } = await import("./pdf/read");
+    const statement = await readPdfStatement(buffer);
+    return { rows: statement.rows, format: "pdf_text", hash, parser: statement.parser.name };
+  }
   const XLSX = await import("xlsx");
   const isCsv = /\.(csv|txt)$/i.test(file.name) || file.type === "text/csv";
 

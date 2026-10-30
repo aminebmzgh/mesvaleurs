@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  accountingCodeSchema,
   amountSchema,
   integerSchema,
   optionalDateSchema,
@@ -18,6 +19,7 @@ export const bankAccountSchema = z.object({
   rib: ribSchema,
   opening_balance: amountSchema("Le solde d'ouverture", { allowNegative: true }),
   opening_balance_date: optionalDateSchema,
+  accounting_code: accountingCodeSchema,
 });
 
 export const checkbookSchema = z

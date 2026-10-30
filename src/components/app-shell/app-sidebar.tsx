@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, Suspense } from "react";
+import { type ReactNode, Suspense, use } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,23 +16,25 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { isActiveLink, navigation } from "./navigation";
+import type { AppRole } from "@/types/app";
+import { isActiveLink, navigation, navigationFor } from "./navigation";
 
 const allHrefs = navigation.flatMap((section) => section.items.map((item) => item.href));
 
 /**
  * Barre latérale. L'en-tête (organisation) et le pied (utilisateur) dépendent de
- * la session : ils sont rendus côté serveur et passés en props.
+ * la session : ils sont rendus côté serveur et passés en props. Le rôle (promesse
+ * résolue derrière un Suspense) masque les liens réservés à certains rôles.
  */
-export function AppSidebar({ header, footer }: { header: ReactNode; footer: ReactNode }) {
+export function AppSidebar({ header, footer, role }: { header: ReactNode; footer: ReactNode; role: Promise<AppRole> }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>{header}</SidebarHeader>
       <SidebarContent>
         {/* Le chemin courant est une donnée de requête sur les routes dynamiques :
             la navigation est d'abord rendue sans lien actif, puis mise en évidence. */}
-        <Suspense fallback={<NavigationLinks pathname={null} />}>
-          <ActiveNavigationLinks />
+        <Suspense fallback={<NavigationLinks pathname={null} role={null} />}>
+          <ActiveNavigationLinks role={role} />
         </Suspense>
       </SidebarContent>
       <SidebarFooter>{footer}</SidebarFooter>
@@ -41,12 +43,12 @@ export function AppSidebar({ header, footer }: { header: ReactNode; footer: Reac
   );
 }
 
-function ActiveNavigationLinks() {
-  return <NavigationLinks pathname={usePathname()} />;
+function ActiveNavigationLinks({ role }: { role: Promise<AppRole> }) {
+  return <NavigationLinks pathname={usePathname()} role={use(role)} />;
 }
 
-function NavigationLinks({ pathname }: { pathname: string | null }) {
-  return navigation.map((section, index) => (
+function NavigationLinks({ pathname, role }: { pathname: string | null; role: AppRole | null }) {
+  return navigationFor(role).map((section, index) => (
     <SidebarGroup key={section.label ?? index}>
       {section.label && <SidebarGroupLabel>{section.label}</SidebarGroupLabel>}
       <SidebarGroupContent>

@@ -47,3 +47,10 @@ export function extractInstrumentNumber(label: string): ExtractedNumber | null {
   }
   return null;
 }
+
+/** Libellé signalant un rejet ou un impayé (« CHQ IMPAYE 1003 », « REJET LCN… », « FRAIS RETOUR CHEQUE »). */
+const REJECTION = /\b(?:IMPAYES?|REJETS?|REJETEE?S?|CONTRE[\s-]?PASSATION|SANS PROVISION|RETOUR\s+(?:DE\s+)?(?:CHQ|CHEQUES?|LCN|EFFETS?))\b/;
+
+export function isRejectionLabel(label: string): boolean {
+  return REJECTION.test(normalizeLabel(label));
+}

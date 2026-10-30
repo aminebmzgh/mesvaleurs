@@ -1,5 +1,7 @@
 import "server-only";
 import { requireActiveOrganization } from "@/lib/auth/dal";
+import { paymentLabel } from "@/lib/payments/label";
+import { isRejectionLabel } from "@/lib/statements/extract";
 import { createClient } from "@/lib/supabase/server";
 
 export type LineStatus = "auto_matched" | "manually_matched" | "to_confirm" | "unmatched" | "ignored";
@@ -59,7 +61,7 @@ export async function getImport(importId: string) {
       .select(
         `id, operation_date, value_date, label, reference, debit, credit, extracted_number, extracted_kind, status, confidence,
          match_reason, matched_payment_id,
-         payments!statement_lines_organization_id_matched_payment_id_fkey ( id, type, number, amount, suppliers ( name ), checkbooks ( number_width ) )`,
+         payments!statement_lines_organization_id_matched_payment_id_fkey ( id, type, number, reference, amount, suppliers ( name ), checkbooks ( number_width ) )`,
       )
       .eq("organization_id", orgId)
       .eq("import_id", importId)
@@ -67,7 +69,7 @@ export async function getImport(importId: string) {
       .order("created_at"),
     supabase
       .from("payments")
-      .select("id, type, number, amount, issue_date, due_date, status, suppliers ( name ), checkbooks ( number_width )")
+      .select("id, type, number, reference, amount, issue_date, due_date, status, suppliers ( name ), checkbooks ( number_width )")
       .eq("organization_id", orgId)
       .eq("bank_account_id", statementImport.bank_account_id)
       .in("status", ["issued", "delivered"])
@@ -76,7 +78,26 @@ export async function getImport(importId: string) {
   if (lines.error || payments.error) {
     throw new Error("Impossible de charger le relevé.", { cause: lines.error ?? payments.error });
   }
-  return { ...statementImport, lines: lines.data ?? [], payments: payments.data ?? [] };
+  // Lignes signalant un rejet : paiement concerné (même compte, même numéro, non encore rejeté)
+  const signalled = (lines.data ?? []).filter((line) => line.extracted_number !== null && isRejectionLabel(line.label));
+  const rejections: Record<string, { id: string; label: string; type: string }> = {};
+  if (signalled.length > 0) {
+    const { data: rejectable } = await supabase
+      .from("payments")
+      .select("id, type, number, reference, checkbooks ( number_width )")
+      .eq("organization_id", orgId)
+      .eq("bank_account_id", statementImport.bank_account_id)
+      .in("type", ["check", "lcn"])
+      .in("status", ["issued", "delivered", "paid"])
+      .in("number", signalled.map((line) => line.extracted_number!));
+    for (const line of signalled) {
+      const payment = (rejectable ?? []).find((p) => p.number === line.extracted_number);
+      if (payment) {
+        rejections[line.id] = { id: payment.id, label: paymentLabel(payment), type: payment.type };
+      }
+    }
+  }
+  return { ...statementImport, lines: lines.data ?? [], payments: payments.data ?? [], rejections };
 }
 
 export type ImportDetail = NonNullable<Awaited<ReturnType<typeof getImport>>>;

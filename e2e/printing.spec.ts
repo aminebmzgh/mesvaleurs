@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { login, uniqueSuffix } from "./helpers";
+import { confirmFundsIfNeeded, login, uniqueSuffix } from "./helpers";
 
 // PNG 1 × 1 pixel, en guise de scan de formule
 const PNG = Buffer.from(
@@ -56,8 +56,19 @@ test("imprimer puis réimprimer un lot", async ({ page }) => {
     }
   }
   page.once("dialog", (dialog) => dialog.accept());
+  await confirmFundsIfNeeded(page);
+  // Lettre d'accompagnement cochée selon la préférence du fournisseur
+  await expect(page.getByLabel("Imprimer la lettre d'accompagnement")).toBeChecked();
   await page.getByRole("button", { name: "Émettre 1 chèque" }).click();
   await expect(page.getByText("Numéros attribués")).toBeVisible();
+  await expect(page).toHaveURL(/lettre=1/);
+
+  // Lettre (double exemplaire) et bordereau de remise en PDF
+  const letter = await page.request.get((await page.getByRole("link", { name: "Lettre d'accompagnement (PDF)" }).getAttribute("href"))!);
+  expect(letter.headers()["content-type"]).toBe("application/pdf");
+  expect((await letter.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  const slip = await page.request.get((await page.getByRole("link", { name: "Bordereau de remise (PDF)" }).getAttribute("href"))!);
+  expect(slip.headers()["content-type"]).toBe("application/pdf");
 
   const printLink = page.getByRole("link", { name: "Imprimer", exact: true });
   const pdf = await page.request.get((await printLink.getAttribute("href"))!);

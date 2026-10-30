@@ -13,11 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
 import { daysBetween, todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import { getInvoice, listSupplierOptions } from "@/lib/invoices/queries";
 import { PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS, paymentStatusVariant } from "@/lib/labels";
+import { paymentNumber } from "@/lib/payments/label";
 import { updateInvoice } from "../actions";
 import { InvoiceForm } from "../invoice-form";
 import { InvoiceStatusBadge } from "../invoice-status";
@@ -175,9 +175,7 @@ async function InvoiceDetail({ params }: Pick<PageProps<"/factures/[id]">, "para
                       <TableRow key={allocation.id}>
                         <TableCell>{PAYMENT_TYPE_LABELS[payment.type]}</TableCell>
                         <TableCell className="font-mono tabular-nums">
-                          {payment.number != null
-                            ? formatInstrumentNumber(payment.number, payment.checkbooks?.number_width ?? 7)
-                            : "—"}
+                          {paymentNumber(payment) || "—"}
                         </TableCell>
                         <TableCell>{formatDate(payment.issue_date)}</TableCell>
                         <TableCell>{payment.due_date ? formatDate(payment.due_date) : "—"}</TableCell>

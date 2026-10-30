@@ -11,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireActiveOrganization } from "@/lib/auth/dal";
-import { WRITER_ROLES } from "@/lib/auth/roles";
-import { formatInstrumentNumber } from "@/lib/checkbooks";
+import { ACCOUNT_MANAGER_ROLES, WRITER_ROLES } from "@/lib/auth/roles";
+import { CeilingDialog } from "@/components/ceiling-dialog";
+import { todayIso } from "@/lib/dates";
 import { formatDate, formatMAD } from "@/lib/format";
 import {
   INVOICE_STATUS_LABELS,
@@ -21,8 +22,12 @@ import {
   PAYMENT_TYPE_LABELS,
   paymentStatusVariant,
 } from "@/lib/labels";
+import { templateOptions } from "@/lib/letters/queries";
+import { paymentNumber } from "@/lib/payments/label";
 import { getSupplier } from "@/lib/suppliers/queries";
-import { updateSupplier } from "../actions";
+import { EnvelopeButton } from "@/components/envelope-button";
+import { LetterDialog } from "../../courriers/letter-dialog";
+import { setSupplierCeiling, updateSupplier } from "../actions";
 import { SupplierForm } from "../supplier-form";
 import { SupplierActiveToggle } from "./supplier-actions";
 
@@ -47,7 +52,11 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
-  const [organization, supplier] = await Promise.all([requireActiveOrganization(), getSupplier(id)]);
+  const [organization, supplier, statementTemplates] = await Promise.all([
+    requireActiveOrganization(),
+    getSupplier(id),
+    templateOptions("statement_request"),
+  ]);
   if (!supplier) {
     notFound();
   }
@@ -71,9 +80,36 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
             {supplier.ice && ` · ICE ${supplier.ice}`}
             {supplier.payment_terms_days != null && ` · Délai convenu : ${supplier.payment_terms_days} jours`}
             {!supplier.is_active && " · Archivé"}
+            {" · Plafond journalier : "}
+            {ACCOUNT_MANAGER_ROLES.includes(organization.role) ? (
+              <CeilingDialog
+                id={supplier.id}
+                name={supplier.name}
+                ceiling={supplier.daily_ceiling}
+                description="Au-delà de ce total de paiements datés du même jour pour ce fournisseur, les lots sont validés par une autre personne avant impression."
+                action={setSupplierCeiling.bind(null, supplier.id)}
+              />
+            ) : supplier.daily_ceiling != null ? (
+              formatMAD(supplier.daily_ceiling)
+            ) : (
+              "aucun"
+            )}
           </>
         }
-        actions={canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
+        actions={
+          <>
+            <LetterDialog
+              trigger="Demande de relevé"
+              title="Demande de relevé de compte"
+              description="Lettre au fournisseur, avec les factures non soldées selon vos livres à la date d'arrêté."
+              href={`/fournisseurs/${supplier.id}/releve`}
+              templates={statementTemplates}
+              date={{ param: "au", label: "Relevé arrêté au", defaultValue: todayIso(), max: todayIso() }}
+            />
+            <EnvelopeButton href={`/fournisseurs/${supplier.id}/enveloppe`} />
+            {canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
+          </>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -161,9 +197,7 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
                     <TableRow key={payment.id}>
                       <TableCell>{PAYMENT_TYPE_LABELS[payment.type]}</TableCell>
                       <TableCell className="font-mono tabular-nums">
-                        {payment.number != null
-                          ? formatInstrumentNumber(payment.number, payment.checkbooks?.number_width ?? 7)
-                          : "—"}
+                        {paymentNumber(payment) || "—"}
                       </TableCell>
                       <TableCell>{formatDate(payment.issue_date)}</TableCell>
                       <TableCell>{payment.due_date ? formatDate(payment.due_date) : "—"}</TableCell>

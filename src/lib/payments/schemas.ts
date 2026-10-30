@@ -22,6 +22,8 @@ export const issueRequestSchema = z
       .max(MAX_INSTRUMENTS, { error: `${MAX_INSTRUMENTS} formules au maximum par émission.` }),
     /** Factures à régler, dans l'ordre d'affectation (les plus anciennes d'abord). */
     invoiceIds: z.array(z.uuid()).max(50),
+    /** Paiement rejeté que cette émission remplace (régularisation). */
+    replacesPaymentId: z.uuid().optional(),
   })
   .refine((request) => request.instruments.every((instrument) => !instrument.dueDate || instrument.dueDate >= request.issueDate), {
     error: "Une échéance ne peut pas précéder la date d'émission.",
@@ -29,3 +31,39 @@ export const issueRequestSchema = z
   });
 
 export type IssueRequest = z.infer<typeof issueRequestSchema>;
+
+/** Saisie d'un virement (montant en centimes). */
+export const transferRequestSchema = z.object({
+  bankAccountId: z.uuid({ error: "Choisissez le compte débité." }),
+  supplierId: z.uuid({ error: "Choisissez un fournisseur." }),
+  amountCents: z.number().int().positive({ error: "Le montant doit être positif." }),
+  transferDate: isoDate,
+  reference: z.string().trim().min(1, { error: "La référence du virement est obligatoire." }).max(100),
+  debited: z.boolean(),
+  /** Factures à régler, dans l'ordre d'affectation (les plus anciennes d'abord). */
+  invoiceIds: z.array(z.uuid()).max(50),
+  notes: z.string().trim().max(500),
+  /** Paiement rejeté que ce virement remplace (régularisation). */
+  replacesPaymentId: z.uuid().optional(),
+});
+
+export type TransferRequest = z.infer<typeof transferRequestSchema>;
+
+/** Émission d'un chèque de garantie (montant en centimes). */
+export const guaranteeRequestSchema = z
+  .object({
+    checkbookId: z.uuid({ error: "Choisissez un chéquier." }),
+    supplierId: z.uuid({ error: "Choisissez un fournisseur." }),
+    payeeName: z.string().trim().min(1, { error: "Le bénéficiaire est obligatoire." }).max(200),
+    amountCents: z.number().int().positive({ error: "Le montant doit être positif." }),
+    issueDate: isoDate,
+    issuePlace: z.string().trim().max(120),
+    purpose: z.string().trim().min(3, { error: "Indiquez l'objet de la garantie." }).max(200),
+    returnDue: isoDate,
+  })
+  .refine((request) => request.returnDue >= request.issueDate, {
+    error: "La restitution prévue doit suivre la date d'émission.",
+    path: ["returnDue"],
+  });
+
+export type GuaranteeRequest = z.infer<typeof guaranteeRequestSchema>;

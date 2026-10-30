@@ -6,7 +6,16 @@ import { sanitizeSearch } from "./schemas";
 const LIST_LIMIT = 200;
 
 /** Fournisseurs de l'organisation active avec leur solde, filtrés par la recherche. */
-export async function listSuppliers({ search, archived = false }: { search?: string; archived?: boolean }) {
+export async function listSuppliers({
+  search,
+  archived = false,
+  limit = LIST_LIMIT,
+}: {
+  search?: string;
+  archived?: boolean;
+  /** Nombre maximal de lignes (exports : davantage que l'écran). */
+  limit?: number;
+}) {
   const organization = await requireActiveOrganization();
   const supabase = await createClient();
   const term = sanitizeSearch(search);
@@ -17,7 +26,7 @@ export async function listSuppliers({ search, archived = false }: { search?: str
     .eq("organization_id", organization.organizationId)
     .eq("is_active", !archived)
     .order("name")
-    .limit(LIST_LIMIT);
+    .limit(limit);
   if (term) {
     query = query.or(`name.ilike.%${term}%,payee_name.ilike.%${term}%,ice.ilike.%${term}%`);
   }
@@ -36,7 +45,7 @@ export async function listSuppliers({ search, archived = false }: { search?: str
   const byId = new Map(summaries.data.map((summary) => [summary.id, summary]));
   return {
     suppliers: suppliers.data.map((supplier) => ({ ...supplier, summary: byId.get(supplier.id) })),
-    truncated: suppliers.data.length === LIST_LIMIT,
+    truncated: suppliers.data.length === limit,
   };
 }
 
@@ -57,7 +66,7 @@ export async function getSupplier(id: string) {
       .order("issue_date", { ascending: false }),
     supabase
       .from("payments")
-      .select("id, type, status, number, amount, issue_date, due_date, debited_at, checkbooks ( number_width )")
+      .select("id, type, status, number, reference, amount, issue_date, due_date, debited_at, checkbooks ( number_width )")
       .eq("organization_id", orgId)
       .eq("supplier_id", id)
       .order("issue_date", { ascending: false })

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { emailSchema, iceSchema, optionalText, requiredText, ribSchema } from "@/lib/validation";
+import { accountingCodeSchema, emailSchema, iceSchema, optionalText, requiredText, ribSchema } from "@/lib/validation";
 
 export const supplierSchema = z.object({
   name: requiredText("La raison sociale"),
@@ -28,6 +28,8 @@ export const supplierSchema = z.object({
     .optional()
     .transform((value) => value === "on"),
   notes: optionalText(2000),
+  // Compte auxiliaire de l'export comptable
+  accounting_code: accountingCodeSchema,
 });
 
 export type SupplierInput = z.infer<typeof supplierSchema>;

@@ -16,6 +16,12 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/paiem
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     return new NextResponse("Lot introuvable.", { status: 404 });
   }
+  // Double signature : aucune impression (même test) avant validation
+  const supabase = await createClient();
+  const { data: batch } = await supabase.from("print_batches").select("approval_status").eq("id", id).maybeSingle();
+  if (batch?.approval_status === "pending" || batch?.approval_status === "refused") {
+    return new NextResponse("Ce lot n'a pas été validé : il ne peut pas être imprimé.", { status: 409 });
+  }
   const job = await getBatchPrintJob(id);
   if (!job) {
     return new NextResponse("Aucune formule à imprimer dans ce lot.", { status: 404 });
@@ -30,7 +36,6 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/paiem
 
   if (!isTest) {
     // Première impression ou réimpression : tracée dans le journal d'audit
-    const supabase = await createClient();
     await supabase.rpc("record_batch_print", { p_batch_id: id });
   }
 
