@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, BanknoteIcon, FileTextIcon } from "lucide-react";
+import { ArrowLeftIcon, BanknoteIcon, FileTextIcon, ScaleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -106,6 +106,10 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
               templates={statementTemplates}
               date={{ param: "au", label: "Relevé arrêté au", defaultValue: todayIso(), max: todayIso() }}
             />
+            <Link href={`/fournisseurs/${supplier.id}/rapprochement`} className={buttonVariants({ variant: "outline" })}>
+              <ScaleIcon aria-hidden />
+              Rapprocher son relevé
+            </Link>
             <EnvelopeButton href={`/fournisseurs/${supplier.id}/enveloppe`} />
             {canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
           </>

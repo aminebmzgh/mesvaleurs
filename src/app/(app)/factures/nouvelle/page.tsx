@@ -26,13 +26,27 @@ async function NewInvoice({ searchParams }: Pick<PageProps<"/factures/nouvelle">
   await requireRole(WRITER_ROLES);
   const [params, suppliers] = await Promise.all([searchParams, listSupplierOptions()]);
   const defaultSupplierId = typeof params.fournisseur === "string" ? params.fournisseur : undefined;
+  const supplierId = suppliers.some((s) => s.value === defaultSupplierId) ? defaultSupplierId : undefined;
+  // Facture pré-remplie (rapprochement avec le relevé du fournisseur) : numéro, date, TTC
+  const text = (value: unknown) => (typeof value === "string" ? value : "");
+  const total = Number(text(params.ttc));
+  const prefill =
+    supplierId && text(params.numero)
+      ? {
+          supplier_id: supplierId,
+          number: text(params.numero).slice(0, 60),
+          ...(/^\d{4}-\d{2}-\d{2}$/.test(text(params.date)) && { issue_date: text(params.date) }),
+          ...(Number.isFinite(total) && total > 0 && { amount_incl_tax: total }),
+        }
+      : undefined;
   return (
     <Card className="max-w-3xl">
       <CardContent>
         <InvoiceForm
           action={createInvoice}
           suppliers={suppliers}
-          defaultSupplierId={suppliers.some((s) => s.value === defaultSupplierId) ? defaultSupplierId : undefined}
+          invoice={prefill}
+          defaultSupplierId={supplierId}
           submitLabel="Enregistrer la facture"
         />
       </CardContent>
