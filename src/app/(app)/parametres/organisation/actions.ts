@@ -5,7 +5,13 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
-import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import {
+  DECLARATION_REMINDER_CHOICES,
+  DUE_ALERT_CHOICES,
+  LOW_STOCK_CHOICES,
+  parseOrganizationSettings,
+  UNCASHED_ALERT_CHOICES,
+} from "@/lib/organizations/settings";
 import { emailSchema, iceSchema, optionalAmountSchema, optionalText, requiredText } from "@/lib/validation";
 
 const organizationSchema = z.object({
@@ -26,6 +32,8 @@ const organizationSchema = z.object({
   low_stock_threshold: z.coerce.number().pipe(z.union(LOW_STOCK_CHOICES.map((count) => z.literal(count)))),
   lcn_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
   invoice_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
+  late_payment_basis: z.enum(["remittance", "debit"]),
+  declaration_reminder_days: z.coerce.number().pipe(z.union(DECLARATION_REMINDER_CHOICES.map((days) => z.literal(days)))),
   approval_threshold: optionalAmountSchema("Le seuil de validation"),
   daily_ceiling: optionalAmountSchema("Le plafond journalier"),
 });
@@ -44,6 +52,8 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     low_stock_threshold,
     lcn_alert_days,
     invoice_alert_days,
+    late_payment_basis,
+    declaration_reminder_days,
     approval_threshold,
     daily_ceiling,
     ...fields
@@ -63,6 +73,8 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     low_stock_threshold,
     lcn_alert_days,
     invoice_alert_days,
+    late_payment_basis,
+    declaration_reminder_days,
     // Un montant nul désactive la règle
     approval_threshold: approval_threshold || null,
     daily_ceiling: daily_ceiling || null,

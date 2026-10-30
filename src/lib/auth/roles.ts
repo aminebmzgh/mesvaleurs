@@ -30,3 +30,6 @@ export function hasRole(role: AppRole, allowed: readonly AppRole[]) {
 
 /** Rôles autorisés à gérer comptes bancaires, chéquiers et modèles d'impression. */
 export const ACCOUNT_MANAGER_ROLES: AppRole[] = ["admin", "manager"];
+
+/** Loi 69-21 : marquer un trimestre comme déclaré (direction et comptabilité). */
+export const DECLARATION_ROLES: AppRole[] = ["admin", "manager", "accountant", "external_accountant"];
