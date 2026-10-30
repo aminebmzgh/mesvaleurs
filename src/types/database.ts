@@ -175,6 +175,26 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     }
                   ]
+                },"late_payment_declarations": {
+                  Row: {
+                    "created_at": string,"declared_by": string | null,"declared_on": string,"id": string,"organization_id": string,"quarter": number,"reference": string | null,"year": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"declared_by"?: string | null,"declared_on": string,"id"?: string,"organization_id": string,"quarter": number,"reference"?: string | null,"year": number
+                  }
+                  Update: {
+                    "created_at"?: string,"declared_by"?: string | null,"declared_on"?: string,"id"?: string,"organization_id"?: string,"quarter"?: number,"reference"?: string | null,"year"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "late_payment_declarations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"lcn_postponements": {
                   Row: {
                     "created_at": string,"created_by": string | null,"id": string,"new_due_date": string,"organization_id": string,"payment_id": string,"previous_due_date": string,"reason": string,"supplier_agreed_at": string

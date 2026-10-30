@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+### Ajouté
+
+- Loi 69-21 (délais de paiement) : page « Délais de paiement » avec les factures dans les
+  délais, proches de la date limite et en retard ; état trimestriel des factures payées hors
+  délai et des restes impayés échus (ICE, mode et référence du paiement, mois de retard,
+  amende indicative), exportable en CSV, Excel et PDF pour l'expert-comptable ; suivi de la
+  déclaration trimestrielle (date de dépôt, référence) avec rappel sur la page Alertes et dans
+  le récapitulatif du matin. Paramètres légaux modifiables (amende : 2,25 % le premier mois
+  puis 0,85 % par mois, seuil de chiffre d'affaires, délai de déclaration) ; date de paiement
+  retenue et délai du rappel réglables dans les paramètres de l'entreprise. Calculs indicatifs.
+
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 
 ### Ajouté

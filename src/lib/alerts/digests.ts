@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadDeclarationReminder } from "@/lib/compliance/data";
 import { loadDashboard } from "@/lib/dashboard/queries";
 import { type EmailMessage, sendEmails } from "@/lib/email/send";
 import { parseOrganizationSettings } from "@/lib/organizations/settings";
@@ -97,7 +98,8 @@ async function digestFor(
     },
     today,
   );
-  const alerts = buildAlerts(dashboard, { lcnAlertDays: settings.lcn_alert_days });
+  const declaration = await loadDeclarationReminder(admin, organization.id, settings.declaration_reminder_days, today);
+  const alerts = buildAlerts(dashboard, { lcnAlertDays: settings.lcn_alert_days, declaration });
   const base = { organizationId: organization.id, alerts: alerts.length };
 
   if (alerts.length === 0) {

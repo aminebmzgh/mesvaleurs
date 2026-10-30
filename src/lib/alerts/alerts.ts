@@ -7,6 +7,7 @@
 import { formatDate, formatMAD } from "@/lib/format";
 import { REJECTION_KIND_LABELS, type RejectionKind } from "@/lib/labels";
 import { countdownLabel, type RegularizationState } from "@/lib/payments/rejections";
+import { type DeclarationReminder, quarterKey, quarterLabel } from "@/lib/compliance/late-payments";
 
 export type AlertSeverity = "critical" | "warning" | "info";
 
@@ -16,6 +17,7 @@ export type AlertKind =
   | "lcn_due"
   | "invoice_overdue"
   | "invoice_due"
+  | "declaration_due"
   | "guarantee_return"
   | "uncashed"
   | "low_stock"
@@ -52,7 +54,10 @@ const SEVERITY_ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1,
 const plural = (count: number, singular: string, pluralForm = `${singular}s`) => (count > 1 ? pluralForm : singular);
 const total = (amounts: number[]) => Math.round(amounts.reduce((sum, amount) => sum + Math.round(amount * 100), 0)) / 100;
 
-export function buildAlerts(source: AlertSource, { lcnAlertDays }: { lcnAlertDays: number }): AppAlert[] {
+export function buildAlerts(
+  source: AlertSource,
+  { lcnAlertDays, declaration = null }: { lcnAlertDays: number; declaration?: DeclarationReminder | null },
+): AppAlert[] {
   const alerts: AppAlert[] = [];
 
   if (source.rejected.length > 0) {
@@ -135,6 +140,23 @@ export function buildAlerts(source: AlertSource, { lcnAlertDays }: { lcnAlertDay
         detail: `${i.supplier} · ${formatMAD(i.remaining)}`,
         badge: i.daysLeft === 0 ? "aujourd'hui" : `${formatDate(i.legalDueDate)} · J-${i.daysLeft}`,
       })),
+    });
+  }
+
+  if (declaration) {
+    const late = declaration.daysLeft < 0;
+    alerts.push({
+      kind: "declaration_due",
+      severity: late ? "critical" : "warning",
+      title: late
+        ? `Déclaration des délais de paiement du ${quarterLabel(declaration.quarter)} en retard`
+        : `Déclaration des délais de paiement du ${quarterLabel(declaration.quarter)} à déposer`,
+      detail: late
+        ? `Date limite dépassée depuis le ${formatDate(declaration.deadline)} (loi 69-21, calcul indicatif).`
+        : `Avant le ${formatDate(declaration.deadline)}${declaration.daysLeft === 0 ? " (aujourd'hui)" : ` (J-${declaration.daysLeft})`} : état trimestriel à transmettre à votre expert-comptable.`,
+      href: `/conformite?trimestre=${quarterKey(declaration.quarter)}`,
+      action: "Préparer l'état trimestriel",
+      items: [],
     });
   }
 

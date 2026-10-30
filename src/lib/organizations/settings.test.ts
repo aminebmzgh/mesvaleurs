@@ -20,6 +20,8 @@ const DEFAULTS = {
   low_stock_threshold: 5,
   lcn_alert_days: 7,
   invoice_alert_days: 7,
+  late_payment_basis: "remittance",
+  declaration_reminder_days: 15,
   approval_threshold: null,
   daily_ceiling: null,
   accounting_export: ACCOUNTING_DEFAULTS,
@@ -39,6 +41,8 @@ describe("parseOrganizationSettings", () => {
       low_stock_threshold: 5,
       lcn_alert_days: 7,
       invoice_alert_days: 7,
+      late_payment_basis: "remittance",
+      declaration_reminder_days: 15,
       approval_threshold: null,
       daily_ceiling: null,
       accounting_export: ACCOUNTING_DEFAULTS,
@@ -79,5 +83,18 @@ describe("export comptable", () => {
       parseOrganizationSettings({ accounting_export: { journal: "BNK", basis: "issue", separator: "|", supplierAccount: "4411 000" } }).accounting_export,
     ).toEqual({ ...ACCOUNTING_DEFAULTS, journal: "BNK", basis: "issue" });
     expect(parseOrganizationSettings({ accounting_export: "texte" }).accounting_export).toEqual(ACCOUNTING_DEFAULTS);
+  });
+});
+
+describe("loi 69-21", () => {
+  it("date de paiement retenue et rappel de la déclaration", () => {
+    expect(parseOrganizationSettings({ late_payment_basis: "debit", declaration_reminder_days: 30 })).toMatchObject({
+      late_payment_basis: "debit",
+      declaration_reminder_days: 30,
+    });
+    expect(parseOrganizationSettings({ late_payment_basis: "cash", declaration_reminder_days: 0 })).toMatchObject({
+      late_payment_basis: "remittance",
+      declaration_reminder_days: 15,
+    });
   });
 });
