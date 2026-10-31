@@ -55,6 +55,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   par le serveur ; page « Archives » avec recherche (numéro, fournisseur, ICE, dates) et
   vérification de l'intégrité des pièces.
 
+### Corrigé
+
+- Fenêtre « Reporter l'échéance » d'une LCN : champs et boutons qui débordaient de la fenêtre ;
+  les boutons du bas des fenêtres passent désormais à la ligne quand la place manque.
+  Libellé « LCN n° … » au lieu de « lcn n° … » dans les fenêtres des chèques et LCN.
+
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 
 ### Ajouté

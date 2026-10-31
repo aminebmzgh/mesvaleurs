@@ -17,6 +17,7 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { upperFirst } from "@/lib/format";
 import {
   LEGAL_DISCLAIMER,
   REGULARIZATION_METHOD_LABELS,
@@ -55,7 +56,7 @@ export function RejectDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rejet {label.startsWith("lcn") ? "de la" : "du"} {label}</DialogTitle>
+          <DialogTitle>Rejet {label.startsWith("LCN") ? "de la" : "du"} {label}</DialogTitle>
           <DialogDescription>
             {isCheck
               ? "Le délai légal de régularisation (un mois par défaut, loi 71-24) démarre à la date du rejet. "
@@ -127,7 +128,7 @@ export function RegularizeDialog({ paymentId, label, today }: { paymentId: strin
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Régulariser le rejet</DialogTitle>
-          <DialogDescription>{label}</DialogDescription>
+          <DialogDescription>{upperFirst(label)}</DialogDescription>
         </DialogHeader>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">Moyen de régularisation</legend>

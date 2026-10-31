@@ -17,7 +17,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { addDays } from "@/lib/dates";
-import { formatDate } from "@/lib/format";
+import { formatDate, upperFirst } from "@/lib/format";
 import { postponeLcn } from "./actions";
 
 /**
@@ -36,11 +36,11 @@ export function PostponeDialog({ paymentId, label, dueDate, today }: { paymentId
         <CalendarPlusIcon aria-hidden />
         Reporter
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Reporter l&apos;échéance</DialogTitle>
           <DialogDescription>
-            {label} — échéance actuelle le {formatDate(dueDate)}. Le report est conservé dans l&apos;historique de la LCN.
+            {upperFirst(label)} — échéance actuelle le {formatDate(dueDate)}. Le report est conservé dans l&apos;historique de la LCN.
           </DialogDescription>
         </DialogHeader>
         <Field>
