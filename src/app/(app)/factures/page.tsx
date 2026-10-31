@@ -1,4 +1,4 @@
-import { FileTextIcon, PaperclipIcon, PlusIcon, SearchIcon, UploadIcon } from "lucide-react";
+import { ArchiveIcon, FileCodeIcon, FileTextIcon, PaperclipIcon, PlusIcon, SearchIcon, UploadIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
@@ -49,19 +49,28 @@ export default function InvoicesPage({ searchParams }: PageProps<"/factures">) {
 
 async function NewInvoiceButton() {
   const organization = await requireActiveOrganization();
-  if (!WRITER_ROLES.includes(organization.role)) {
-    return null;
-  }
   return (
     <>
-      <Link href="/factures/importer" className={buttonVariants({ variant: "outline" })}>
-        <UploadIcon aria-hidden />
-        Importer
+      <Link href="/factures/archives" className={buttonVariants({ variant: "outline" })}>
+        <ArchiveIcon aria-hidden />
+        Archives
       </Link>
-      <Link href="/factures/nouvelle" className={buttonVariants()}>
-        <PlusIcon aria-hidden />
-        Nouvelle facture
-      </Link>
+      {WRITER_ROLES.includes(organization.role) && (
+        <>
+          <Link href="/factures/ubl" className={buttonVariants({ variant: "outline" })}>
+            <FileCodeIcon aria-hidden />
+            Factures UBL
+          </Link>
+          <Link href="/factures/importer" className={buttonVariants({ variant: "outline" })}>
+            <UploadIcon aria-hidden />
+            Importer
+          </Link>
+          <Link href="/factures/nouvelle" className={buttonVariants()}>
+            <PlusIcon aria-hidden />
+            Nouvelle facture
+          </Link>
+        </>
+      )}
     </>
   );
 }

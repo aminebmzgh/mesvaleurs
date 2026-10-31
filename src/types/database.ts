@@ -143,6 +143,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"invoice_archives": {
+                  Row: {
+                    "archived_at": string,"archived_by": string | null,"bucket_id": string,"file_path": string,"id": string,"invoice_id": string,"kind": string,"organization_id": string,"retain_until": string,"sha256": string | null,"size_bytes": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string,"archived_by"?: string | null,"bucket_id"?: string,"file_path": string,"id"?: string,"invoice_id": string,"kind": string,"organization_id": string,"retain_until"?: string,"sha256"?: string | null,"size_bytes"?: number | null
+                  }
+                  Update: {
+                    "archived_at"?: string,"archived_by"?: string | null,"bucket_id"?: string,"file_path"?: string,"id"?: string,"invoice_id"?: string,"kind"?: string,"organization_id"?: string,"retain_until"?: string,"sha256"?: string | null,"size_bytes"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_archives_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoice_archives_organization_id_invoice_id_fkey"
+      columns: ["organization_id","invoice_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
                 },"invoices": {
                   Row: {
                     "amount_cashed": number,"amount_excl_tax": number | null,"amount_incl_tax": number,"amount_paid": number,"attachment_path": string | null,"created_at": string,"delivery_date": string | null,"id": string,"issue_date": string,"legal_due_date": string | null,"notes": string | null,"number": string,"organization_id": string,"payment_terms_days": number | null,"status": Database["public"]['Enums']["invoice_status"],"supplier_id": string,"updated_at": string,"vat_amount": number | null
@@ -744,6 +770,9 @@ isOneToOne: false
                            },
 "reject_payment":
 { Args: { "p_kind": Database["public"]['Enums']["rejection_kind"],"p_payment_id": string,"p_reason": string,"p_rejected_on": string }; Returns: undefined
+                           },
+"seal_invoice_archive":
+{ Args: { "p_id": string,"p_sha256": string,"p_size": number }; Returns: undefined
                            },
 "set_email_alerts":
 { Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined

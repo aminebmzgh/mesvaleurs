@@ -42,6 +42,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   fournisseurs stratégiques (nouvelle case sur la fiche fournisseur) passent en priorité ;
   amende indicative de la loi 69-21 affichée. « Préparer le chèque » ou « Préparer la LCN »
   ouvre l'assistant de paiement pré-rempli (fournisseur, factures, moyen, échéance).
+- Factures électroniques UBL (Factures › Factures UBL) : import de fichiers XML UBL 2.1,
+  plusieurs à la fois. Fournisseur reconnu par son ICE ; inconnu, il est proposé à la
+  création (raison sociale, ICE, IF, RC, adresse, RIB lus dans le fichier) et créé seulement
+  après confirmation. Contrôles avant import : devise, HT + TVA = TTC, somme des lignes,
+  facture déjà enregistrée, ICE du destinataire. Le fichier est relu et contrôlé par le
+  serveur ; aucune connexion à la plateforme de la DGI.
+- Archivage légal des factures : chaque pièce déposée (fichier UBL, PDF, photo, y compris les
+  pièces déjà jointes) est inscrite au registre et conservée 10 ans, sans modification ni
+  suppression possible, administrateurs compris ; une pièce remplacée ou retirée reste
+  archivée, et une facture archivée ne peut plus être supprimée. Empreinte SHA-256 calculée
+  par le serveur ; page « Archives » avec recherche (numéro, fournisseur, ICE, dates) et
+  vérification de l'intégrité des pièces.
 
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 
