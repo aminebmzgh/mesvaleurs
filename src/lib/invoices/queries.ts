@@ -76,7 +76,7 @@ export async function getInvoice(id: string) {
   const supabase = await createClient();
   const orgId = organization.organizationId;
 
-  const [invoice, allocations] = await Promise.all([
+  const [invoice, allocations, archives] = await Promise.all([
     supabase
       .from("invoices")
       .select("*, suppliers ( id, name, payment_terms_days )")
@@ -90,9 +90,15 @@ export async function getInvoice(id: string) {
       )
       .eq("organization_id", orgId)
       .eq("invoice_id", id),
+    supabase
+      .from("invoice_archives")
+      .select("id, kind, archived_at, retain_until, sha256")
+      .eq("organization_id", orgId)
+      .eq("invoice_id", id)
+      .order("archived_at"),
   ]);
-  if (invoice.error || allocations.error) {
-    throw new Error("Impossible de charger la facture.", { cause: invoice.error ?? allocations.error });
+  if (invoice.error || allocations.error || archives.error) {
+    throw new Error("Impossible de charger la facture.", { cause: invoice.error ?? allocations.error ?? archives.error });
   }
   if (!invoice.data) {
     return null;
@@ -106,5 +112,73 @@ export async function getInvoice(id: string) {
     attachmentUrl = data?.signedUrl ?? null;
   }
 
-  return { ...invoice.data, allocations: allocations.data ?? [], attachmentUrl };
+  return { ...invoice.data, allocations: allocations.data ?? [], archives: archives.data ?? [], attachmentUrl };
+}
+
+const ARCHIVE_LIMIT = 200;
+
+/**
+ * Registre des archives (archivage légal) : recherche par numéro de facture, raison
+ * sociale ou ICE du fournisseur, et par date de facture ; liens temporaires vers les pièces.
+ */
+export async function listArchives({ search, from, to }: { search?: string; from?: string; to?: string }) {
+  const organization = await requireActiveOrganization();
+  const supabase = await createClient();
+  const orgId = organization.organizationId;
+  const term = sanitizeSearch(search);
+
+  let invoiceIds: string[] | null = null;
+  if (term || from || to) {
+    let invoices = supabase.from("invoices").select("id").eq("organization_id", orgId).limit(2000);
+    if (term) {
+      // Numéro de facture, ou fournisseur retrouvé par sa raison sociale ou son ICE
+      const { data: suppliers } = await supabase
+        .from("suppliers")
+        .select("id")
+        .eq("organization_id", orgId)
+        .or(`name.ilike.%${term}%,ice.ilike.%${term}%`);
+      const supplierIds = (suppliers ?? []).map((supplier) => supplier.id);
+      invoices = invoices.or(
+        supplierIds.length > 0 ? `number.ilike.%${term}%,supplier_id.in.(${supplierIds.join(",")})` : `number.ilike.%${term}%`,
+      );
+    }
+    if (from) {
+      invoices = invoices.gte("issue_date", from);
+    }
+    if (to) {
+      invoices = invoices.lte("issue_date", to);
+    }
+    const { data, error } = await invoices;
+    if (error) {
+      throw new Error("Impossible de rechercher les archives.", { cause: error });
+    }
+    invoiceIds = data.map((invoice) => invoice.id);
+  }
+
+  let query = supabase
+    .from("invoice_archives")
+    .select(
+      "id, kind, file_path, sha256, size_bytes, archived_at, retain_until, invoices ( id, number, issue_date, amount_incl_tax, suppliers ( name, ice ) )",
+    )
+    .eq("organization_id", orgId)
+    .order("archived_at", { ascending: false })
+    .limit(ARCHIVE_LIMIT);
+  if (invoiceIds) {
+    query = query.in("invoice_id", invoiceIds.length > 0 ? invoiceIds : ["00000000-0000-0000-0000-000000000000"]);
+  }
+  const { data, error } = await query;
+  if (error) {
+    throw new Error("Impossible de charger les archives.", { cause: error });
+  }
+  const { data: urls } = data.length
+    ? await supabase.storage.from("factures").createSignedUrls(
+        data.map((archive) => archive.file_path),
+        SIGNED_URL_SECONDS,
+      )
+    : { data: [] };
+  const urlByPath = new Map((urls ?? []).map((entry) => [entry.path, entry.signedUrl]));
+  return {
+    archives: data.map((archive) => ({ ...archive, url: urlByPath.get(archive.file_path) ?? null })),
+    truncated: data.length === ARCHIVE_LIMIT,
+  };
 }
