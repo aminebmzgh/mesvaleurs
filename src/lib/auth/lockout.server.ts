@@ -18,7 +18,7 @@ const keysOf = ({ email, ip }: Target) =>
 export async function loginLockedUntil(target: Target): Promise<Date | null> {
   const { data, error } = await createAdminClient().rpc("login_locked_until", { p_keys: keysOf(target).map(({ key }) => key) });
   if (error) {
-    console.error("Verrouillage de connexion : lecture impossible", error.code);
+    console.error("Verrouillage de connexion : lecture impossible", error.code, error.message);
     return null;
   }
   return data ? new Date(data) : null;

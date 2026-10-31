@@ -71,6 +71,8 @@ export async function readInvoiceWithAi(input: z.infer<typeof readingSchema>): P
     p_monthly_quota: status.quota,
   });
   if (reserveError) {
+    // Clé service_role absente ou invalide, migration manquante… : détail dans les journaux du serveur
+    console.error("IA : réservation du quota impossible", reserveError.code, reserveError.message);
     return { error: "Impossible de lancer la lecture. Réessayez." };
   }
   if (!usageId) {

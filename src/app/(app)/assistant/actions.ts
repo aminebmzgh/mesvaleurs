@@ -50,6 +50,8 @@ export async function askAssistant(history: z.input<typeof historySchema>): Prom
     p_monthly_quota: status.quota,
   });
   if (reserveError) {
+    // Clé service_role absente ou invalide, migration manquante… : détail dans les journaux du serveur
+    console.error("IA : réservation du quota impossible", reserveError.code, reserveError.message);
     return { error: "Impossible d'envoyer la question. Réessayez." };
   }
   if (!usageId) {
