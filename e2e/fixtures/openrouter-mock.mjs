@@ -3,6 +3,10 @@
  * au vrai service. La « lecture » reprend les lignes « clé: valeur » du texte reçu
  * (factures PDF fabriquées par les tests). GET /last renvoie le dernier texte reçu,
  * pour vérifier le masquage des données personnelles.
+ *
+ * Assistant (requête avec outils) : la dernière question choisit l'outil appelé
+ * (mots-clés ci-dessous) ; une fois le résultat reçu, la réponse en reprend le nombre,
+ * le total et le premier lien.
  */
 import http from "node:http";
 
@@ -26,6 +30,56 @@ const FIELDS = [
 const NUMBERS = new Set(["amount_excl_tax", "vat_amount", "amount_incl_tax"]);
 
 let lastText = "";
+
+/** Outil appelé selon la question posée à l'assistant. */
+function toolFor(question) {
+  if (/dois|fournisseur/i.test(question)) {
+    return { name: "rechercher_fournisseurs", arguments: { recherche: "Sotrama" } };
+  }
+  if (/amende|retard/i.test(question)) {
+    return { name: "delais_de_paiement", arguments: { horizon_jours: 30 } };
+  }
+  if (/trésorerie/i.test(question)) {
+    return { name: "tresorerie", arguments: { jours: 30 } };
+  }
+  return { name: "lister_paiements", arguments: { statut: "en_circulation" } };
+}
+
+/** Premier champ « nom » trouvé dans le résultat d'un outil (parcours en profondeur). */
+function first(value, key) {
+  if (value && typeof value === "object") {
+    if (key in value && !Array.isArray(value)) {
+      return value[key];
+    }
+    for (const child of Object.values(value)) {
+      const found = first(child, key);
+      if (found !== undefined) {
+        return found;
+      }
+    }
+  }
+  return undefined;
+}
+
+function assistantReply(payload) {
+  const last = payload.messages.at(-1);
+  if (last.role === "tool") {
+    const result = JSON.parse(last.content);
+    const link = first(result, "lien") ?? first(result, "page");
+    const parts = [`Réponse du faux assistant : ${first(result, "nombre") ?? "?"} résultat(s)`];
+    const total = first(result, "total") ?? first(result, "solde_du") ?? first(result, "solde_total_actuel");
+    if (total !== undefined) {
+      parts.push(`montant ${total}`);
+    }
+    return { role: "assistant", content: `${parts.join(", ")}.${link ? ` [Voir le détail](${link})` : ""}` };
+  }
+  const call = toolFor(last.content);
+  return {
+    role: "assistant",
+    content: null,
+    tool_calls: [{ id: "appel-1", type: "function", function: { name: call.name, arguments: JSON.stringify(call.arguments) } }],
+  };
+}
 
 function read(text) {
   const invoice = { is_invoice: true };
@@ -53,11 +107,25 @@ http
     request.on("data", (chunk) => (body += chunk));
     request.on("end", () => {
       const payload = JSON.parse(body);
-      const user = payload.messages.find((message) => message.role === "user");
-      lastText = user.content
-        .filter((part) => part.type === "text")
-        .map((part) => part.text)
-        .join("\n");
+      const user = payload.messages.findLast((message) => message.role === "user");
+      lastText =
+        typeof user.content === "string"
+          ? user.content
+          : user.content
+              .filter((part) => part.type === "text")
+              .map((part) => part.text)
+              .join("\n");
+      if (payload.tools || payload.messages.some((message) => message.role === "tool")) {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        response.end(
+          JSON.stringify({
+            model: payload.model,
+            choices: [{ message: assistantReply(payload) }],
+            usage: { prompt_tokens: 900, completion_tokens: 60, cost: 0.0002 },
+          }),
+        );
+        return;
+      }
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(
         JSON.stringify({

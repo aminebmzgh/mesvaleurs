@@ -103,7 +103,7 @@ const aiSchema = z.object({
 });
 
 /**
- * Lecture des factures par IA : activée par un administrateur qui accepte l'envoi des
+ * IA (lecture des factures, assistant) : activée par un administrateur qui accepte l'envoi des
  * documents à un service situé hors du Maroc (loi 09-08). Son accord est conservé
  * (qui, quand) ; la modification est tracée par le journal d'audit.
  */
@@ -135,7 +135,7 @@ export async function updateAiSettings(_prev: FormState, formData: FormData): Pr
     return { error: "Impossible d'enregistrer les modifications." };
   }
   revalidatePath("/", "layout");
-  return { success: enabled ? "Lecture des factures par IA activée." : "Lecture des factures par IA désactivée." };
+  return { success: enabled ? "IA activée : lecture des factures et assistant." : "IA désactivée." };
 }
 
 /** Logo de l'entreprise (en-tête des lettres) : chemin du fichier envoyé dans le bucket `logos`, ou retrait. */

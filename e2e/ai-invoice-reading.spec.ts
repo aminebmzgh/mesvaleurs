@@ -24,12 +24,12 @@ test("IA désactivée par défaut, activée par un administrateur avec son accor
   await login(page, "admin@demo.ma");
   await page.goto("/parametres/organisation");
   const card = page.locator("#ia");
-  const enabled = card.getByLabel("Activer la lecture des factures par IA");
+  const enabled = card.getByLabel("Activer l'IA : lecture des factures et assistant");
   // Base rejouée : l'IA a pu être activée par un passage précédent
   if (await enabled.isChecked()) {
     await enabled.uncheck();
     await card.getByRole("button", { name: "Enregistrer les réglages de l'IA" }).click();
-    await expect(card.getByText("Lecture des factures par IA désactivée.")).toBeVisible();
+    await expect(card.getByText("IA désactivée.", { exact: true })).toBeVisible();
   }
 
   await page.goto("/factures/nouvelle");
@@ -41,9 +41,9 @@ test("IA désactivée par défaut, activée par un administrateur avec son accor
   // Sans accord sur l'envoi hors du Maroc : refusé
   await card.getByRole("button", { name: "Enregistrer les réglages de l'IA" }).click();
   await expect(card.getByText("Acceptez l'envoi des documents au service d'IA pour l'activer.")).toBeVisible();
-  await card.getByLabel(/J'accepte que les factures lues soient envoyées/).check();
+  await card.getByLabel(/J'accepte que les factures lues/).check();
   await card.getByRole("button", { name: "Enregistrer les réglages de l'IA" }).click();
-  await expect(card.getByText("Lecture des factures par IA activée.")).toBeVisible();
+  await expect(card.getByText("IA activée : lecture des factures et assistant.")).toBeVisible();
   await expect(card.getByText(/Activée le .* par admin@demo\.ma\./)).toBeVisible();
 });
 

@@ -7,6 +7,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ### Ajouté
 
+- Assistant IA (page « Assistant IA ») : questions en français sur les fournisseurs, factures,
+  chèques, LCN, virements, délais de paiement (loi 69-21) et trésorerie, par exemple « Combien
+  je dois encore à X ? », « Quels chèques ne sont pas encore passés ? », « Quelles factures
+  risquent une amende ce trimestre ? ». Le modèle consulte les données de l'entreprise par des
+  outils en lecture seule (aucune coordonnée personnelle transmise) et répond avec les liens
+  vers les écrans concernés. Ouvert à tous les membres, quand l'IA est activée pour
+  l'entreprise ; chaque question compte dans le quota mensuel d'IA. Conversation non
+  enregistrée ; e-mails, téléphones et RIB des questions masqués avant l'envoi.
 - Saisie de factures assistée par IA : sur la page Nouvelle facture, un PDF, un scan ou une
   photo de la facture est lu par un modèle d'IA (OpenRouter) qui pré-remplit fournisseur,
   numéro, dates, délai et montants HT, TVA et TTC, à vérifier avant d'enregistrer. Fournisseur
