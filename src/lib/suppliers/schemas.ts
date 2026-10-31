@@ -27,6 +27,11 @@ export const supplierSchema = z.object({
     .literal("on")
     .optional()
     .transform((value) => value === "on"),
+  // Optimiseur de paiements : factures servies en priorité
+  is_strategic: z
+    .literal("on")
+    .optional()
+    .transform((value) => value === "on"),
   notes: optionalText(2000),
   // Compte auxiliaire de l'export comptable
   accounting_code: accountingCodeSchema,

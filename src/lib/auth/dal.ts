@@ -44,6 +44,8 @@ export type ActiveOrganization = OrganizationMembership & {
   latePaymentBasis: "remittance" | "debit";
   /** Loi 69-21 : rappel de la déclaration trimestrielle (jours avant la date limite). */
   declarationReminderDays: number;
+  /** Optimiseur de paiements : réserve de trésorerie à préserver (DH). */
+  paymentReserve: number;
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -176,6 +178,7 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     invoiceAlertDays: settings.invoice_alert_days,
     latePaymentBasis: settings.late_payment_basis,
     declarationReminderDays: settings.declaration_reminder_days,
+    paymentReserve: settings.payment_reserve,
   };
 });
 

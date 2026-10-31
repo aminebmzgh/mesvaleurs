@@ -34,6 +34,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   du relevé, règlement pas encore remis), soldes de la période comparés. Facture manquante
   créée en un clic (saisie pré-remplie) ; rapport exportable en Excel, PDF et CSV. Rien
   n'est enregistré.
+- Plan de paiement (Paiements › Plan de paiement) : les factures en attente dont la date
+  limite tombe dans les 60 jours sont réparties en « payer cette semaine », « chèques à
+  programmer », « LCN à 30, 60 ou 90 jours » (de préférence avant la date limite) et « à
+  reporter », d'après la trésorerie prévisionnelle de tous les comptes, sans jamais passer
+  sous une réserve réglable (Paramètres › Entreprise, modifiable à chaque calcul). Les
+  fournisseurs stratégiques (nouvelle case sur la fiche fournisseur) passent en priorité ;
+  amende indicative de la loi 69-21 affichée. « Préparer le chèque » ou « Préparer la LCN »
+  ouvre l'assistant de paiement pré-rempli (fournisseur, factures, moyen, échéance).
 
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 

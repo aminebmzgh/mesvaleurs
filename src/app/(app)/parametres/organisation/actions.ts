@@ -36,6 +36,7 @@ const organizationSchema = z.object({
   declaration_reminder_days: z.coerce.number().pipe(z.union(DECLARATION_REMINDER_CHOICES.map((days) => z.literal(days)))),
   approval_threshold: optionalAmountSchema("Le seuil de validation"),
   daily_ceiling: optionalAmountSchema("Le plafond journalier"),
+  payment_reserve: optionalAmountSchema("La réserve de trésorerie"),
 });
 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -56,6 +57,7 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     declaration_reminder_days,
     approval_threshold,
     daily_ceiling,
+    payment_reserve,
     ...fields
   } = parsed.data;
   const supabase = await createClient();
@@ -78,6 +80,7 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     // Un montant nul désactive la règle
     approval_threshold: approval_threshold || null,
     daily_ceiling: daily_ceiling || null,
+    payment_reserve: payment_reserve ?? 0,
   };
 
   const { error } = await supabase

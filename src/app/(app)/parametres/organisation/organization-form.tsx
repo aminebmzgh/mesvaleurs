@@ -34,6 +34,7 @@ type OrganizationValues = {
   declaration_reminder_days: number;
   approval_threshold: number | null;
   daily_ceiling: number | null;
+  payment_reserve: number;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -214,6 +215,21 @@ export function OrganizationForm({
                     fournisseur : pages Membres et fiche fournisseur.
                   </FieldDescription>
                   <FieldErrors state={state} name="daily_ceiling" />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="payment_reserve">Réserve de trésorerie (DH)</FieldLabel>
+                  <Input
+                    id="payment_reserve"
+                    name="payment_reserve"
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    defaultValue={organization.payment_reserve ? formatAmount(organization.payment_reserve) : ""}
+                    {...invalidProps(state, "payment_reserve")}
+                  />
+                  <FieldDescription>
+                    Solde prévisionnel que l&apos;optimiseur de paiements ne doit jamais entamer (modifiable à chaque calcul).
+                  </FieldDescription>
+                  <FieldErrors state={state} name="payment_reserve" />
                 </Field>
               </div>
               <Field orientation="horizontal">
