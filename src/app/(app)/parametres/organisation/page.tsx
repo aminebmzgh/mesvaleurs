@@ -3,9 +3,11 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAiStatus } from "@/lib/ai/usage";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { parseOrganizationSettings } from "@/lib/organizations/settings";
 import { createClient } from "@/lib/supabase/server";
+import { AiSettingsForm } from "./ai-settings-form";
 import { LogoUpload } from "./logo-upload";
 import { OrganizationForm } from "./organization-form";
 
@@ -28,11 +30,14 @@ export default function OrganizationSettingsPage() {
 async function OrganizationSettings() {
   const organization = await requireActiveOrganization();
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("organizations")
-    .select("name, ice, tax_id, trade_register, patente, cnss, address, city, phone, email, annual_revenue, settings, logo_path")
-    .eq("id", organization.organizationId)
-    .single();
+  const [{ data }, ai] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select("name, ice, tax_id, trade_register, patente, cnss, address, city, phone, email, annual_revenue, settings, logo_path")
+      .eq("id", organization.organizationId)
+      .single(),
+    getAiStatus(supabase, organization.organizationId),
+  ]);
 
   if (!data) {
     return null;
@@ -58,6 +63,17 @@ async function OrganizationSettings() {
         organization={{ ...fields, ...settings }}
         readOnly={organization.role !== "admin"}
       />
+      {/* Sans clé du service d'IA sur le serveur, rien à régler */}
+      {ai.configured && (
+        <AiSettingsForm
+          key={`ai-${organization.organizationId}`}
+          enabled={settings.ai_enabled}
+          consent={settings.ai_consent}
+          quota={settings.ai_monthly_quota}
+          used={ai.used}
+          readOnly={organization.role !== "admin"}
+        />
+      )}
     </div>
   );
 }

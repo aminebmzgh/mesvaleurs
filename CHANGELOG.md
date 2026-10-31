@@ -7,6 +7,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ### Ajouté
 
+- Saisie de factures assistée par IA : sur la page Nouvelle facture, un PDF, un scan ou une
+  photo de la facture est lu par un modèle d'IA (OpenRouter) qui pré-remplit fournisseur,
+  numéro, dates, délai et montants HT, TVA et TTC, à vérifier avant d'enregistrer. Fournisseur
+  reconnu par son ICE ou sa raison sociale, sinon créé après confirmation ; le document devient
+  la pièce jointe de la facture, archivée. Anomalies signalées : facture déjà enregistrée ou
+  déjà soldée, montant inhabituel pour le fournisseur, totaux ou taux de TVA incohérents,
+  dates douteuses, ICE absent ou facture adressée à une autre entreprise. Désactivée par
+  défaut : un administrateur l'active dans les paramètres de l'entreprise en acceptant l'envoi
+  hors du Maroc (loi 09-08), accord conservé ; quota mensuel de lectures par entreprise
+  (100 par défaut). Seuls des fournisseurs de modèles qui ne conservent pas les documents
+  sont utilisés ; dans un PDF texte, e-mails, téléphones et RIB sont masqués avant l'envoi.
 - Loi 69-21 (délais de paiement) : page « Délais de paiement » avec les factures dans les
   délais, proches de la date limite et en retard ; état trimestriel des factures payées hors
   délai et des restes impayés échus (ICE, mode et référence du paiement, mois de retard,

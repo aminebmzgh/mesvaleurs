@@ -32,14 +32,28 @@ export async function createInvoice(_prev: FormState, formData: FormData): Promi
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
+  // Pièce déjà déposée par le navigateur (lecture par IA) : elle devient la pièce jointe
+  const attachment = z.object({ id: z.uuid(), path: z.string().max(300) }).safeParse({
+    id: formData.get("attachment_invoice_id"),
+    path: formData.get("attachment_path"),
+  });
+  const withAttachment = attachment.success && isAttachmentPathOf(attachment.data.path, organization.organizationId, attachment.data.id);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("invoices")
-    .insert({ ...parsed.data, organization_id: organization.organizationId })
+    .insert({
+      ...parsed.data,
+      organization_id: organization.organizationId,
+      ...(withAttachment && { id: attachment.data.id, attachment_path: attachment.data.path }),
+    })
     .select("id")
     .single();
   if (error) {
     return invoiceError(error);
+  }
+  if (withAttachment) {
+    await sealInvoiceArchives(organization.organizationId, data.id);
   }
 
   revalidatePath("/factures");

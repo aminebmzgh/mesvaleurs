@@ -25,6 +25,9 @@ const DEFAULTS = {
   approval_threshold: null,
   daily_ceiling: null,
   payment_reserve: 0,
+  ai_enabled: false,
+  ai_consent: null,
+  ai_monthly_quota: 100,
   accounting_export: ACCOUNTING_DEFAULTS,
 };
 
@@ -47,6 +50,9 @@ describe("parseOrganizationSettings", () => {
       approval_threshold: null,
       daily_ceiling: null,
       payment_reserve: 0,
+      ai_enabled: false,
+      ai_consent: null,
+      ai_monthly_quota: 100,
       accounting_export: ACCOUNTING_DEFAULTS,
     });
     expect(parseOrganizationSettings({ uncashed_alert_days: 2 }).uncashed_alert_days).toBe(60);
@@ -76,6 +82,9 @@ describe("double signature", () => {
       approval_threshold: null,
       daily_ceiling: null,
       payment_reserve: 0,
+      ai_enabled: false,
+      ai_consent: null,
+      ai_monthly_quota: 100,
     });
   });
 });
@@ -98,6 +107,22 @@ describe("loi 69-21", () => {
     expect(parseOrganizationSettings({ late_payment_basis: "cash", declaration_reminder_days: 0 })).toMatchObject({
       late_payment_basis: "remittance",
       declaration_reminder_days: 15,
+    });
+  });
+});
+
+describe("intelligence artificielle", () => {
+  it("désactivée par défaut, accord et quota lus s'ils sont valides", () => {
+    const consent = { at: "2026-10-31T10:00:00.000Z", by: "a0000000-0000-4000-8000-000000000001", email: "admin@demo.ma" };
+    expect(parseOrganizationSettings({ ai_enabled: true, ai_consent: consent, ai_monthly_quota: 200 })).toMatchObject({
+      ai_enabled: true,
+      ai_consent: consent,
+      ai_monthly_quota: 200,
+    });
+    expect(parseOrganizationSettings({ ai_enabled: "oui", ai_consent: { by: "x" }, ai_monthly_quota: 0 })).toMatchObject({
+      ai_enabled: false,
+      ai_consent: null,
+      ai_monthly_quota: 100,
     });
   });
 });

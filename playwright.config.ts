@@ -6,6 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Prérequis : `pnpm db:start` (ou `pnpm db:reset` pour repartir du seed) et `.env.local`.
  */
 const PORT = 3100;
+/** Faux service d'IA (OpenRouter) : aucune facture n'est envoyée au vrai service. */
+const AI_MOCK_PORT = 3101;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -23,17 +25,28 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: `pnpm build && pnpm start --port ${PORT}`,
-    url: `http://localhost:${PORT}/connexion`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 300_000,
-    env: {
-      NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
-      // Tâche planifiée appelée par les tests ; aucun e-mail réel n'est envoyé
-      CRON_SECRET: "e2e-cron-secret-0123456789",
-      RESEND_API_KEY: "",
-      EMAIL_FROM: "",
+  webServer: [
+    {
+      command: "node e2e/fixtures/openrouter-mock.mjs",
+      url: `http://localhost:${AI_MOCK_PORT}/last`,
+      reuseExistingServer: !process.env.CI,
+      env: { OPENROUTER_MOCK_PORT: String(AI_MOCK_PORT) },
     },
-  },
+    {
+      command: `pnpm build && pnpm start --port ${PORT}`,
+      url: `http://localhost:${PORT}/connexion`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 300_000,
+      env: {
+        NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
+        // Tâche planifiée appelée par les tests ; aucun e-mail réel n'est envoyé
+        CRON_SECRET: "e2e-cron-secret-0123456789",
+        RESEND_API_KEY: "",
+        EMAIL_FROM: "",
+        OPENROUTER_API_KEY: "e2e-fake-key",
+        OPENROUTER_BASE_URL: `http://localhost:${AI_MOCK_PORT}/v1`,
+        OPENROUTER_MODEL: "e2e/faux-modele",
+      },
+    },
+  ],
 });

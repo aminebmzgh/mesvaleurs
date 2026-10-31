@@ -22,15 +22,17 @@ test("inventaire d'un chéquier : formules utilisées, annulées, restantes", as
 test("seuil d'alerte « carnet presque épuisé » réglable", async ({ page }) => {
   await login(page, "admin@demo.ma");
   await page.goto("/parametres/organisation");
+  await page.waitForLoadState("networkidle");
   await selectOption(page, "Signaler un carnet presque épuisé à partir de", "10 formules restantes");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Informations de l'entreprise enregistrées.")).toBeVisible();
   await page.reload();
+  await page.waitForLoadState("networkidle");
   await expect(page.getByLabel("Signaler un carnet presque épuisé à partir de")).toHaveText(/10 formules restantes/);
 
   // Retour à la valeur par défaut, pour les autres tests
   await page.getByLabel("Signaler un carnet presque épuisé à partir de").click();
   await page.getByRole("option", { name: "5 formules restantes", exact: true }).click();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Informations de l'entreprise enregistrées.")).toBeVisible();
 });

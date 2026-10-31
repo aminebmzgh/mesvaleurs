@@ -38,31 +38,34 @@ test("page Alertes : alertes en cours, préférence e-mail et historique des env
   const checkbox = page.getByLabel("Recevoir le récapitulatif des alertes chaque matin");
   await expect(checkbox).toBeChecked();
   await checkbox.uncheck();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Vous ne recevrez plus le récapitulatif par e-mail.")).toBeVisible();
   await page.reload();
+  await page.waitForLoadState("networkidle");
   await expect(checkbox).not.toBeChecked();
 
   // Retour à la valeur par défaut, pour les autres tests
   await checkbox.check();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Vous recevrez le récapitulatif chaque matin.")).toBeVisible();
 });
 
 test("délais d'alerte des LCN et des factures réglables", async ({ page }) => {
   await login(page, "admin@demo.ma");
   await page.goto("/parametres/organisation");
+  await page.waitForLoadState("networkidle");
   await expect(page.getByLabel("Signaler une LCN à échoir")).toHaveText(/7 jours avant/);
   await page.getByLabel("Signaler une facture à payer").click();
   await page.getByRole("option", { name: "15 jours avant", exact: true }).click();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Informations de l'entreprise enregistrées.")).toBeVisible();
   await page.reload();
+  await page.waitForLoadState("networkidle");
   await expect(page.getByLabel("Signaler une facture à payer")).toHaveText(/15 jours avant/);
 
   // Retour à la valeur par défaut
   await page.getByLabel("Signaler une facture à payer").click();
   await page.getByRole("option", { name: "7 jours avant", exact: true }).click();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Informations de l'entreprise enregistrées.")).toBeVisible();
 });

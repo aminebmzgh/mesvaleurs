@@ -26,6 +26,10 @@ export const DUE_ALERT_CHOICES = [3, 7, 15, 30] as const;
 export const DECLARATION_REMINDER_DEFAULT = 15;
 export const DECLARATION_REMINDER_CHOICES = [7, 15, 30] as const;
 
+/** IA (saisie de factures) : lectures par mois et par entreprise, par défaut et proposées. */
+export const AI_QUOTA_DEFAULT = 100;
+export const AI_QUOTA_CHOICES = [50, 100, 200, 500] as const;
+
 const accountCode = (fallback: string) => z.string().regex(/^[A-Za-z0-9._-]{1,20}$/).catch(fallback).default(fallback);
 
 /**
@@ -79,6 +83,13 @@ export const organizationSettingsSchema = z.object({
   daily_ceiling: z.number().positive().nullable().catch(null).default(null),
   /** Optimiseur de paiements : solde prévisionnel à ne jamais entamer (DH). */
   payment_reserve: z.number().min(0).catch(0).default(0),
+  /**
+   * IA (saisie de factures assistée) : désactivée par défaut. Activée par un administrateur
+   * qui accepte l'envoi des pièces hors du Maroc (loi 09-08) ; son accord est conservé.
+   */
+  ai_enabled: z.boolean().catch(false).default(false),
+  ai_consent: z.object({ at: z.string(), by: z.uuid(), email: z.string().nullable() }).nullable().catch(null).default(null),
+  ai_monthly_quota: z.number().int().min(1).max(10000).catch(AI_QUOTA_DEFAULT).default(AI_QUOTA_DEFAULT),
   /** Absent : valeurs par défaut ; illisible : valeurs par défaut (les champs invalides le sont un à un). */
   accounting_export: accountingExportSchema.catch(() => accountingExportSchema.parse({})).prefault({}),
 });
