@@ -109,6 +109,7 @@ const FIELD_LABELS: Record<string, string> = {
   tax_id: "IF",
   trade_register: "RC",
   print_cover_letter: "Lettre d'accompagnement",
+  is_strategic: "Fournisseur stratégique",
   number_width: "Chiffres du numéro",
   received_at: "Reçu le",
   print_template_id: "Modèle d'impression",

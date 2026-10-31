@@ -24,6 +24,7 @@ const DEFAULTS = {
   declaration_reminder_days: 15,
   approval_threshold: null,
   daily_ceiling: null,
+  payment_reserve: 0,
   accounting_export: ACCOUNTING_DEFAULTS,
 };
 
@@ -45,6 +46,7 @@ describe("parseOrganizationSettings", () => {
       declaration_reminder_days: 15,
       approval_threshold: null,
       daily_ceiling: null,
+      payment_reserve: 0,
       accounting_export: ACCOUNTING_DEFAULTS,
     });
     expect(parseOrganizationSettings({ uncashed_alert_days: 2 }).uncashed_alert_days).toBe(60);
@@ -73,6 +75,7 @@ describe("double signature", () => {
     expect(parseOrganizationSettings({ approval_threshold: -1, daily_ceiling: "beaucoup" })).toMatchObject({
       approval_threshold: null,
       daily_ceiling: null,
+      payment_reserve: 0,
     });
   });
 });

@@ -77,6 +77,8 @@ export const organizationSettingsSchema = z.object({
   approval_threshold: z.number().positive().nullable().catch(null).default(null),
   /** Plafond journalier de l'entreprise (total des paiements datés du jour, DH) ; null = aucun. */
   daily_ceiling: z.number().positive().nullable().catch(null).default(null),
+  /** Optimiseur de paiements : solde prévisionnel à ne jamais entamer (DH). */
+  payment_reserve: z.number().min(0).catch(0).default(0),
   /** Absent : valeurs par défaut ; illisible : valeurs par défaut (les champs invalides le sont un à un). */
   accounting_export: accountingExportSchema.catch(() => accountingExportSchema.parse({})).prefault({}),
 });
