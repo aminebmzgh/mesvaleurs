@@ -35,8 +35,8 @@ export function AiSettingsForm({
         <CardHeader>
           <CardTitle>Intelligence artificielle</CardTitle>
           <CardDescription>
-            Lecture des factures fournisseurs (PDF, scan, photo) pour pré-remplir la saisie et signaler les anomalies. Désactivée
-            par défaut. Lectures ce mois : {used} sur {quota}.
+            Lecture des factures fournisseurs (PDF, scan, photo) pour pré-remplir la saisie et signaler les anomalies, et assistant
+            qui répond aux questions sur vos données. Désactivée par défaut. Lectures et questions ce mois : {used} sur {quota}.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -53,11 +53,11 @@ export function AiSettingsForm({
                   className="mt-0.5 size-4 accent-primary"
                 />
                 <FieldContent>
-                  <FieldLabel htmlFor="ai_enabled">Activer la lecture des factures par IA</FieldLabel>
+                  <FieldLabel htmlFor="ai_enabled">Activer l&apos;IA : lecture des factures et assistant</FieldLabel>
                   <FieldDescription>
                     {enabled && consent
                       ? `Activée le ${formatDateTime(consent.at)}${consent.email ? ` par ${consent.email}` : ""}.`
-                      : "Proposée sur la page Nouvelle facture aux personnes qui saisissent les factures."}
+                      : "Lecture proposée sur la page Nouvelle facture, assistant ouvert à tous les membres (page Assistant IA)."}
                   </FieldDescription>
                 </FieldContent>
               </Field>
@@ -66,7 +66,8 @@ export function AiSettingsForm({
                   <input id="ai_consent" name="ai_consent" type="checkbox" className="mt-0.5 size-4 accent-primary" />
                   <FieldContent>
                     <FieldLabel htmlFor="ai_consent">
-                      J&apos;accepte que les factures lues soient envoyées à un service d&apos;IA situé hors du Maroc
+                      J&apos;accepte que les factures lues, les questions posées et les données utiles aux réponses soient envoyées à un
+                      service d&apos;IA situé hors du Maroc
                     </FieldLabel>
                     <FieldDescription>
                       Service OpenRouter et fournisseurs de modèles (États-Unis, Europe), choisis parmi ceux qui ne conservent pas
@@ -79,7 +80,7 @@ export function AiSettingsForm({
                 </Field>
               )}
               <Field className="max-w-sm">
-                <FieldLabel htmlFor="ai_monthly_quota">Lectures par mois au plus</FieldLabel>
+                <FieldLabel htmlFor="ai_monthly_quota">Lectures et questions par mois au plus</FieldLabel>
                 <FormSelect
                   id="ai_monthly_quota"
                   name="ai_monthly_quota"

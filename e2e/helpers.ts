@@ -33,3 +33,19 @@ export async function confirmFundsIfNeeded(page: Page) {
     await confirmation.check();
   }
 }
+
+/** IA activée pour l'entreprise de démonstration (par un administrateur, avec son accord). */
+export async function enableAi(page: Page) {
+  await login(page, "admin@demo.ma");
+  await page.goto("/parametres/organisation");
+  await page.waitForLoadState("networkidle");
+  const card = page.locator("#ia");
+  const enabled = card.getByLabel("Activer l'IA : lecture des factures et assistant");
+  if (!(await enabled.isChecked())) {
+    await enabled.check();
+    await card.getByLabel(/J'accepte que les factures lues/).check();
+    await card.getByRole("button", { name: "Enregistrer les réglages de l'IA" }).click();
+    await expect(card.getByText("IA activée : lecture des factures et assistant.")).toBeVisible();
+  }
+  await page.context().clearCookies();
+}

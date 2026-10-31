@@ -20,6 +20,7 @@ import {
   ScaleIcon,
   type LucideIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   SquarePenIcon,
   TruckIcon,
   UsersIcon,
@@ -35,6 +36,7 @@ export const navigation: NavSection[] = [
     items: [
       { title: "Tableau de bord", href: "/tableau-de-bord", icon: LayoutDashboardIcon },
       { title: "Alertes", href: "/alertes", icon: BellIcon },
+      { title: "Assistant IA", href: "/assistant", icon: SparklesIcon },
     ],
   },
   {
