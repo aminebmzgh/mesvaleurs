@@ -115,6 +115,7 @@ export function InvoiceForm({
   submitLabel,
   readOnly = false,
   supplierLocked = false,
+  hiddenFields,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   suppliers: SelectOption[];
@@ -124,6 +125,8 @@ export function InvoiceForm({
   readOnly?: boolean;
   /** Fournisseur figé : facture déjà rattachée à des paiements. */
   supplierLocked?: boolean;
+  /** Champs transmis tels quels (pièce déjà déposée par la lecture par IA). */
+  hiddenFields?: Record<string, string>;
 }) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
 
@@ -132,6 +135,9 @@ export function InvoiceForm({
       <fieldset disabled={readOnly}>
         <FieldGroup>
           <FormMessage state={state} />
+          {Object.entries(hiddenFields ?? {}).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} value={value} />
+          ))}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field className="sm:col-span-2">
               <FieldLabel htmlFor="supplier_id">Fournisseur</FieldLabel>

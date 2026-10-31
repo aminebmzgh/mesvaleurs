@@ -5,7 +5,27 @@ export type Database = {
   
   "public": {
           Tables: {
-            "alert_digests": {
+            "ai_usages": {
+                  Row: {
+                    "cost": number | null,"created_at": string,"feature": string,"id": string,"input_tokens": number | null,"model": string | null,"organization_id": string,"output_tokens": number | null,"succeeded": boolean | null,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cost"?: number | null,"created_at"?: string,"feature": string,"id"?: string,"input_tokens"?: number | null,"model"?: string | null,"organization_id": string,"output_tokens"?: number | null,"succeeded"?: boolean | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "cost"?: number | null,"created_at"?: string,"feature"?: string,"id"?: string,"input_tokens"?: number | null,"model"?: string | null,"organization_id"?: string,"output_tokens"?: number | null,"succeeded"?: boolean | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_usages_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"alert_digests": {
                   Row: {
                     "alert_count": number,"created_at": string,"digest_date": string,"error": string | null,"id": string,"organization_id": string,"recipient_count": number,"status": Database["public"]['Enums']["alert_digest_status"],"updated_at": string
                   }
@@ -770,6 +790,9 @@ isOneToOne: false
                            },
 "reject_payment":
 { Args: { "p_kind": Database["public"]['Enums']["rejection_kind"],"p_payment_id": string,"p_reason": string,"p_rejected_on": string }; Returns: undefined
+                           },
+"reserve_ai_usage":
+{ Args: { "p_feature": string,"p_monthly_quota": number,"p_organization_id": string,"p_user_id": string }; Returns: string
                            },
 "seal_invoice_archive":
 { Args: { "p_id": string,"p_sha256": string,"p_size": number }; Returns: undefined

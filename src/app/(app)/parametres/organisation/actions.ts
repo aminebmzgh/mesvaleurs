@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/dal";
+import { requireRole, requireUser } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
 import {
+  AI_QUOTA_CHOICES,
   DECLARATION_REMINDER_CHOICES,
   DUE_ALERT_CHOICES,
   LOW_STOCK_CHOICES,
@@ -93,6 +94,48 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
 
   revalidatePath("/", "layout");
   return { success: "Informations de l'entreprise enregistrées." };
+}
+
+const aiSchema = z.object({
+  ai_enabled: z.literal("on").optional(),
+  ai_consent: z.literal("on").optional(),
+  ai_monthly_quota: z.coerce.number().pipe(z.union(AI_QUOTA_CHOICES.map((count) => z.literal(count)))),
+});
+
+/**
+ * Lecture des factures par IA : activée par un administrateur qui accepte l'envoi des
+ * documents à un service situé hors du Maroc (loi 09-08). Son accord est conservé
+ * (qui, quand) ; la modification est tracée par le journal d'audit.
+ */
+export async function updateAiSettings(_prev: FormState, formData: FormData): Promise<FormState> {
+  const organization = await requireRole(["admin"]);
+  const parsed = aiSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { fieldErrors: toFieldErrors(parsed.error) };
+  }
+  const enabled = parsed.data.ai_enabled === "on";
+  const supabase = await createClient();
+  const { data: current } = await supabase.from("organizations").select("settings").eq("id", organization.organizationId).single();
+  const settings = parseOrganizationSettings(current?.settings);
+
+  let consent = settings.ai_consent;
+  if (enabled && !settings.ai_enabled) {
+    if (parsed.data.ai_consent !== "on") {
+      return { fieldErrors: { ai_consent: ["Acceptez l'envoi des documents au service d'IA pour l'activer."] } };
+    }
+    const user = await requireUser();
+    consent = { at: new Date().toISOString(), by: user.id, email: user.email };
+  }
+
+  const { error } = await supabase
+    .from("organizations")
+    .update({ settings: { ...settings, ai_enabled: enabled, ai_consent: consent, ai_monthly_quota: parsed.data.ai_monthly_quota } })
+    .eq("id", organization.organizationId);
+  if (error) {
+    return { error: "Impossible d'enregistrer les modifications." };
+  }
+  revalidatePath("/", "layout");
+  return { success: enabled ? "Lecture des factures par IA activée." : "Lecture des factures par IA désactivée." };
 }
 
 /** Logo de l'entreprise (en-tête des lettres) : chemin du fichier envoyé dans le bucket `logos`, ou retrait. */
