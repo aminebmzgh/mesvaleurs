@@ -16,6 +16,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { upperFirst } from "@/lib/format";
 import type { PaymentStatus, PaymentType } from "@/lib/labels";
 import {
   type ActionResult,
@@ -79,7 +80,7 @@ export function PaymentRowActions({
           icon={HandshakeIcon}
           trigger="Remis"
           title="Remise au fournisseur"
-          description={`${label} — la date de remise peut servir de date de paiement (loi 69-21).`}
+          description={`${upperFirst(label)} — la date de remise peut servir de date de paiement (loi 69-21).`}
           fieldLabel="Remis le"
           submitLabel="Enregistrer la remise"
           success="Remise enregistrée."
@@ -93,7 +94,7 @@ export function PaymentRowActions({
           icon={CircleCheckIcon}
           trigger={type === "guarantee_check" ? "Encaissé" : "Débité"}
           title={type === "guarantee_check" ? "Chèque de garantie encaissé" : "Virement débité"}
-          description={`${label} — date à laquelle le compte a été débité.`}
+          description={`${upperFirst(label)} — date à laquelle le compte a été débité.`}
           fieldLabel="Débité le"
           submitLabel="Enregistrer le débit"
           success="Débit enregistré."
@@ -108,7 +109,7 @@ export function PaymentRowActions({
             icon={ShieldCheckIcon}
             trigger="Restitué"
             title="Chèque de garantie restitué"
-            description={`${label} — rendu par le fournisseur : il sort du risque d'encaissement.`}
+            description={`${upperFirst(label)} — rendu par le fournisseur : il sort du risque d'encaissement.`}
             fieldLabel="Restitué le"
             submitLabel="Enregistrer la restitution"
             success="Restitution enregistrée."
@@ -120,7 +121,7 @@ export function PaymentRowActions({
             icon={Trash2Icon}
             trigger="Détruit"
             title="Chèque de garantie détruit"
-            description={`${label} — détruit (par le fournisseur ou en votre présence).`}
+            description={`${upperFirst(label)} — détruit (par le fournisseur ou en votre présence).`}
             fieldLabel="Détruit le"
             submitLabel="Enregistrer la destruction"
             success="Destruction enregistrée."

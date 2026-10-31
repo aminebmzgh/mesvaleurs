@@ -81,3 +81,8 @@ export function formatDateTime(value: string | Date, timeZone = "Africa/Casablan
   const time = new Intl.DateTimeFormat("fr-FR", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
   return `${formatDate(date, timeZone)} ${time}`;
 }
+
+/** Majuscule initiale, pour un libellé placé en début de phrase (« chèque n° 1003 » → « Chèque n° 1003 »). */
+export function upperFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
