@@ -143,6 +143,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"inbound_statements": {
+                  Row: {
+                    "content_type": string | null,"created_at": string,"file_path": string,"filename": string,"id": string,"organization_id": string,"provider_attachment_id": string,"received_at": string,"sender": string,"size_bytes": number | null,"statement_import_id": string | null,"status": string,"subject": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_type"?: string | null,"created_at"?: string,"file_path": string,"filename": string,"id"?: string,"organization_id": string,"provider_attachment_id": string,"received_at"?: string,"sender": string,"size_bytes"?: number | null,"statement_import_id"?: string | null,"status"?: string,"subject"?: string | null
+                  }
+                  Update: {
+                    "content_type"?: string | null,"created_at"?: string,"file_path"?: string,"filename"?: string,"id"?: string,"organization_id"?: string,"provider_attachment_id"?: string,"received_at"?: string,"sender"?: string,"size_bytes"?: number | null,"statement_import_id"?: string | null,"status"?: string,"subject"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "inbound_statements_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inbound_statements_statement_import_id_fkey"
+      columns: ["statement_import_id"]
+isOneToOne: false
+      referencedRelation: "statement_imports"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"invitations": {
                   Row: {
                     "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string,"id": string,"invited_by": string | null,"organization_id": string,"role": Database["public"]['Enums']["app_role"]
@@ -317,14 +343,14 @@ isOneToOne: false
                   ]
                 },"memberships": {
                   Row: {
-                    "created_at": string,"daily_ceiling": number | null,"email_alerts": boolean,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
+                    "created_at": string,"daily_ceiling": number | null,"email_alerts": boolean,"email_monthly_summary": boolean,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"email_monthly_summary"?: boolean,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"email_monthly_summary"?: boolean,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -341,16 +367,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"organizations": {
+                },"monthly_summaries": {
                   Row: {
-                    "address": string | null,"annual_revenue": number | null,"city": string | null,"cnss": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"logo_path": string | null,"name": string,"patente": string | null,"phone": string | null,"settings": NonNullable<Json>,"tax_id": string | null,"timezone": string,"trade_register": string | null,"updated_at": string
+                    "created_at": string,"error": string | null,"id": string,"month": string,"organization_id": string,"recipient_count": number,"status": Database["public"]['Enums']["alert_digest_status"],"updated_at": string,"with_commentary": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"error"?: string | null,"id"?: string,"month": string,"organization_id": string,"recipient_count"?: number,"status"?: Database["public"]['Enums']["alert_digest_status"],"updated_at"?: string,"with_commentary"?: boolean
                   }
                   Update: {
-                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"error"?: string | null,"id"?: string,"month"?: string,"organization_id"?: string,"recipient_count"?: number,"status"?: Database["public"]['Enums']["alert_digest_status"],"updated_at"?: string,"with_commentary"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "monthly_summaries_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"organizations": {
+                  Row: {
+                    "address": string | null,"annual_revenue": number | null,"city": string | null,"cnss": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"logo_path": string | null,"name": string,"patente": string | null,"phone": string | null,"settings": NonNullable<Json>,"statement_inbox_token": string | null,"tax_id": string | null,"timezone": string,"trade_register": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"statement_inbox_token"?: string | null,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"statement_inbox_token"?: string | null,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -385,6 +431,70 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "payments"
       referencedColumns: ["organization_id","id"]
+    }
+                  ]
+                },"payment_receipt_items": {
+                  Row: {
+                    "organization_id": string,"payment_id": string,"receipt_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "organization_id": string,"payment_id": string,"receipt_id": string
+                  }
+                  Update: {
+                    "organization_id"?: string,"payment_id"?: string,"receipt_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_receipt_items_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipt_items_payment_id_fkey"
+      columns: ["payment_id"]
+isOneToOne: true
+      referencedRelation: "payments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipt_items_receipt_id_fkey"
+      columns: ["receipt_id"]
+isOneToOne: false
+      referencedRelation: "payment_receipts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_receipts": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"delivered_on": string,"emailed_at": string | null,"emailed_to": string | null,"id": string,"organization_id": string,"photo_path": string | null,"reference": string,"signature_path": string,"signed_at": string,"signer_id_number": string | null,"signer_name": string,"supplier_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"delivered_on": string,"emailed_at"?: string | null,"emailed_to"?: string | null,"id"?: string,"organization_id": string,"photo_path"?: string | null,"reference": string,"signature_path": string,"signed_at"?: string,"signer_id_number"?: string | null,"signer_name": string,"supplier_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"delivered_on"?: string,"emailed_at"?: string | null,"emailed_to"?: string | null,"id"?: string,"organization_id"?: string,"photo_path"?: string | null,"reference"?: string,"signature_path"?: string,"signed_at"?: string,"signer_id_number"?: string | null,"signer_name"?: string,"supplier_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_receipts_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipts_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "supplier_summaries"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipts_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id"]
     }
                   ]
                 },"payments": {
@@ -765,6 +875,9 @@ isOneToOne: false
 "login_locked_until":
 { Args: { "p_keys": (string)[] }; Returns: string
                            },
+"mark_receipt_emailed":
+{ Args: { "p_email": string,"p_receipt_id": string }; Returns: undefined
+                           },
 "my_pending_invitations":
 { Args: Record<PropertyKey, never>; Returns: {
               "expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["app_role"]
@@ -779,6 +892,9 @@ isOneToOne: false
 "record_login_failure":
 { Args: { "p_key": string,"p_lock": string,"p_max_failures": number,"p_window": string }; Returns: string
                            },
+"record_payment_receipt":
+{ Args: { "p_delivered_on": string,"p_payment_ids": (string)[],"p_photo_path"?: string,"p_signature_path": string,"p_signer_id_number": string,"p_signer_name": string }; Returns: string
+                           },
 "record_transfer":
 { Args: { "p_allocations"?: Json,"p_amount": number,"p_bank_account_id": string,"p_debited": boolean,"p_notes"?: string,"p_organization_id": string,"p_reference": string,"p_supplier_id": string,"p_transfer_date": string }; Returns: string
                            },
@@ -791,6 +907,9 @@ isOneToOne: false
 "reject_payment":
 { Args: { "p_kind": Database["public"]['Enums']["rejection_kind"],"p_payment_id": string,"p_reason": string,"p_rejected_on": string }; Returns: undefined
                            },
+"renew_statement_inbox":
+{ Args: { "p_organization_id": string }; Returns: string
+                           },
 "reserve_ai_usage":
 { Args: { "p_feature": string,"p_monthly_quota": number,"p_organization_id": string,"p_user_id": string }; Returns: string
                            },
@@ -799,6 +918,12 @@ isOneToOne: false
                            },
 "set_email_alerts":
 { Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined
+                           },
+"set_email_monthly_summary":
+{ Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined
+                           },
+"set_inbound_statement_status":
+{ Args: { "p_id": string,"p_import_id"?: string,"p_status": string }; Returns: undefined
                            },
 "set_statement_line_ignored":
 { Args: { "p_ignored": boolean,"p_line_id": string }; Returns: undefined

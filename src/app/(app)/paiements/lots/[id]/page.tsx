@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, CircleCheckIcon, CircleXIcon, HourglassIcon } from "lucide-react";
+import { ArrowLeftIcon, CircleCheckIcon, CircleXIcon, HourglassIcon, PenLineIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -131,6 +131,21 @@ async function BatchDetail({ params, searchParams }: PageProps<"/paiements/lots/
           />
         </CardContent>
       </Card>
+      )}
+
+      {!awaiting && !refused && WRITER_ROLES.includes(organization.role) && batch.payments.some((p) => p.status === "issued" || p.status === "delivered") && (
+        <Card>
+          <CardHeader className="flex-row flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col gap-1.5">
+              <CardTitle>Remise au fournisseur</CardTitle>
+              <CardDescription>Le fournisseur ou son livreur signe à l&apos;écran : accusé de réception numéroté et reçu PDF.</CardDescription>
+            </div>
+            <Link href={`/paiements/remise?lot=${batch.id}`} className={buttonVariants()}>
+              <PenLineIcon aria-hidden />
+              Faire signer la remise
+            </Link>
+          </CardHeader>
+        </Card>
       )}
 
       <Card>

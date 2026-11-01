@@ -58,7 +58,15 @@ export async function chat(
     tools,
     responseFormat,
     maxTokens = 1500,
-  }: { messages: AiMessage[]; tools?: AiTool[]; responseFormat?: object; maxTokens?: number },
+    reasoning = true,
+  }: {
+    messages: AiMessage[];
+    tools?: AiTool[];
+    responseFormat?: object;
+    maxTokens?: number;
+    /** Réflexion préalable du modèle : désactivée pour un texte court (sinon elle peut épuiser le plafond). */
+    reasoning?: boolean;
+  },
   { config, fetchImpl = fetch, siteUrl }: { config: AiConfig; fetchImpl?: typeof fetch; siteUrl?: string },
 ): Promise<AiChatResult> {
   let response: Response;
@@ -76,6 +84,7 @@ export async function chat(
         messages,
         ...(tools && { tools }),
         ...(responseFormat && { response_format: responseFormat }),
+        ...(!reasoning && { reasoning: { enabled: false } }),
         // Pas de « temperature » : refusée par certains modèles (require_parameters exclurait tout fournisseur)
         max_tokens: maxTokens,
         provider: { zdr: true, data_collection: "deny", require_parameters: true },

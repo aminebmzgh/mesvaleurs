@@ -8,6 +8,9 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 3100;
 /** Faux service d'IA (OpenRouter) : aucune facture n'est envoyée au vrai service. */
 const AI_MOCK_PORT = 3101;
+/** Faux Resend (réception des relevés par e-mail) et secret de son webhook. */
+const RESEND_MOCK_PORT = 3102;
+const E2E_WEBHOOK_SECRET = `whsec_${Buffer.from("e2e-webhook-secret-0123456789").toString("base64")}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -33,6 +36,12 @@ export default defineConfig({
       env: { OPENROUTER_MOCK_PORT: String(AI_MOCK_PORT) },
     },
     {
+      command: "node e2e/fixtures/resend-mock.mjs",
+      url: `http://localhost:${RESEND_MOCK_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      env: { RESEND_MOCK_PORT: String(RESEND_MOCK_PORT) },
+    },
+    {
       command: `pnpm build && pnpm start --port ${PORT}`,
       url: `http://localhost:${PORT}/connexion`,
       reuseExistingServer: !process.env.CI,
@@ -46,6 +55,9 @@ export default defineConfig({
         OPENROUTER_API_KEY: "e2e-fake-key",
         OPENROUTER_BASE_URL: `http://localhost:${AI_MOCK_PORT}/v1`,
         OPENROUTER_MODEL: "e2e/faux-modele",
+        RESEND_WEBHOOK_SECRET: E2E_WEBHOOK_SECRET,
+        RESEND_INBOUND_KEY: "e2e-fake-inbound-key",
+        RESEND_API_URL: `http://localhost:${RESEND_MOCK_PORT}`,
       },
     },
   ],

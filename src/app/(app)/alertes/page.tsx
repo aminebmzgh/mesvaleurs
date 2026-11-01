@@ -103,7 +103,7 @@ async function EmailDigest() {
           </Alert>
         )}
         {settings.eligible ? (
-          <EmailAlertsForm enabled={settings.enabled} />
+          <EmailAlertsForm enabled={settings.enabled} monthlySummary={settings.monthlySummary} />
         ) : (
           <p className="text-sm text-muted-foreground">Le récapitulatif n&apos;est pas envoyé aux experts-comptables externes.</p>
         )}

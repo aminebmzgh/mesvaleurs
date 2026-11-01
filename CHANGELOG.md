@@ -5,6 +5,31 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+## [1.3.0] — Phase 3 : remise des valeurs et e-mails
+
+### Ajouté
+
+- Accusé de réception fournisseur : à la remise des chèques et LCN (bouton « Faire signer » d'un
+  chèque ou d'un lot), le fournisseur ou son livreur signe sur la tablette ou le téléphone :
+  nom, CIN facultative, signature au doigt, photo des valeurs remises. Accusé numéroté
+  (AR-2026-0001…), valeurs passées en « remis » à la date signée (date de paiement retenue
+  pour la loi 69-21), reçu PDF avec la signature, envoyé par e-mail au fournisseur ou partagé
+  (WhatsApp…) depuis le téléphone. Page « Accusés de réception ». Signature et photo
+  conservées, ni modifiables ni supprimables.
+- Relevés reçus par e-mail : chaque entreprise dispose d'une adresse de réception confidentielle
+  et renouvelable (releves-…@import.mesvaleurs.ma), à donner à sa banque ou à laquelle
+  transférer ses relevés. Les pièces jointes (PDF, Excel, CSV, photo) arrivent dans la carte
+  « Relevés reçus par e-mail » de la page Rapprochement ; « Importer » ouvre l'écran d'import
+  avec le fichier déjà chargé (choix du compte, vérification, rapprochement), « Ignorer » le
+  retire. Webhook Resend signé, sans doublon si l'e-mail est relayé plusieurs fois.
+- Résumé mensuel par e-mail, le 1er de chaque mois : ce qui a été payé le mois écoulé (débité,
+  émis), ce qui reste à payer (factures, chèques et LCN en circulation) et les risques
+  (factures en retard et amendes indicatives, échéances des 30 prochains jours, LCN à
+  provisionner, chèques rejetés non régularisés, soldes bancaires après engagements). Avec
+  l'IA activée, un paragraphe « Points d'attention » de l'assistant, rédigé à partir des seuls
+  chiffres (aucun nom transmis), compté dans le quota d'IA. Préférence de chaque membre sur la
+  page Alertes, activée par défaut.
+
 ## [1.2.0] — Phase 3 : Conformité et intelligence
 
 ### Ajouté

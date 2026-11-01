@@ -57,3 +57,14 @@ describe("completeJson", () => {
     await expect(completeJson(request, { config, fetchImpl: empty })).rejects.toThrow("Réponse vide");
   });
 });
+
+describe("chat", () => {
+  it("réflexion du modèle désactivable pour un texte court", async () => {
+    const { chat } = await import("./openrouter");
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] })));
+    await chat({ messages: [{ role: "user", content: "x" }], reasoning: false }, { config, fetchImpl });
+    await chat({ messages: [{ role: "user", content: "x" }] }, { config, fetchImpl });
+    expect(JSON.parse(String(fetchImpl.mock.calls[0][1]?.body)).reasoning).toEqual({ enabled: false });
+    expect(JSON.parse(String(fetchImpl.mock.calls[1][1]?.body))).not.toHaveProperty("reasoning");
+  });
+});

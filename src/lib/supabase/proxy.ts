@@ -14,6 +14,8 @@ const PUBLIC_PATHS = [
   "/hors-ligne",
   // Tâches planifiées : protégées par CRON_SECRET dans la route
   "/api/cron",
+  // Webhook Resend (relevés reçus par e-mail) : authentifié par sa signature
+  "/api/inbound",
 ];
 
 function isPublicPath(pathname: string) {

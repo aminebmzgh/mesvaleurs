@@ -12,7 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { ACCOUNT_MANAGER_ROLES } from "@/lib/auth/roles";
 import { formatDate } from "@/lib/format";
+import { getInbox } from "@/lib/inbound/queries";
 import { listImports } from "@/lib/statements/queries";
+import { InboxCard } from "./inbox-card";
 
 export const metadata: Metadata = { title: "Rapprochement bancaire" };
 
@@ -28,11 +30,24 @@ export default function ReconciliationPage() {
           </Suspense>
         }
       />
+      <Suspense>
+        <Inbox />
+      </Suspense>
       <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
         <Imports />
       </Suspense>
     </>
   );
+}
+
+/** Relevés reçus par e-mail, si la réception est configurée sur ce serveur. */
+async function Inbox() {
+  const organization = await requireActiveOrganization();
+  const inbox = await getInbox();
+  if (!inbox.configured) {
+    return null;
+  }
+  return <InboxCard address={inbox.address} pending={inbox.pending} recent={inbox.recent} canManage={ACCOUNT_MANAGER_ROLES.includes(organization.role)} />;
 }
 
 async function ImportButton() {

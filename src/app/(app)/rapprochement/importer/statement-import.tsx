@@ -1,8 +1,8 @@
 "use client";
 
-import { CameraIcon, CircleAlertIcon, FileSpreadsheetIcon, Loader2Icon, UploadIcon } from "lucide-react";
+import { CameraIcon, CircleAlertIcon, FileSpreadsheetIcon, InboxIcon, Loader2Icon, UploadIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -29,15 +29,26 @@ import { MAX_STATEMENT_LINES, STATEMENT_MAX_BYTES, statementFilePath } from "@/l
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { importStatement, loadColumnMapping } from "../actions";
+import { markInboundImported } from "../inbox-actions";
 import { OcrReview } from "./ocr-review";
 
 type Account = { id: string; label: string; bankName: string };
+/** Relevé reçu par e-mail, à charger dès l'ouverture de l'écran. */
+type Inbound = { id: string; filename: string; contentType: string | null; url: string; sender: string; receivedAt: string };
 type Loaded = StatementFile & { file: File };
 
 const SELECT_CLASS = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30";
 const cellText = (cell: Cell) => (cell === null || cell === undefined ? "" : cell instanceof Date ? cell.toLocaleDateString("fr-FR") : String(cell));
 
-export function StatementImport({ organizationId, accounts }: { organizationId: string; accounts: Account[] }) {
+export function StatementImport({
+  organizationId,
+  accounts,
+  inbound = null,
+}: {
+  organizationId: string;
+  accounts: Account[];
+  inbound?: Inbound | null;
+}) {
   const router = useRouter();
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -114,6 +125,26 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
     });
   };
 
+  // Relevé reçu par e-mail : téléchargé depuis la boîte puis lu comme un fichier choisi
+  const inboundLoaded = useRef(false);
+  useEffect(() => {
+    if (!inbound || inboundLoaded.current) {
+      return;
+    }
+    inboundLoaded.current = true;
+    fetch(inbound.url)
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(String(response.status));
+        }
+        const blob = await response.blob();
+        onFile(new File([blob], inbound.filename, { type: inbound.contentType ?? blob.type }));
+      })
+      .catch(() => setReadError("Impossible de récupérer le relevé reçu par e-mail. Rechargez la page."));
+    // Une seule fois, à l'ouverture de l'écran
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inbound]);
+
   const submit = () => {
     if (!loaded || !mapping || lines.length === 0 || reviewBlocked) {
       return;
@@ -140,6 +171,12 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
         toast.error(result.error);
         return;
       }
+      if (inbound) {
+        const marked = await markInboundImported(inbound.id, result.data.importId);
+        if (marked.error) {
+          toast.error(marked.error);
+        }
+      }
       const { inserted, duplicates, autoMatched, toConfirm } = result.data;
       toast.success(
         `${inserted} ligne(s) importée(s)${duplicates ? `, ${duplicates} déjà présente(s)` : ""} · ${autoMatched} rapprochée(s), ${toConfirm} à confirmer.`,
@@ -150,6 +187,15 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
 
   return (
     <div className="flex flex-col gap-6">
+      {inbound && (
+        <Alert>
+          <InboxIcon aria-hidden />
+          <AlertDescription>
+            Relevé reçu par e-mail : {inbound.filename}, de {inbound.sender}, le {formatDate(inbound.receivedAt)}. Choisissez le compte
+            bancaire, vérifiez la lecture, puis importez.
+          </AlertDescription>
+        </Alert>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>1. Relevé</CardTitle>
