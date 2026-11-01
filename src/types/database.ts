@@ -387,6 +387,70 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     }
                   ]
+                },"payment_receipt_items": {
+                  Row: {
+                    "organization_id": string,"payment_id": string,"receipt_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "organization_id": string,"payment_id": string,"receipt_id": string
+                  }
+                  Update: {
+                    "organization_id"?: string,"payment_id"?: string,"receipt_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_receipt_items_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipt_items_payment_id_fkey"
+      columns: ["payment_id"]
+isOneToOne: true
+      referencedRelation: "payments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipt_items_receipt_id_fkey"
+      columns: ["receipt_id"]
+isOneToOne: false
+      referencedRelation: "payment_receipts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_receipts": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"delivered_on": string,"emailed_at": string | null,"emailed_to": string | null,"id": string,"organization_id": string,"photo_path": string | null,"reference": string,"signature_path": string,"signed_at": string,"signer_id_number": string | null,"signer_name": string,"supplier_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"delivered_on": string,"emailed_at"?: string | null,"emailed_to"?: string | null,"id"?: string,"organization_id": string,"photo_path"?: string | null,"reference": string,"signature_path": string,"signed_at"?: string,"signer_id_number"?: string | null,"signer_name": string,"supplier_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"delivered_on"?: string,"emailed_at"?: string | null,"emailed_to"?: string | null,"id"?: string,"organization_id"?: string,"photo_path"?: string | null,"reference"?: string,"signature_path"?: string,"signed_at"?: string,"signer_id_number"?: string | null,"signer_name"?: string,"supplier_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_receipts_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipts_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "supplier_summaries"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payment_receipts_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"payments": {
                   Row: {
                     "amount": number,"bank_account_id": string,"cancellation_reason": string | null,"cancelled_at": string | null,"checkbook_id": string | null,"created_at": string,"created_by": string | null,"debited_at": string | null,"delivered_at": string | null,"due_date": string | null,"guarantee_closed_at": string | null,"guarantee_outcome": Database["public"]['Enums']["guarantee_outcome"] | null,"guarantee_purpose": string | null,"guarantee_return_due": string | null,"id": string,"issue_date": string,"issue_place": string | null,"notes": string | null,"number": number | null,"organization_id": string,"payee_name": string,"print_batch_id": string | null,"reference": string | null,"regularization_due_date": string | null,"regularization_method": Database["public"]['Enums']["regularization_method"] | null,"regularization_notes": string | null,"regularized_at": string | null,"rejected_at": string | null,"rejection_kind": Database["public"]['Enums']["rejection_kind"] | null,"rejection_reason": string | null,"replacement_payment_id": string | null,"scan_path": string | null,"status": Database["public"]['Enums']["payment_status"],"supplier_id": string,"type": Database["public"]['Enums']["payment_type"],"updated_at": string
@@ -765,6 +829,9 @@ isOneToOne: false
 "login_locked_until":
 { Args: { "p_keys": (string)[] }; Returns: string
                            },
+"mark_receipt_emailed":
+{ Args: { "p_email": string,"p_receipt_id": string }; Returns: undefined
+                           },
 "my_pending_invitations":
 { Args: Record<PropertyKey, never>; Returns: {
               "expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["app_role"]
@@ -778,6 +845,9 @@ isOneToOne: false
                            },
 "record_login_failure":
 { Args: { "p_key": string,"p_lock": string,"p_max_failures": number,"p_window": string }; Returns: string
+                           },
+"record_payment_receipt":
+{ Args: { "p_delivered_on": string,"p_payment_ids": (string)[],"p_photo_path"?: string,"p_signature_path": string,"p_signer_id_number": string,"p_signer_name": string }; Returns: string
                            },
 "record_transfer":
 { Args: { "p_allocations"?: Json,"p_amount": number,"p_bank_account_id": string,"p_debited": boolean,"p_notes"?: string,"p_organization_id": string,"p_reference": string,"p_supplier_id": string,"p_transfer_date": string }; Returns: string

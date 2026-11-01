@@ -6,6 +6,7 @@ import "server-only";
  */
 
 const RESEND_BATCH_URL = "https://api.resend.com/emails/batch";
+const RESEND_EMAIL_URL = "https://api.resend.com/emails";
 /** Messages par appel à l'API (limite de l'envoi groupé Resend). */
 const BATCH_SIZE = 100;
 
@@ -53,4 +54,40 @@ export async function sendEmails(
     }
   }
   return { status: "sent", count: messages.length };
+}
+
+export type EmailAttachment = { filename: string; content: Uint8Array };
+
+/** Un message, avec pièces jointes (reçus PDF…) : l'envoi groupé de Resend ne les accepte pas. */
+export async function sendEmail(
+  message: EmailMessage & { attachments?: EmailAttachment[]; replyTo?: string },
+  { idempotencyKey, config = emailConfig(), fetchImpl = fetch }: { idempotencyKey: string; config?: EmailConfig | null; fetchImpl?: typeof fetch },
+): Promise<SendResult> {
+  if (!config) {
+    return { status: "disabled" };
+  }
+  try {
+    const response = await fetchImpl(RESEND_EMAIL_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify({
+        from: config.from,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
+        ...(message.replyTo && { reply_to: message.replyTo }),
+        ...(message.attachments && {
+          attachments: message.attachments.map((file) => ({ filename: file.filename, content: Buffer.from(file.content).toString("base64") })),
+        }),
+      }),
+    });
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      return { status: "failed", error: `Resend ${response.status} ${body}`.slice(0, 500) };
+    }
+  } catch (error) {
+    return { status: "failed", error: (error instanceof Error ? error.message : String(error)).slice(0, 500) };
+  }
+  return { status: "sent", count: 1 };
 }
