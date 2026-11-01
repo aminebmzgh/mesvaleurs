@@ -5,6 +5,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+## [1.2.0] — Phase 3 : Conformité et intelligence
+
 ### Ajouté
 
 - Assistant IA (page « Assistant IA ») : questions en français sur les fournisseurs, factures,
@@ -74,8 +76,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   par le serveur ; page « Archives » avec recherche (numéro, fournisseur, ICE, dates) et
   vérification de l'intégrité des pièces.
 
+### Modifié
+
+- Application servie sur le domaine **mesvaleurs.ma** (www redirigé ; l'ancienne adresse
+  Vercel reste valable). E-mails d'authentification (connexion, invitation, mot de passe
+  oublié) et récapitulatif des alertes envoyés depuis notifications@mesvaleurs.ma par Resend,
+  avec les modèles en français ; liens des e-mails vers mesvaleurs.ma.
+
 ### Corrigé
 
+- Journaux du serveur : message d'erreur détaillé quand un appel avec la clé de service
+  échoue (lecture et assistant IA, verrouillage de connexion), pour un diagnostic immédiat.
 - Fenêtre « Reporter l'échéance » d'une LCN : champs et boutons qui débordaient de la fenêtre ;
   les boutons du bas des fenêtres passent désormais à la ligne quand la place manque.
   Libellé « LCN n° … » au lieu de « lcn n° … » dans les fenêtres des chèques et LCN.
