@@ -3,6 +3,9 @@ import path from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { confirmFundsIfNeeded, login, uniqueSuffix } from "./helpers";
 
+// Émission de chèques, lecture PDF ou OCR : plus long que la limite par défaut de 30 s
+test.describe.configure({ timeout: 60_000 });
+
 const SEED_IMPORT = "/rapprochement/20000000-0000-4000-8000-000000000001";
 
 /** Émet un chèque sur le compte principal et renvoie son numéro. */

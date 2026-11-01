@@ -14,6 +14,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   pour la loi 69-21), reçu PDF avec la signature, envoyé par e-mail au fournisseur ou partagé
   (WhatsApp…) depuis le téléphone. Page « Accusés de réception ». Signature et photo
   conservées, ni modifiables ni supprimables.
+- Relevés reçus par e-mail : chaque entreprise dispose d'une adresse de réception confidentielle
+  et renouvelable (releves-…@import.mesvaleurs.ma), à donner à sa banque ou à laquelle
+  transférer ses relevés. Les pièces jointes (PDF, Excel, CSV, photo) arrivent dans la carte
+  « Relevés reçus par e-mail » de la page Rapprochement ; « Importer » ouvre l'écran d'import
+  avec le fichier déjà chargé (choix du compte, vérification, rapprochement), « Ignorer » le
+  retire. Webhook Resend signé, sans doublon si l'e-mail est relayé plusieurs fois.
 
 ## [1.2.0] — Phase 3 : Conformité et intelligence
 
