@@ -452,5 +452,6 @@ additional_redirect_urls = ["https://mesvaleurs-*-amine-boumazzoughes-projects.v
 project_id = "yqqovspjdsccfscmbeel"
 
 [remotes.prod.auth]
-site_url = "https://mesvaleurs.vercel.app"
-additional_redirect_urls = ["https://mesvaleurs.vercel.app/**"]
+# Domaine de l'application ; l'adresse Vercel reste acceptée (liens déjà envoyés)
+site_url = "https://mesvaleurs.ma"
+additional_redirect_urls = ["https://mesvaleurs.ma/**", "https://mesvaleurs.vercel.app/**"]
