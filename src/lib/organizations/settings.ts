@@ -22,6 +22,14 @@ export const INVOICE_ALERT_DEFAULT = 7;
 /** Délais d'alerte proposés dans les paramètres (jours). */
 export const DUE_ALERT_CHOICES = [3, 7, 15, 30] as const;
 
+/** Rappel de la déclaration trimestrielle des délais de paiement (loi 69-21), jours avant la date limite. */
+export const DECLARATION_REMINDER_DEFAULT = 15;
+export const DECLARATION_REMINDER_CHOICES = [7, 15, 30] as const;
+
+/** IA (saisie de factures) : lectures par mois et par entreprise, par défaut et proposées. */
+export const AI_QUOTA_DEFAULT = 100;
+export const AI_QUOTA_CHOICES = [50, 100, 200, 500] as const;
+
 const accountCode = (fallback: string) => z.string().regex(/^[A-Za-z0-9._-]{1,20}$/).catch(fallback).default(fallback);
 
 /**
@@ -59,10 +67,29 @@ export const organizationSettingsSchema = z.object({
   lcn_alert_days: z.number().int().min(1).max(60).catch(LCN_ALERT_DEFAULT).default(LCN_ALERT_DEFAULT),
   /** Alerte des factures dont la date limite légale tombe dans ce délai (jours). */
   invoice_alert_days: z.number().int().min(1).max(60).catch(INVOICE_ALERT_DEFAULT).default(INVOICE_ALERT_DEFAULT),
+  /** Loi 69-21 : date de paiement retenue (remise du chèque / échéance de la LCN, ou débit). */
+  late_payment_basis: z.enum(["remittance", "debit"]).catch("remittance").default("remittance"),
+  /** Loi 69-21 : rappel de la déclaration trimestrielle, jours avant la date limite. */
+  declaration_reminder_days: z
+    .number()
+    .int()
+    .min(1)
+    .max(60)
+    .catch(DECLARATION_REMINDER_DEFAULT)
+    .default(DECLARATION_REMINDER_DEFAULT),
   /** Double signature : validation exigée pour toute formule au-delà de ce montant (DH) ; null = désactivée. */
   approval_threshold: z.number().positive().nullable().catch(null).default(null),
   /** Plafond journalier de l'entreprise (total des paiements datés du jour, DH) ; null = aucun. */
   daily_ceiling: z.number().positive().nullable().catch(null).default(null),
+  /** Optimiseur de paiements : solde prévisionnel à ne jamais entamer (DH). */
+  payment_reserve: z.number().min(0).catch(0).default(0),
+  /**
+   * IA (saisie de factures assistée) : désactivée par défaut. Activée par un administrateur
+   * qui accepte l'envoi des pièces hors du Maroc (loi 09-08) ; son accord est conservé.
+   */
+  ai_enabled: z.boolean().catch(false).default(false),
+  ai_consent: z.object({ at: z.string(), by: z.uuid(), email: z.string().nullable() }).nullable().catch(null).default(null),
+  ai_monthly_quota: z.number().int().min(1).max(10000).catch(AI_QUOTA_DEFAULT).default(AI_QUOTA_DEFAULT),
   /** Absent : valeurs par défaut ; illisible : valeurs par défaut (les champs invalides le sont un à un). */
   accounting_export: accountingExportSchema.catch(() => accountingExportSchema.parse({})).prefault({}),
 });

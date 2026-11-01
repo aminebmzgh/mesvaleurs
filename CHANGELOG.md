@@ -5,6 +5,92 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+## [1.2.0] — Phase 3 : Conformité et intelligence
+
+### Ajouté
+
+- Assistant IA (page « Assistant IA ») : questions en français sur les fournisseurs, factures,
+  chèques, LCN, virements, délais de paiement (loi 69-21) et trésorerie, par exemple « Combien
+  je dois encore à X ? », « Quels chèques ne sont pas encore passés ? », « Quelles factures
+  risquent une amende ce trimestre ? ». Le modèle consulte les données de l'entreprise par des
+  outils en lecture seule (aucune coordonnée personnelle transmise) et répond avec les liens
+  vers les écrans concernés. Ouvert à tous les membres, quand l'IA est activée pour
+  l'entreprise ; chaque question compte dans le quota mensuel d'IA. Conversation non
+  enregistrée ; e-mails, téléphones et RIB des questions masqués avant l'envoi.
+- Saisie de factures assistée par IA : sur la page Nouvelle facture, un PDF, un scan ou une
+  photo de la facture est lu par un modèle d'IA (OpenRouter) qui pré-remplit fournisseur,
+  numéro, dates, délai et montants HT, TVA et TTC, à vérifier avant d'enregistrer. Fournisseur
+  reconnu par son ICE ou sa raison sociale, sinon créé après confirmation ; le document devient
+  la pièce jointe de la facture, archivée. Anomalies signalées : facture déjà enregistrée ou
+  déjà soldée, montant inhabituel pour le fournisseur, totaux ou taux de TVA incohérents,
+  dates douteuses, ICE absent ou facture adressée à une autre entreprise. Désactivée par
+  défaut : un administrateur l'active dans les paramètres de l'entreprise en acceptant l'envoi
+  hors du Maroc (loi 09-08), accord conservé ; quota mensuel de lectures par entreprise
+  (100 par défaut). Seuls des fournisseurs de modèles qui ne conservent pas les documents
+  sont utilisés ; dans un PDF texte, e-mails, téléphones et RIB sont masqués avant l'envoi.
+- Loi 69-21 (délais de paiement) : page « Délais de paiement » avec les factures dans les
+  délais, proches de la date limite et en retard ; état trimestriel des factures payées hors
+  délai et des restes impayés échus (ICE, mode et référence du paiement, mois de retard,
+  amende indicative), exportable en CSV, Excel et PDF pour l'expert-comptable ; suivi de la
+  déclaration trimestrielle (date de dépôt, référence) avec rappel sur la page Alertes et dans
+  le récapitulatif du matin. Paramètres légaux modifiables (amende : 2,25 % le premier mois
+  puis 0,85 % par mois, seuil de chiffre d'affaires, délai de déclaration) ; date de paiement
+  retenue et délai du rappel réglables dans les paramètres de l'entreprise. Calculs indicatifs.
+- Relevés scannés et photographiés : un PDF sans texte, une image JPEG ou PNG, ou une photo
+  prise avec le téléphone est lu par reconnaissance de caractères (Tesseract, français)
+  directement dans le navigateur, sans service tiers : moteur et modèle de langue servis par
+  l'application. Écran de vérification obligatoire : chaque mouvement est corrigeable à côté
+  de l'image du relevé, les lectures incertaines sont surlignées, lignes ajoutables ou
+  supprimables, et l'import exige la confirmation « J'ai vérifié chaque ligne ».
+- Nouveau carnet : photo du premier chèque ou de la première LCN (appareil photo sur
+  téléphone) lue dans le navigateur. Le numéro imprimé en clair et la bande CMC7 sont
+  recoupés, le RIB est comparé à celui du compte (alerte s'il diffère) et une LCN est
+  reconnue ; le premier numéro est pré-rempli, toujours à confirmer. Le dernier numéro est
+  calculé d'après la taille du carnet (25, 50 ou 100 formules, ou saisie libre).
+- Rapprochement avec le relevé d'un fournisseur (fiche fournisseur › « Rapprocher son
+  relevé ») : relevé Excel, CSV, PDF, scanné ou photographié, lu dans le navigateur et
+  comparé à nos livres sur sa période. Factures retrouvées par numéro (séparateurs et zéros
+  ignorés), règlements par numéro de chèque, de LCN ou référence de virement, sinon d'après
+  le montant et la date ; écarts signalés (montant différent, absent de nos livres, absent
+  du relevé, règlement pas encore remis), soldes de la période comparés. Facture manquante
+  créée en un clic (saisie pré-remplie) ; rapport exportable en Excel, PDF et CSV. Rien
+  n'est enregistré.
+- Plan de paiement (Paiements › Plan de paiement) : les factures en attente dont la date
+  limite tombe dans les 60 jours sont réparties en « payer cette semaine », « chèques à
+  programmer », « LCN à 30, 60 ou 90 jours » (de préférence avant la date limite) et « à
+  reporter », d'après la trésorerie prévisionnelle de tous les comptes, sans jamais passer
+  sous une réserve réglable (Paramètres › Entreprise, modifiable à chaque calcul). Les
+  fournisseurs stratégiques (nouvelle case sur la fiche fournisseur) passent en priorité ;
+  amende indicative de la loi 69-21 affichée. « Préparer le chèque » ou « Préparer la LCN »
+  ouvre l'assistant de paiement pré-rempli (fournisseur, factures, moyen, échéance).
+- Factures électroniques UBL (Factures › Factures UBL) : import de fichiers XML UBL 2.1,
+  plusieurs à la fois. Fournisseur reconnu par son ICE ; inconnu, il est proposé à la
+  création (raison sociale, ICE, IF, RC, adresse, RIB lus dans le fichier) et créé seulement
+  après confirmation. Contrôles avant import : devise, HT + TVA = TTC, somme des lignes,
+  facture déjà enregistrée, ICE du destinataire. Le fichier est relu et contrôlé par le
+  serveur ; aucune connexion à la plateforme de la DGI.
+- Archivage légal des factures : chaque pièce déposée (fichier UBL, PDF, photo, y compris les
+  pièces déjà jointes) est inscrite au registre et conservée 10 ans, sans modification ni
+  suppression possible, administrateurs compris ; une pièce remplacée ou retirée reste
+  archivée, et une facture archivée ne peut plus être supprimée. Empreinte SHA-256 calculée
+  par le serveur ; page « Archives » avec recherche (numéro, fournisseur, ICE, dates) et
+  vérification de l'intégrité des pièces.
+
+### Modifié
+
+- Application servie sur le domaine **mesvaleurs.ma** (www redirigé ; l'ancienne adresse
+  Vercel reste valable). E-mails d'authentification (connexion, invitation, mot de passe
+  oublié) et récapitulatif des alertes envoyés depuis notifications@mesvaleurs.ma par Resend,
+  avec les modèles en français ; liens des e-mails vers mesvaleurs.ma.
+
+### Corrigé
+
+- Journaux du serveur : message d'erreur détaillé quand un appel avec la clé de service
+  échoue (lecture et assistant IA, verrouillage de connexion), pour un diagnostic immédiat.
+- Fenêtre « Reporter l'échéance » d'une LCN : champs et boutons qui débordaient de la fenêtre ;
+  les boutons du bas des fenêtres passent désormais à la ligne quand la place manque.
+  Libellé « LCN n° … » au lieu de « lcn n° … » dans les fenêtres des chèques et LCN.
+
 ## [1.1.0] — Phase 2 : Trésorerie et confort
 
 ### Ajouté

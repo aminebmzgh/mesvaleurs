@@ -232,7 +232,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                         <TableCell>
                           <PaymentRowActions
                             paymentId={payment.id}
-                            label={`${PAYMENT_TYPE_LABELS[payment.type].toLowerCase()} n° ${formatted}`}
+                            label={`${payment.type === "lcn" ? "LCN" : PAYMENT_TYPE_LABELS[payment.type].toLowerCase()} n° ${formatted}`}
                             type={payment.type}
                             status={payment.status}
                             regularized={payment.regularized_at !== null}

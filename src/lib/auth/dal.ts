@@ -40,6 +40,12 @@ export type ActiveOrganization = OrganizationMembership & {
   lcnAlertDays: number;
   /** Délai d'alerte des factures proches de la date limite légale (jours). */
   invoiceAlertDays: number;
+  /** Loi 69-21 : date de paiement retenue. */
+  latePaymentBasis: "remittance" | "debit";
+  /** Loi 69-21 : rappel de la déclaration trimestrielle (jours avant la date limite). */
+  declarationReminderDays: number;
+  /** Optimiseur de paiements : réserve de trésorerie à préserver (DH). */
+  paymentReserve: number;
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -170,6 +176,9 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     lowStockThreshold: settings.low_stock_threshold,
     lcnAlertDays: settings.lcn_alert_days,
     invoiceAlertDays: settings.invoice_alert_days,
+    latePaymentBasis: settings.late_payment_basis,
+    declarationReminderDays: settings.declaration_reminder_days,
+    paymentReserve: settings.payment_reserve,
   };
 });
 

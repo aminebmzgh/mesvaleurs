@@ -33,7 +33,7 @@ type AmountKey = "excl" | "vat" | "incl";
  * 20 %. Les montants calculés restent modifiables (autre taux, arrondi du fournisseur) ;
  * modifier la TVA recalcule le montant non saisi.
  */
-function AmountFields({ state, invoice }: { state: FormState; invoice?: InvoiceValues }) {
+function AmountFields({ state, invoice }: { state: FormState; invoice?: Partial<InvoiceValues> }) {
   const [values, setValues] = useState<Record<AmountKey, string>>({
     excl: amount(invoice?.amount_excl_tax),
     vat: amount(invoice?.vat_amount),
@@ -115,15 +115,18 @@ export function InvoiceForm({
   submitLabel,
   readOnly = false,
   supplierLocked = false,
+  hiddenFields,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   suppliers: SelectOption[];
-  invoice?: InvoiceValues;
+  invoice?: Partial<InvoiceValues>;
   defaultSupplierId?: string;
   submitLabel: string;
   readOnly?: boolean;
   /** Fournisseur figé : facture déjà rattachée à des paiements. */
   supplierLocked?: boolean;
+  /** Champs transmis tels quels (pièce déjà déposée par la lecture par IA). */
+  hiddenFields?: Record<string, string>;
 }) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
 
@@ -132,6 +135,9 @@ export function InvoiceForm({
       <fieldset disabled={readOnly}>
         <FieldGroup>
           <FormMessage state={state} />
+          {Object.entries(hiddenFields ?? {}).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} value={value} />
+          ))}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field className="sm:col-span-2">
               <FieldLabel htmlFor="supplier_id">Fournisseur</FieldLabel>

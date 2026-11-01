@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatAmount } from "@/lib/format";
 import { initialFormState } from "@/lib/forms";
-import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import { DECLARATION_REMINDER_CHOICES, DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
 import { updateOrganization } from "./actions";
 
 type OrganizationValues = {
@@ -30,8 +30,11 @@ type OrganizationValues = {
   low_stock_threshold: number;
   lcn_alert_days: number;
   invoice_alert_days: number;
+  late_payment_basis: "remittance" | "debit";
+  declaration_reminder_days: number;
   approval_threshold: number | null;
   daily_ceiling: number | null;
+  payment_reserve: number;
 };
 
 const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?: string; wide?: boolean }[] = [
@@ -157,6 +160,31 @@ export function OrganizationForm({
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field>
+                  <FieldLabel htmlFor="late_payment_basis">Date de paiement retenue (loi 69-21)</FieldLabel>
+                  <FormSelect
+                    id="late_payment_basis"
+                    name="late_payment_basis"
+                    options={[
+                      { value: "remittance", label: "Remise du chèque, échéance de la LCN" },
+                      { value: "debit", label: "Date de débit en banque" },
+                    ]}
+                    defaultValue={organization.late_payment_basis}
+                  />
+                  <FieldDescription>Pour mesurer le retard de paiement d&apos;une facture et calculer l&apos;amende indicative.</FieldDescription>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="declaration_reminder_days">Rappeler la déclaration trimestrielle</FieldLabel>
+                  <FormSelect
+                    id="declaration_reminder_days"
+                    name="declaration_reminder_days"
+                    options={DECLARATION_REMINDER_CHOICES.map((days) => ({ value: String(days), label: `${days} jours avant` }))}
+                    defaultValue={String(organization.declaration_reminder_days)}
+                  />
+                  <FieldDescription>Déclaration des délais de paiement : avant sa date limite, jusqu&apos;à ce qu&apos;elle soit marquée « déclarée ».</FieldDescription>
+                </Field>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
                   <FieldLabel htmlFor="approval_threshold">Double signature au-delà de (DH)</FieldLabel>
                   <Input
                     id="approval_threshold"
@@ -187,6 +215,21 @@ export function OrganizationForm({
                     fournisseur : pages Membres et fiche fournisseur.
                   </FieldDescription>
                   <FieldErrors state={state} name="daily_ceiling" />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="payment_reserve">Réserve de trésorerie (DH)</FieldLabel>
+                  <Input
+                    id="payment_reserve"
+                    name="payment_reserve"
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    defaultValue={organization.payment_reserve ? formatAmount(organization.payment_reserve) : ""}
+                    {...invalidProps(state, "payment_reserve")}
+                  />
+                  <FieldDescription>
+                    Solde prévisionnel que l&apos;optimiseur de paiements ne doit jamais entamer (modifiable à chaque calcul).
+                  </FieldDescription>
+                  <FieldErrors state={state} name="payment_reserve" />
                 </Field>
               </div>
               <Field orientation="horizontal">

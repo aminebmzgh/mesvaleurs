@@ -2,10 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/dal";
+import { requireRole, requireUser } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
-import { DUE_ALERT_CHOICES, LOW_STOCK_CHOICES, parseOrganizationSettings, UNCASHED_ALERT_CHOICES } from "@/lib/organizations/settings";
+import {
+  AI_QUOTA_CHOICES,
+  DECLARATION_REMINDER_CHOICES,
+  DUE_ALERT_CHOICES,
+  LOW_STOCK_CHOICES,
+  parseOrganizationSettings,
+  UNCASHED_ALERT_CHOICES,
+} from "@/lib/organizations/settings";
 import { emailSchema, iceSchema, optionalAmountSchema, optionalText, requiredText } from "@/lib/validation";
 
 const organizationSchema = z.object({
@@ -26,8 +33,11 @@ const organizationSchema = z.object({
   low_stock_threshold: z.coerce.number().pipe(z.union(LOW_STOCK_CHOICES.map((count) => z.literal(count)))),
   lcn_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
   invoice_alert_days: z.coerce.number().pipe(z.union(DUE_ALERT_CHOICES.map((days) => z.literal(days)))),
+  late_payment_basis: z.enum(["remittance", "debit"]),
+  declaration_reminder_days: z.coerce.number().pipe(z.union(DECLARATION_REMINDER_CHOICES.map((days) => z.literal(days)))),
   approval_threshold: optionalAmountSchema("Le seuil de validation"),
   daily_ceiling: optionalAmountSchema("Le plafond journalier"),
+  payment_reserve: optionalAmountSchema("La réserve de trésorerie"),
 });
 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -44,8 +54,11 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     low_stock_threshold,
     lcn_alert_days,
     invoice_alert_days,
+    late_payment_basis,
+    declaration_reminder_days,
     approval_threshold,
     daily_ceiling,
+    payment_reserve,
     ...fields
   } = parsed.data;
   const supabase = await createClient();
@@ -63,9 +76,12 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
     low_stock_threshold,
     lcn_alert_days,
     invoice_alert_days,
+    late_payment_basis,
+    declaration_reminder_days,
     // Un montant nul désactive la règle
     approval_threshold: approval_threshold || null,
     daily_ceiling: daily_ceiling || null,
+    payment_reserve: payment_reserve ?? 0,
   };
 
   const { error } = await supabase
@@ -78,6 +94,48 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
 
   revalidatePath("/", "layout");
   return { success: "Informations de l'entreprise enregistrées." };
+}
+
+const aiSchema = z.object({
+  ai_enabled: z.literal("on").optional(),
+  ai_consent: z.literal("on").optional(),
+  ai_monthly_quota: z.coerce.number().pipe(z.union(AI_QUOTA_CHOICES.map((count) => z.literal(count)))),
+});
+
+/**
+ * IA (lecture des factures, assistant) : activée par un administrateur qui accepte l'envoi des
+ * documents à un service situé hors du Maroc (loi 09-08). Son accord est conservé
+ * (qui, quand) ; la modification est tracée par le journal d'audit.
+ */
+export async function updateAiSettings(_prev: FormState, formData: FormData): Promise<FormState> {
+  const organization = await requireRole(["admin"]);
+  const parsed = aiSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { fieldErrors: toFieldErrors(parsed.error) };
+  }
+  const enabled = parsed.data.ai_enabled === "on";
+  const supabase = await createClient();
+  const { data: current } = await supabase.from("organizations").select("settings").eq("id", organization.organizationId).single();
+  const settings = parseOrganizationSettings(current?.settings);
+
+  let consent = settings.ai_consent;
+  if (enabled && !settings.ai_enabled) {
+    if (parsed.data.ai_consent !== "on") {
+      return { fieldErrors: { ai_consent: ["Acceptez l'envoi des documents au service d'IA pour l'activer."] } };
+    }
+    const user = await requireUser();
+    consent = { at: new Date().toISOString(), by: user.id, email: user.email };
+  }
+
+  const { error } = await supabase
+    .from("organizations")
+    .update({ settings: { ...settings, ai_enabled: enabled, ai_consent: consent, ai_monthly_quota: parsed.data.ai_monthly_quota } })
+    .eq("id", organization.organizationId);
+  if (error) {
+    return { error: "Impossible d'enregistrer les modifications." };
+  }
+  revalidatePath("/", "layout");
+  return { success: enabled ? "IA activée : lecture des factures et assistant." : "IA désactivée." };
 }
 
 /** Logo de l'entreprise (en-tête des lettres) : chemin du fichier envoyé dans le bucket `logos`, ou retrait. */

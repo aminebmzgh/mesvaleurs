@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { fromCents, parseAmount, toCents } from "@/lib/amount";
 import { amountInWords } from "@/lib/amount-in-words";
 import { availableCount, availableNumbers, formatInstrumentNumber } from "@/lib/checkbooks";
+import { daysBetween } from "@/lib/dates";
 import { formatAmount, formatDate, formatMAD } from "@/lib/format";
 import type { AssistantData, OpenInvoice, ReplacedPayment } from "@/lib/payments/queries";
 import { checkCustomSplit, MAX_INSTRUMENTS, scheduleDueDates, splitEqual } from "@/lib/payments/split";
@@ -22,6 +23,9 @@ import { QuickInvoiceForm, QuickSupplierDialog } from "./quick-create";
 
 type InstrumentType = "check" | "lcn";
 type SplitMode = "equal" | "custom";
+
+/** Paiement proposé par l'optimiseur : fournisseur, factures, moyen et échéance de la LCN. */
+export type PaymentPrefill = { supplierId: string; invoiceIds: string[]; type: InstrumentType; dueDate: string | null };
 
 const TYPE_LABELS: Record<InstrumentType, { one: string; many: string }> = {
   check: { one: "chèque", many: "chèques" },
@@ -32,18 +36,24 @@ export function PaymentAssistant({
   data,
   today,
   replacing = null,
+  prefill = null,
 }: {
   data: AssistantData;
   today: string;
   /** Paiement rejeté que cette émission régularise. */
   replacing?: ReplacedPayment | null;
+  prefill?: PaymentPrefill | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   // 1. Moyen de paiement
   const availableTypes = (["check", "lcn"] as const).filter((t) => data.checkbooks.some((c) => c.type === t));
-  const [type, setType] = useState<InstrumentType>(availableTypes[0] ?? "check");
+  // Plan de l'optimiseur : moyen de paiement proposé, s'il existe un carnet de ce type
+  const prefillType = prefill && availableTypes.includes(prefill.type) ? prefill.type : null;
+  const prefillDays =
+    prefillType === "lcn" && prefill?.dueDate && prefill.dueDate > today ? Math.min(daysBetween(today, prefill.dueDate), 365) : null;
+  const [type, setType] = useState<InstrumentType>(prefillType ?? availableTypes[0] ?? "check");
   const checkbooks = data.checkbooks.filter((c) => c.type === type);
   const [checkbookId, setCheckbookId] = useState(checkbooks[0]?.id ?? "");
   const checkbook = checkbooks.find((c) => c.id === checkbookId) ?? checkbooks[0];
@@ -67,8 +77,8 @@ export function PaymentAssistant({
   const [customAmounts, setCustomAmounts] = useState<string[]>([""]);
   const [issueDate, setIssueDate] = useState(today);
   const [issuePlace, setIssuePlace] = useState(data.city);
-  const [intervalDays, setIntervalDays] = useState(30);
-  const [dueDates, setDueDates] = useState<string[]>(() => scheduleDueDates(today, 1, 30));
+  const [intervalDays, setIntervalDays] = useState(prefillDays ?? 30);
+  const [dueDates, setDueDates] = useState<string[]>(() => scheduleDueDates(today, 1, prefillDays ?? 30));
   const [overpayConfirmed, setOverpayConfirmed] = useState(false);
   const [fundsConfirmed, setFundsConfirmed] = useState(false);
   // Lettre d'accompagnement : cochée selon la préférence du fournisseur
@@ -101,12 +111,13 @@ export function PaymentAssistant({
     });
   };
 
-  // Remplacement d'un paiement rejeté : fournisseur et factures pré-sélectionnés, une fois
+  // Remplacement d'un paiement rejeté ou plan de l'optimiseur : fournisseur et factures pré-sélectionnés, une fois
   const prefilled = useRef(false);
+  const initial = replacing ?? prefill;
   useEffect(() => {
-    if (replacing && !prefilled.current) {
+    if (initial && !prefilled.current) {
       prefilled.current = true;
-      selectSupplier(replacing.supplierId, replacing.invoiceIds);
+      selectSupplier(initial.supplierId, initial.invoiceIds);
     }
   });
 

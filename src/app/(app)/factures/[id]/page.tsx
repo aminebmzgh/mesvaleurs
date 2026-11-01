@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, BanknoteIcon, TriangleAlertIcon } from "lucide-react";
+import { ArchiveIcon, ArrowLeftIcon, BanknoteIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -128,15 +128,27 @@ async function InvoiceDetail({ params }: Pick<PageProps<"/factures/[id]">, "para
       <Card>
         <CardHeader>
           <CardTitle>Pièce jointe</CardTitle>
-          <CardDescription>Scan ou photo de la facture, conservé de façon sécurisée.</CardDescription>
+          <CardDescription>
+            Scan, photo ou fichier UBL de la facture. Toute pièce déposée est archivée 10 ans, sans modification possible, même
+            remplacée ou retirée.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-3">
           <AttachmentUpload
             organizationId={organization.organizationId}
             invoiceId={invoice.id}
             attachmentUrl={invoice.attachmentUrl}
             canEdit={canEdit}
           />
+          {invoice.archives.length > 0 && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ArchiveIcon className="size-4" aria-hidden />
+              {invoice.archives.length} pièce(s) archivée(s), conservée(s) jusqu&apos;au {formatDate(invoice.archives[0].retain_until)}.
+              <Link href={`/factures/archives?q=${encodeURIComponent(invoice.number)}`} className="underline">
+                Voir les archives
+              </Link>
+            </p>
+          )}
         </CardContent>
       </Card>
 

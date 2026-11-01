@@ -1,5 +1,6 @@
 import "server-only";
 import { requireActiveOrganization, requireUser } from "@/lib/auth/dal";
+import { loadDeclarationReminder } from "@/lib/compliance/data";
 import { getDashboard } from "@/lib/dashboard/queries";
 import { emailConfig } from "@/lib/email/send";
 import { createClient } from "@/lib/supabase/server";
@@ -8,7 +9,9 @@ import { buildAlerts } from "./alerts";
 /** Alertes de l'entreprise active, telles que le récapitulatif quotidien les envoie. */
 export async function getAlerts() {
   const organization = await requireActiveOrganization();
-  return buildAlerts(await getDashboard(), { lcnAlertDays: organization.lcnAlertDays });
+  const dashboard = await getDashboard();
+  const declaration = await loadDeclarationReminder(await createClient(), organization.organizationId, organization.declarationReminderDays, dashboard.today);
+  return buildAlerts(dashboard, { lcnAlertDays: organization.lcnAlertDays, declaration });
 }
 
 /** Préférence du membre connecté et derniers récapitulatifs envoyés à l'entreprise. */

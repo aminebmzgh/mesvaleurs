@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { login, uniqueSuffix } from "./helpers";
 
 test("une création apparaît au journal avec son auteur, filtrable et exportable", async ({ browser }) => {
+  // Deux sessions et deux connexions : proche de la limite par défaut de 30 s
+  test.setTimeout(60_000);
   const name = `Fournisseur audit ${uniqueSuffix()}`;
 
   // Le préparateur crée un fournisseur, et n'a pas accès au journal

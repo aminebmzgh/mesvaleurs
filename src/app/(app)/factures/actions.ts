@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
 import { type FormState, toFieldErrors } from "@/lib/forms";
+import { sealInvoiceArchives } from "@/lib/invoices/archives";
 import { invoiceSchema, isAttachmentPathOf } from "@/lib/invoices/schemas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,14 +32,28 @@ export async function createInvoice(_prev: FormState, formData: FormData): Promi
     return { fieldErrors: toFieldErrors(parsed.error) };
   }
 
+  // Pièce déjà déposée par le navigateur (lecture par IA) : elle devient la pièce jointe
+  const attachment = z.object({ id: z.uuid(), path: z.string().max(300) }).safeParse({
+    id: formData.get("attachment_invoice_id"),
+    path: formData.get("attachment_path"),
+  });
+  const withAttachment = attachment.success && isAttachmentPathOf(attachment.data.path, organization.organizationId, attachment.data.id);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("invoices")
-    .insert({ ...parsed.data, organization_id: organization.organizationId })
+    .insert({
+      ...parsed.data,
+      organization_id: organization.organizationId,
+      ...(withAttachment && { id: attachment.data.id, attachment_path: attachment.data.path }),
+    })
     .select("id")
     .single();
   if (error) {
     return invoiceError(error);
+  }
+  if (withAttachment) {
+    await sealInvoiceArchives(organization.organizationId, data.id);
   }
 
   revalidatePath("/factures");
@@ -86,12 +101,15 @@ export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
   const id = z.uuid().parse(invoiceId);
   const supabase = await createClient();
 
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("attachment_path")
-    .eq("id", id)
-    .eq("organization_id", organization.organizationId)
-    .maybeSingle();
+  // Facture dont une pièce est archivée : conservée 10 ans (archivage légal)
+  const { count } = await supabase
+    .from("invoice_archives")
+    .select("id", { count: "exact", head: true })
+    .eq("invoice_id", id)
+    .eq("organization_id", organization.organizationId);
+  if (count) {
+    return { error: "Cette facture a des pièces archivées (conservées 10 ans) : elle ne peut pas être supprimée." };
+  }
   const { error } = await supabase
     .from("invoices")
     .delete()
@@ -105,10 +123,6 @@ export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
           : "Impossible de supprimer la facture.",
     };
   }
-  if (invoice?.attachment_path) {
-    await supabase.storage.from("factures").remove([invoice.attachment_path]);
-  }
-
   revalidatePath("/factures", "layout");
   redirect("/factures");
 }
@@ -143,9 +157,10 @@ export async function setInvoiceAttachment(invoiceId: string, path: string | nul
   if (error) {
     return { error: "Impossible d'enregistrer la pièce jointe." };
   }
-  // L'ancien fichier, remplacé ou retiré, est supprimé du stockage
-  if (invoice.attachment_path && invoice.attachment_path !== path) {
-    await supabase.storage.from("factures").remove([invoice.attachment_path]);
+  // Nouvelle pièce inscrite aux archives par la base : empreinte calculée ici. L'ancienne,
+  // remplacée ou retirée, reste archivée.
+  if (path !== null) {
+    await sealInvoiceArchives(organization.organizationId, id);
   }
 
   revalidatePath(`/factures/${id}`);

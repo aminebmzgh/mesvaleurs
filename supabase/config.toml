@@ -447,10 +447,42 @@ project_id = "dnaadluvwvxmzzipbrxz"
 site_url = "https://mesvaleurs-git-develop-amine-boumazzoughes-projects.vercel.app"
 additional_redirect_urls = ["https://mesvaleurs-*-amine-boumazzoughes-projects.vercel.app/**"]
 
+# E-mails d'authentification envoyés par Resend depuis le domaine vérifié mesvaleurs.ma (#6).
+# Mot de passe SMTP = clé Resend limitée à l'envoi, lue dans l'environnement au moment du push.
+[remotes.preprod.auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_SENDING_KEY)"
+admin_email = "notifications@mesvaleurs.ma"
+sender_name = "MesValeurs"
+
+[remotes.preprod.auth.rate_limit]
+# Avec un SMTP personnalisé : e-mails d'authentification par heure (2 sans SMTP)
+email_sent = 100
+
 # Production
 [remotes.prod]
 project_id = "yqqovspjdsccfscmbeel"
 
 [remotes.prod.auth]
-site_url = "https://mesvaleurs.vercel.app"
-additional_redirect_urls = ["https://mesvaleurs.vercel.app/**"]
+# Domaine de l'application ; l'adresse Vercel reste acceptée (liens déjà envoyés)
+site_url = "https://mesvaleurs.ma"
+additional_redirect_urls = ["https://mesvaleurs.ma/**", "https://mesvaleurs.vercel.app/**"]
+
+# E-mails d'authentification envoyés par Resend depuis le domaine vérifié mesvaleurs.ma (#6).
+# Mot de passe SMTP = clé Resend limitée à l'envoi, lue dans l'environnement au moment du push.
+[remotes.prod.auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_SENDING_KEY)"
+admin_email = "notifications@mesvaleurs.ma"
+sender_name = "MesValeurs"
+
+[remotes.prod.auth.rate_limit]
+# Avec un SMTP personnalisé : e-mails d'authentification par heure (2 sans SMTP)
+email_sent = 100
+

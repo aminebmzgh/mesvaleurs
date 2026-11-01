@@ -22,6 +22,7 @@ export type SupplierValues = {
   phone: string | null;
   payment_terms_days: number | null;
   print_cover_letter: boolean;
+  is_strategic: boolean;
   notes: string | null;
   accounting_code?: string | null;
 };
@@ -137,6 +138,19 @@ export function SupplierForm({
               <FieldContent>
                 <FieldLabel htmlFor="print_cover_letter">Joindre une lettre d&apos;accompagnement</FieldLabel>
                 <FieldDescription>Cochée par défaut dans l&apos;assistant de paiement.</FieldDescription>
+              </FieldContent>
+            </Field>
+            <Field orientation="horizontal">
+              <input
+                id="is_strategic"
+                name="is_strategic"
+                type="checkbox"
+                defaultChecked={supplier?.is_strategic ?? false}
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <FieldContent>
+                <FieldLabel htmlFor="is_strategic">Fournisseur stratégique</FieldLabel>
+                <FieldDescription>Ses factures passent en priorité dans le plan de paiement proposé.</FieldDescription>
               </FieldContent>
             </Field>
           </div>

@@ -20,8 +20,14 @@ const DEFAULTS = {
   low_stock_threshold: 5,
   lcn_alert_days: 7,
   invoice_alert_days: 7,
+  late_payment_basis: "remittance",
+  declaration_reminder_days: 15,
   approval_threshold: null,
   daily_ceiling: null,
+  payment_reserve: 0,
+  ai_enabled: false,
+  ai_consent: null,
+  ai_monthly_quota: 100,
   accounting_export: ACCOUNTING_DEFAULTS,
 };
 
@@ -39,8 +45,14 @@ describe("parseOrganizationSettings", () => {
       low_stock_threshold: 5,
       lcn_alert_days: 7,
       invoice_alert_days: 7,
+      late_payment_basis: "remittance",
+      declaration_reminder_days: 15,
       approval_threshold: null,
       daily_ceiling: null,
+      payment_reserve: 0,
+      ai_enabled: false,
+      ai_consent: null,
+      ai_monthly_quota: 100,
       accounting_export: ACCOUNTING_DEFAULTS,
     });
     expect(parseOrganizationSettings({ uncashed_alert_days: 2 }).uncashed_alert_days).toBe(60);
@@ -69,6 +81,10 @@ describe("double signature", () => {
     expect(parseOrganizationSettings({ approval_threshold: -1, daily_ceiling: "beaucoup" })).toMatchObject({
       approval_threshold: null,
       daily_ceiling: null,
+      payment_reserve: 0,
+      ai_enabled: false,
+      ai_consent: null,
+      ai_monthly_quota: 100,
     });
   });
 });
@@ -79,5 +95,34 @@ describe("export comptable", () => {
       parseOrganizationSettings({ accounting_export: { journal: "BNK", basis: "issue", separator: "|", supplierAccount: "4411 000" } }).accounting_export,
     ).toEqual({ ...ACCOUNTING_DEFAULTS, journal: "BNK", basis: "issue" });
     expect(parseOrganizationSettings({ accounting_export: "texte" }).accounting_export).toEqual(ACCOUNTING_DEFAULTS);
+  });
+});
+
+describe("loi 69-21", () => {
+  it("date de paiement retenue et rappel de la déclaration", () => {
+    expect(parseOrganizationSettings({ late_payment_basis: "debit", declaration_reminder_days: 30 })).toMatchObject({
+      late_payment_basis: "debit",
+      declaration_reminder_days: 30,
+    });
+    expect(parseOrganizationSettings({ late_payment_basis: "cash", declaration_reminder_days: 0 })).toMatchObject({
+      late_payment_basis: "remittance",
+      declaration_reminder_days: 15,
+    });
+  });
+});
+
+describe("intelligence artificielle", () => {
+  it("désactivée par défaut, accord et quota lus s'ils sont valides", () => {
+    const consent = { at: "2026-10-31T10:00:00.000Z", by: "a0000000-0000-4000-8000-000000000001", email: "admin@demo.ma" };
+    expect(parseOrganizationSettings({ ai_enabled: true, ai_consent: consent, ai_monthly_quota: 200 })).toMatchObject({
+      ai_enabled: true,
+      ai_consent: consent,
+      ai_monthly_quota: 200,
+    });
+    expect(parseOrganizationSettings({ ai_enabled: "oui", ai_consent: { by: "x" }, ai_monthly_quota: 0 })).toMatchObject({
+      ai_enabled: false,
+      ai_consent: null,
+      ai_monthly_quota: 100,
+    });
   });
 });

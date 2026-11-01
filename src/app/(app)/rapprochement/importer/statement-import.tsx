@@ -1,11 +1,11 @@
 "use client";
 
-import { CircleAlertIcon, FileSpreadsheetIcon, Loader2Icon, UploadIcon } from "lucide-react";
+import { CameraIcon, CircleAlertIcon, FileSpreadsheetIcon, Loader2Icon, UploadIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,11 +22,14 @@ import {
   parseRows,
   statementPeriod,
 } from "@/lib/statements/parse";
+import { parseReviewLines, type ReviewLine, reviewLines } from "@/lib/statements/ocr/review";
 import { PdfStatementError } from "@/lib/statements/pdf/parsers";
-import { headerSignature, readStatementFile, type StatementFile } from "@/lib/statements/read-file";
+import { headerSignature, type OcrProgress, readStatementFile, type StatementFile } from "@/lib/statements/read-file";
 import { MAX_STATEMENT_LINES, STATEMENT_MAX_BYTES, statementFilePath } from "@/lib/statements/schemas";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { importStatement, loadColumnMapping } from "../actions";
+import { OcrReview } from "./ocr-review";
 
 type Account = { id: string; label: string; bankName: string };
 type Loaded = StatementFile & { file: File };
@@ -42,28 +45,45 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
   const [mapping, setMapping] = useState<ColumnMapping | null>(null);
   const [mappingSource, setMappingSource] = useState<"saved" | "guessed" | null>(null);
   const [readError, setReadError] = useState<string>();
+  const [ocrProgress, setOcrProgress] = useState<OcrProgress | null>(null);
+  // Corrections de l'écran de vérification OCR, valables pour une lecture et une correspondance données
+  const [edits, setEdits] = useState<{ key: string; lines: ReviewLine[] } | null>(null);
+  const [verified, setVerified] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const headers = loaded ? (loaded.rows[headerRow] ?? []) : [];
   const parsed = useMemo(() => (loaded && mapping ? parseRows(loaded.rows, headerRow, mapping) : null), [loaded, mapping, headerRow]);
-  const period = parsed ? statementPeriod(parsed.lines) : null;
-  const totals = parsed?.lines.reduce(
+  const scan = loaded?.scan;
+  const reviewKey = loaded && mapping ? `${loaded.hash}|${headerRow}|${JSON.stringify(mapping)}` : "";
+  const initialReview = useMemo(
+    () => (loaded?.scan && mapping ? reviewLines(loaded.rows, headerRow, mapping, loaded.scan.uncertain) : null),
+    [loaded, mapping, headerRow],
+  );
+  const review = edits && edits.key === reviewKey ? edits.lines : initialReview;
+  const reviewed = useMemo(() => (review ? parseReviewLines(review) : null), [review]);
+  const lines = (scan ? reviewed?.lines : parsed?.lines) ?? [];
+  const period = statementPeriod(lines);
+  const totals = lines.reduce(
     (sum, line) => ({ debit: sum.debit + (line.debit ?? 0), credit: sum.credit + (line.credit ?? 0) }),
     { debit: 0, credit: 0 },
   );
-  const withNumber = parsed?.lines.filter((line) => line.debit && extractInstrumentNumber(line.label)).length ?? 0;
+  const withNumber = lines.filter((line) => line.debit && extractInstrumentNumber(line.label)).length;
+  const reviewBlocked = scan !== undefined && (!verified || (reviewed?.errors.size ?? 0) > 0);
 
   const onFile = (file: File) => {
     setReadError(undefined);
+    loaded?.scan?.pages.forEach((url) => URL.revokeObjectURL(url));
     setLoaded(null);
     setMapping(null);
+    setEdits(null);
+    setVerified(false);
     if (file.size > STATEMENT_MAX_BYTES) {
       setReadError("Fichier trop volumineux : 20 Mo maximum.");
       return;
     }
     startTransition(async () => {
       try {
-        const result = await readStatementFile(file);
+        const result = await readStatementFile(file, setOcrProgress);
         if (result.rows.length === 0) {
           setReadError("Le fichier est vide.");
           return;
@@ -86,14 +106,16 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
         setReadError(
           error instanceof PdfStatementError
             ? error.message
-            : "Impossible de lire ce fichier. Téléchargez le relevé en PDF, Excel (.xlsx) ou CSV depuis votre banque en ligne.",
+            : "Impossible de lire ce fichier. Importez un relevé PDF, Excel (.xlsx), CSV, ou une photo JPEG ou PNG.",
         );
+      } finally {
+        setOcrProgress(null);
       }
     });
   };
 
   const submit = () => {
-    if (!loaded || !mapping || !parsed || parsed.lines.length === 0) {
+    if (!loaded || !mapping || lines.length === 0 || reviewBlocked) {
       return;
     }
     startTransition(async () => {
@@ -109,7 +131,7 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
         filePath: uploadError ? null : filePath,
         headerSignature: headerSignature(headers),
         mapping,
-        lines: parsed.lines,
+        lines,
       });
       if (!result.ok) {
         if (!uploadError) {
@@ -132,8 +154,8 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
         <CardHeader>
           <CardTitle>1. Relevé</CardTitle>
           <CardDescription>
-            Relevé PDF, export Excel (.xlsx, .xls) ou CSV téléchargé depuis votre banque en ligne. Le format est mémorisé par
-            banque. Les PDF scannés ne sont pas encore lus.
+            Relevé PDF, export Excel (.xlsx, .xls) ou CSV téléchargé depuis votre banque en ligne, ou relevé papier scanné ou
+            photographié (lu dans votre navigateur, puis vérifié ligne par ligne). Le format est mémorisé par banque.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -152,7 +174,7 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
             <input
               id="statement-file"
               type="file"
-              accept=".pdf,.csv,.txt,.xls,.xlsx"
+              accept=".pdf,.csv,.txt,.xls,.xlsx,.jpg,.jpeg,.png"
               className="text-sm file:me-3 file:rounded-md file:border file:bg-muted file:px-3 file:py-1"
               disabled={!accountId || pending}
               onChange={(event) => {
@@ -162,6 +184,26 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
                 }
               }}
             />
+            {/* Sur téléphone : ouvre directement l'appareil photo */}
+            <label
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-fit self-start", (!accountId || pending) && "pointer-events-none opacity-50")}
+            >
+              <CameraIcon aria-hidden />
+              Photographier le relevé
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                capture="environment"
+                className="sr-only"
+                disabled={!accountId || pending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    onFile(file);
+                  }
+                }}
+              />
+            </label>
           </Field>
           {readError && (
             <Alert variant="destructive" className="sm:col-span-2">
@@ -179,6 +221,7 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
               <CardTitle>2. Colonnes</CardTitle>
               <CardDescription>
                 {loaded.parser && `Relevé PDF lu (${loaded.parser}). `}
+                {scan && `Relevé scanné lu par OCR (${scan.pages.length} page${scan.pages.length > 1 ? "s" : ""}). `}
                 {mappingSource === "saved"
                   ? "Correspondance reprise du dernier relevé de cette banque."
                   : "Correspondance proposée d'après l'en-tête : vérifiez-la."}
@@ -237,14 +280,14 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
             <CardHeader>
               <CardTitle>3. Vérification</CardTitle>
               <CardDescription>
-                {parsed.lines.length} mouvement(s)
-                {period && ` du ${formatDate(period.start)} au ${formatDate(period.end)}`} · débits {formatMAD(totals?.debit ?? 0)} ·
-                crédits {formatMAD(totals?.credit ?? 0)} · {withNumber} débit(s) avec numéro de chèque ou de LCN
-                {parsed.skipped > 0 && ` · ${parsed.skipped} ligne(s) sans date ignorée(s) (soldes, totaux)`}
+                {lines.length} mouvement(s)
+                {period && ` du ${formatDate(period.start)} au ${formatDate(period.end)}`} · débits {formatMAD(totals.debit)} · crédits{" "}
+                {formatMAD(totals.credit)} · {withNumber} débit(s) avec numéro de chèque ou de LCN
+                {!scan && parsed.skipped > 0 && ` · ${parsed.skipped} ligne(s) sans date ignorée(s) (soldes, totaux)`}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              {parsed.errors.length > 0 && (
+              {!scan && parsed.errors.length > 0 && (
                 <Alert variant="destructive">
                   <CircleAlertIcon aria-hidden />
                   <AlertDescription>
@@ -257,7 +300,7 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
                   </AlertDescription>
                 </Alert>
               )}
-              {parsed.lines.length > MAX_STATEMENT_LINES && (
+              {lines.length > MAX_STATEMENT_LINES && (
                 <Alert variant="destructive">
                   <CircleAlertIcon aria-hidden />
                   <AlertDescription>
@@ -265,46 +308,72 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
                   </AlertDescription>
                 </Alert>
               )}
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Libellé</TableHead>
-                      <TableHead>N° détecté</TableHead>
-                      <TableHead className="text-end">Débit</TableHead>
-                      <TableHead className="text-end">Crédit</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {parsed.lines.slice(0, 10).map((line, index) => {
-                      const extracted = line.debit ? extractInstrumentNumber(line.label) : null;
-                      return (
-                        <TableRow key={index}>
-                          <TableCell>{formatDate(line.operationDate)}</TableCell>
-                          <TableCell className="max-w-96 truncate">{line.label}</TableCell>
-                          <TableCell className="font-mono tabular-nums">
-                            {extracted ? `${extracted.kind === "lcn" ? "LCN " : ""}${extracted.number}` : "—"}
-                          </TableCell>
-                          <TableCell className="text-end tabular-nums">{line.debit ? formatMAD(line.debit) : ""}</TableCell>
-                          <TableCell className="text-end tabular-nums">{line.credit ? formatMAD(line.credit) : ""}</TableCell>
+              {scan && review && reviewed ? (
+                <>
+                  <OcrReview
+                    lines={review}
+                    errors={reviewed.errors}
+                    pages={scan.pages}
+                    onChange={(next) => setEdits({ key: reviewKey, lines: next })}
+                  />
+                  {reviewed.errors.size > 0 && (
+                    <Alert variant="destructive">
+                      <CircleAlertIcon aria-hidden />
+                      <AlertDescription>{reviewed.errors.size} ligne(s) à compléter avant l&apos;import.</AlertDescription>
+                    </Alert>
+                  )}
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={verified}
+                      onChange={(event) => setVerified(event.target.checked)}
+                      className="mt-0.5 size-4 accent-primary"
+                    />
+                    J&apos;ai vérifié chaque ligne (date, libellé, montant) avec le relevé scanné.
+                  </label>
+                </>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Libellé</TableHead>
+                          <TableHead>N° détecté</TableHead>
+                          <TableHead className="text-end">Débit</TableHead>
+                          <TableHead className="text-end">Crédit</TableHead>
                         </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              {parsed.lines.length > 10 && (
-                <p className="text-xs text-muted-foreground">… et {parsed.lines.length - 10} autre(s) mouvement(s).</p>
+                      </TableHeader>
+                      <TableBody>
+                        {lines.slice(0, 10).map((line, index) => {
+                          const extracted = line.debit ? extractInstrumentNumber(line.label) : null;
+                          return (
+                            <TableRow key={index}>
+                              <TableCell>{formatDate(line.operationDate)}</TableCell>
+                              <TableCell className="max-w-96 truncate">{line.label}</TableCell>
+                              <TableCell className="font-mono tabular-nums">
+                                {extracted ? `${extracted.kind === "lcn" ? "LCN " : ""}${extracted.number}` : "—"}
+                              </TableCell>
+                              <TableCell className="text-end tabular-nums">{line.debit ? formatMAD(line.debit) : ""}</TableCell>
+                              <TableCell className="text-end tabular-nums">{line.credit ? formatMAD(line.credit) : ""}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {lines.length > 10 && <p className="text-xs text-muted-foreground">… et {lines.length - 10} autre(s) mouvement(s).</p>}
+                </>
               )}
               <Button
                 size="lg"
                 className="w-fit"
-                disabled={pending || parsed.lines.length === 0 || parsed.lines.length > MAX_STATEMENT_LINES}
+                disabled={pending || lines.length === 0 || lines.length > MAX_STATEMENT_LINES || reviewBlocked}
                 onClick={submit}
               >
                 {pending ? <Loader2Icon className="animate-spin" aria-hidden /> : <UploadIcon aria-hidden />}
-                Importer et rapprocher {parsed.lines.length} mouvement(s)
+                Importer et rapprocher {lines.length} mouvement(s)
               </Button>
             </CardContent>
           </Card>
@@ -314,7 +383,11 @@ export function StatementImport({ organizationId, accounts }: { organizationId: 
       {!loaded && !readError && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           {pending ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : <FileSpreadsheetIcon className="size-4" aria-hidden />}
-          {pending ? "Lecture du fichier…" : "Choisissez le relevé à importer."}
+          {ocrProgress
+            ? `Lecture du scan, page ${ocrProgress.page} sur ${ocrProgress.pages} : ${Math.round(ocrProgress.ratio * 100)} %…`
+            : pending
+              ? "Lecture du fichier…"
+              : "Choisissez le relevé à importer."}
         </p>
       )}
     </div>

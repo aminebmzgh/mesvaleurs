@@ -59,6 +59,7 @@ export const TABLE_LABELS: Record<string, string> = {
   statement_lines: "Ligne de relevé",
   letter_templates: "Modèle de lettre",
   stop_orders: "Opposition",
+  late_payment_declarations: "Déclaration des délais de paiement",
 };
 
 export function actionLabel(action: string): string {
@@ -94,6 +95,9 @@ const FIELD_LABELS: Record<string, string> = {
   amount_cashed: "Encaissé",
   payment_terms_days: "Délai convenu",
   legal_due_date: "Date limite légale",
+  declared_on: "Déposée le",
+  year: "Année",
+  quarter: "Trimestre",
   is_active: "Actif",
   rib: "RIB",
   reference: "Référence",
@@ -105,6 +109,7 @@ const FIELD_LABELS: Record<string, string> = {
   tax_id: "IF",
   trade_register: "RC",
   print_cover_letter: "Lettre d'accompagnement",
+  is_strategic: "Fournisseur stratégique",
   number_width: "Chiffres du numéro",
   received_at: "Reçu le",
   print_template_id: "Modèle d'impression",

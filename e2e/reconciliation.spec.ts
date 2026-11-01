@@ -190,12 +190,102 @@ test("un relevé PDF texte est lu et rapproché", async ({ page }) => {
   await expect(page.getByLabel(`Ligne CHQ ${number} SOTRAMA MATERIAUX`).getByText("Rapprochée")).toBeVisible();
 });
 
-test("un PDF scanné est refusé avec une explication", async ({ page }) => {
+/**
+ * Relevé papier « scanné » : dessiné dans le navigateur (polices identiques en local et en CI),
+ * lignes de [x en points, texte] sur une image A4 à 200 ppp.
+ */
+async function scannedStatement(page: Page, lines: [number, string][][]): Promise<Buffer> {
+  const dataUrl = await page.evaluate((rows) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1654;
+    canvas.height = 2339;
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#111111";
+    context.font = "28px Arial, Helvetica, sans-serif";
+    rows.forEach((parts, row) => parts.forEach(([x, text]) => context.fillText(text, x * (1654 / 595), 160 + row * 52)));
+    return canvas.toDataURL("image/png");
+  }, lines);
+  return Buffer.from(dataUrl.split(",")[1], "base64");
+}
+
+/** PDF scanné : l'image seule, sans couche texte. */
+async function imagePdf(images: Buffer[]): Promise<Buffer> {
+  const { PDFDocument } = await import("pdf-lib");
+  const document = await PDFDocument.create();
+  for (const image of images) {
+    const png = await document.embedPng(image);
+    document.addPage([595, 842]).drawImage(png, { x: 0, y: 0, width: 595, height: 842 });
+  }
+  return Buffer.from(await document.save());
+}
+
+const SCAN_HEADER: [number, string][] = [[40, "Date"], [130, "Libellé"], [400, "Débit"], [490, "Crédit"]];
+
+test("un relevé PDF scanné est lu par OCR, vérifié puis rapproché", async ({ page }) => {
+  test.setTimeout(120_000);
+  await login(page, "gestionnaire@demo.ma");
+  const number = await issueCheck(page, `OCR-${uniqueSuffix()}`, "6 123,45");
+
+  await page.goto("/rapprochement/importer");
+  await page.waitForLoadState("networkidle");
+  const scan = await scannedStatement(page, [
+    [[40, "ATTIJARIWAFA BANK - Relevé de compte"]],
+    [],
+    SCAN_HEADER,
+    [[40, "29/10/2026"], [130, `CHQ ${number}`], [400, "6 123,45"]],
+    [[40, "29/10/2026"], [130, "FRAIS TENUE DE COMPTE"], [400, "35,00"]],
+  ]);
+  await page.getByLabel("Compte bancaire").selectOption({ label: "Compte principal · Attijariwafa bank" });
+  await page.getByLabel("Fichier").setInputFiles({ name: `scan-${uniqueSuffix()}.pdf`, mimeType: "application/pdf", buffer: await imagePdf([scan]) });
+
+  await expect(page.getByText(/Relevé scanné lu par OCR \(1 page\)/)).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByRole("img", { name: "Page 1 du relevé scanné" })).toBeVisible();
+  await expect(page.getByLabel("Date, ligne 1")).toHaveValue("2026-10-29");
+  await expect(page.getByLabel("Libellé, ligne 1")).toHaveValue(new RegExp(`CHQ ${number}`));
+  await expect(page.getByLabel("Débit, ligne 1")).toHaveValue(/^6\s123,45$/);
+
+  // Vérification obligatoire avant l'import
+  const submit = page.getByRole("button", { name: /Importer et rapprocher 2 mouvement/ });
+  await expect(submit).toBeDisabled();
+  await page.getByLabel(/J'ai vérifié chaque ligne/).check();
+  await submit.click();
+  await expect(page.getByText(/1 rapprochée\(s\)/)).toBeVisible();
+});
+
+test("photo d'un relevé : lignes corrigées, ajoutées et supprimées avant l'import", async ({ page }) => {
+  test.setTimeout(120_000);
   await login(page, "gestionnaire@demo.ma");
   await page.goto("/rapprochement/importer");
   await page.waitForLoadState("networkidle");
-  await page.getByLabel("Fichier").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: await statementPdf([], 2) });
-  await expect(page.getByText(/Ce PDF ne contient pas de texte/)).toBeVisible();
+  const photo = await scannedStatement(page, [
+    SCAN_HEADER,
+    [[40, "27/10/2026"], [130, "VIREMENT RECU CLIENT ATLAS"], [490, "12 500,00"]],
+    [[40, "28/10/2026"], [130, "COMMISSION SUR VIREMENT"], [400, "15,00"]],
+  ]);
+  await page.getByLabel("Fichier").setInputFiles({ name: "photo-releve.png", mimeType: "image/png", buffer: photo });
+  await expect(page.getByLabel("Crédit, ligne 1")).toHaveValue(/^12\s500,00$/, { timeout: 90_000 });
+
+  await page.getByRole("button", { name: "Supprimer la ligne 2" }).click();
+  await page.getByRole("button", { name: "Ajouter une ligne oubliée" }).click();
+  await page.getByLabel(/J'ai vérifié chaque ligne/).check();
+  // Ligne ajoutée incomplète : import bloqué
+  await expect(page.getByText("1 ligne(s) à compléter avant l'import.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Importer et rapprocher 1 mouvement/ })).toBeDisabled();
+
+  await page.getByLabel("Libellé, ligne 2").fill("FRAIS DE TENUE");
+  await page.getByLabel("Débit, ligne 2").fill("20,00");
+  await expect(page.getByRole("button", { name: /Importer et rapprocher 2 mouvement/ })).toBeEnabled();
+  await expect(page.getByText(/débits 20,00\sDH · crédits 12\s500,00\sDH/)).toBeVisible();
+});
+
+test("un scan illisible est refusé avec une explication", async ({ page }) => {
+  await login(page, "gestionnaire@demo.ma");
+  await page.goto("/rapprochement/importer");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Fichier").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: await statementPdf([], 1) });
+  await expect(page.getByText(/Aucun texte lisible sur ce scan/)).toBeVisible({ timeout: 60_000 });
 });
 
 test("le comptable consulte le rapprochement sans pouvoir le modifier", async ({ page }) => {

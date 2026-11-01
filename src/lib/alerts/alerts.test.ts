@@ -91,3 +91,18 @@ describe("buildAlerts", () => {
     expect(alert.href).toBe("/comptes-bancaires/b1");
   });
 });
+
+describe("déclaration trimestrielle (loi 69-21)", () => {
+  it("à déposer : avertissement ; en retard : urgent, lien vers l'état du trimestre", () => {
+    const [due] = buildAlerts(empty, { lcnAlertDays: 7, declaration: { quarter: { year: 2026, quarter: 3 }, deadline: "2026-10-31", daysLeft: 5 } });
+    expect(due).toMatchObject({
+      kind: "declaration_due",
+      severity: "warning",
+      title: "Déclaration des délais de paiement du T3 2026 à déposer",
+      href: "/conformite?trimestre=2026-T3",
+    });
+    expect(due.detail).toContain("Avant le 31/10/2026 (J-5)");
+    const [late] = buildAlerts(empty, { lcnAlertDays: 7, declaration: { quarter: { year: 2026, quarter: 3 }, deadline: "2026-10-31", daysLeft: -2 } });
+    expect(late).toMatchObject({ severity: "critical", title: "Déclaration des délais de paiement du T3 2026 en retard" });
+  });
+});

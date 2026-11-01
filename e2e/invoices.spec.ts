@@ -39,6 +39,8 @@ test("saisir, joindre, contester puis supprimer une facture", async ({ page }) =
   await page.getByLabel("Choisir la pièce jointe").setInputFiles({ name: "facture.pdf", mimeType: "application/pdf", buffer: PDF });
   await expect(page.getByText("Pièce jointe enregistrée.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Voir la pièce jointe" })).toBeVisible();
+  // Archivage légal : pièce conservée 10 ans
+  await expect(page.getByText(/1 pièce\(s\) archivée\(s\), conservée\(s\) jusqu'au/)).toBeVisible();
 
   // Contestation et levée
   await page.getByRole("button", { name: "Contester" }).click();
@@ -46,11 +48,11 @@ test("saisir, joindre, contester puis supprimer une facture", async ({ page }) =
   await page.getByRole("button", { name: "Lever la contestation" }).click();
   await expect(page.getByText("Non payée")).toBeVisible();
 
-  // Suppression
+  // Suppression refusée : pièce archivée
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Supprimer" }).click();
-  await expect(page).toHaveURL(/\/factures$/);
-  await expect(page.getByRole("link", { name: number })).toHaveCount(0);
+  await expect(page.getByText("Cette facture a des pièces archivées (conservées 10 ans) : elle ne peut pas être supprimée.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Facture ${number}` })).toBeVisible();
 });
 
 test("HT et TVA calculés depuis le TTC, TVA modifiable", async ({ page }) => {
