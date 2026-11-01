@@ -343,14 +343,14 @@ isOneToOne: false
                   ]
                 },"memberships": {
                   Row: {
-                    "created_at": string,"daily_ceiling": number | null,"email_alerts": boolean,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
+                    "created_at": string,"daily_ceiling": number | null,"email_alerts": boolean,"email_monthly_summary": boolean,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"email_monthly_summary"?: boolean,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"daily_ceiling"?: number | null,"email_alerts"?: boolean,"email_monthly_summary"?: boolean,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -364,6 +364,26 @@ isOneToOne: false
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"monthly_summaries": {
+                  Row: {
+                    "created_at": string,"error": string | null,"id": string,"month": string,"organization_id": string,"recipient_count": number,"status": Database["public"]['Enums']["alert_digest_status"],"updated_at": string,"with_commentary": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"error"?: string | null,"id"?: string,"month": string,"organization_id": string,"recipient_count"?: number,"status"?: Database["public"]['Enums']["alert_digest_status"],"updated_at"?: string,"with_commentary"?: boolean
+                  }
+                  Update: {
+                    "created_at"?: string,"error"?: string | null,"id"?: string,"month"?: string,"organization_id"?: string,"recipient_count"?: number,"status"?: Database["public"]['Enums']["alert_digest_status"],"updated_at"?: string,"with_commentary"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "monthly_summaries_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
       referencedColumns: ["id"]
     }
                   ]
@@ -897,6 +917,9 @@ isOneToOne: false
 { Args: { "p_id": string,"p_sha256": string,"p_size": number }; Returns: undefined
                            },
 "set_email_alerts":
+{ Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined
+                           },
+"set_email_monthly_summary":
 { Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined
                            },
 "set_inbound_statement_status":

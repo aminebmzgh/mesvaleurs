@@ -5,15 +5,19 @@ import { requireActiveOrganization } from "@/lib/auth/dal";
 import type { FormState } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
 
-/** Récapitulatif quotidien par e-mail du membre connecté : activé ou non. */
+/** E-mails du membre connecté : récapitulatif quotidien des alertes et résumé mensuel. */
 export async function setEmailAlerts(_prev: FormState, formData: FormData): Promise<FormState> {
   const organization = await requireActiveOrganization();
   const enabled = formData.get("enabled") === "on";
+  const monthly = formData.get("monthly_summary") === "on";
   const supabase = await createClient();
-  const { error } = await supabase.rpc("set_email_alerts", { p_organization_id: organization.organizationId, p_enabled: enabled });
-  if (error) {
-    return { error: "Impossible d'enregistrer votre préférence." };
+  const [alerts, summary] = await Promise.all([
+    supabase.rpc("set_email_alerts", { p_organization_id: organization.organizationId, p_enabled: enabled }),
+    supabase.rpc("set_email_monthly_summary", { p_organization_id: organization.organizationId, p_enabled: monthly }),
+  ]);
+  if (alerts.error || summary.error) {
+    return { error: "Impossible d'enregistrer vos préférences." };
   }
   revalidatePath("/alertes");
-  return { success: enabled ? "Vous recevrez le récapitulatif chaque matin." : "Vous ne recevrez plus le récapitulatif par e-mail." };
+  return { success: "Préférences d'e-mail enregistrées." };
 }

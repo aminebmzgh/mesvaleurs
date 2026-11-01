@@ -36,18 +36,23 @@ test("page Alertes : alertes en cours, préférence e-mail et historique des env
   await expect(page.getByRole("row").filter({ hasText: today }).getByText("Envoi non configuré")).toBeVisible();
 
   const checkbox = page.getByLabel("Recevoir le récapitulatif des alertes chaque matin");
+  const monthly = page.getByLabel("Recevoir le résumé mensuel");
   await expect(checkbox).toBeChecked();
+  await expect(monthly).toBeChecked();
   await checkbox.uncheck();
+  await monthly.uncheck();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByText("Vous ne recevrez plus le récapitulatif par e-mail.")).toBeVisible();
+  await expect(page.getByText("Préférences d'e-mail enregistrées.")).toBeVisible();
   await page.reload();
   await page.waitForLoadState("networkidle");
   await expect(checkbox).not.toBeChecked();
+  await expect(monthly).not.toBeChecked();
 
-  // Retour à la valeur par défaut, pour les autres tests
+  // Retour aux valeurs par défaut, pour les autres tests
   await checkbox.check();
+  await monthly.check();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByText("Vous recevrez le récapitulatif chaque matin.")).toBeVisible();
+  await expect(page.getByText("Préférences d'e-mail enregistrées.")).toBeVisible();
 });
 
 test("délais d'alerte des LCN et des factures réglables", async ({ page }) => {
@@ -68,4 +73,19 @@ test("délais d'alerte des LCN et des factures réglables", async ({ page }) => 
   await page.getByRole("option", { name: "7 jours avant", exact: true }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Informations de l'entreprise enregistrées.")).toBeVisible();
+});
+
+test("résumé mensuel : tâche protégée par le secret, rejouable sans doublon", async ({ request }) => {
+  expect((await request.get("/api/cron/resume-mensuel")).status()).toBe(401);
+  const headers = { Authorization: `Bearer ${CRON_SECRET}` };
+  const first = await request.get("/api/cron/resume-mensuel", { headers });
+  expect(first.status()).toBe(200);
+  const body = await first.json();
+  expect(body.month).toMatch(/^\d{4}-\d{2}-01$/);
+  expect(body.organizations).toBeGreaterThanOrEqual(2);
+  // Envoi non configuré en test ; une entreprise déjà traitée ce mois (passage précédent) est ignorée
+  expect(Object.keys(body.summary).every((status) => ["disabled", "skipped", "no_recipients"].includes(status))).toBe(true);
+
+  const second = await (await request.get("/api/cron/resume-mensuel", { headers })).json();
+  expect(second.summary).toEqual({ skipped: second.organizations });
 });

@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/alertes",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/resume-mensuel",
+      "schedule": "0 7 1 * *"
     }
   ]
 }
