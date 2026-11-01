@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-const { emailConfig, sendEmails } = await import("./send");
+const { emailConfig, sendEmail, sendEmails } = await import("./send");
 
 const message = (to: string) => ({ to, subject: "Alertes", text: "texte", html: "<p>html</p>" });
 const config = { apiKey: "re_test", from: "MesValeurs <alertes@exemple.ma>" };
@@ -44,5 +44,29 @@ describe("sendEmails", () => {
       throw new Error("fetch failed");
     });
     expect(await sendEmails([message("a@b.ma")], { idempotencyKey: "k", config, fetchImpl: offline })).toEqual({ status: "failed", error: "fetch failed" });
+  });
+});
+
+describe("sendEmail", () => {
+  it("un message avec pièce jointe encodée en base64", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response("{}", { status: 200 }));
+    const result = await sendEmail(
+      { ...message("f@atl.ma"), replyTo: "compta@atlas.ma", attachments: [{ filename: "recu.pdf", content: new Uint8Array([37, 80, 68, 70]) }] },
+      { idempotencyKey: "recu/1", config, fetchImpl },
+    );
+    expect(result).toEqual({ status: "sent", count: 1 });
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe("https://api.resend.com/emails");
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      to: ["f@atl.ma"],
+      reply_to: "compta@atlas.ma",
+      attachments: [{ filename: "recu.pdf", content: "JVBERg==" }],
+    });
+  });
+
+  it("sans configuration ou en erreur : rien n'est envoyé ou l'échec est signalé", async () => {
+    expect(await sendEmail(message("a@b.ma"), { idempotencyKey: "k", config: null })).toEqual({ status: "disabled" });
+    const refused = vi.fn<typeof fetch>(async () => new Response("invalid", { status: 422 }));
+    expect((await sendEmail(message("a@b.ma"), { idempotencyKey: "k", config, fetchImpl: refused })).status).toBe("failed");
   });
 });

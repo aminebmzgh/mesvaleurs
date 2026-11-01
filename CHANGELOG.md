@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+### Ajouté
+
+- Accusé de réception fournisseur : à la remise des chèques et LCN (bouton « Faire signer » d'un
+  chèque ou d'un lot), le fournisseur ou son livreur signe sur la tablette ou le téléphone :
+  nom, CIN facultative, signature au doigt, photo des valeurs remises. Accusé numéroté
+  (AR-2026-0001…), valeurs passées en « remis » à la date signée (date de paiement retenue
+  pour la loi 69-21), reçu PDF avec la signature, envoyé par e-mail au fournisseur ou partagé
+  (WhatsApp…) depuis le téléphone. Page « Accusés de réception ». Signature et photo
+  conservées, ni modifiables ni supprimables.
+
 ## [1.2.0] — Phase 3 : Conformité et intelligence
 
 ### Ajouté

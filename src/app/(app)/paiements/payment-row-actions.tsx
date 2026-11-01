@@ -1,6 +1,7 @@
 "use client";
 
-import { BanIcon, CircleCheckIcon, FileTextIcon, HandshakeIcon, Loader2Icon, type LucideIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
+import { BanIcon, CircleCheckIcon, FileTextIcon, HandshakeIcon, Loader2Icon, type LucideIcon, PenLineIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -86,6 +87,13 @@ export function PaymentRowActions({
           success="Remise enregistrée."
           action={markDelivered}
         />
+      )}
+      {canDeliver && (
+        // Remise signée à l'écran par le fournisseur ou son livreur (accusé de réception)
+        <Link href={`/paiements/remise?paiement=${paymentId}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <PenLineIcon aria-hidden />
+          Faire signer
+        </Link>
       )}
       {canDebit && (
         <DateDialog

@@ -5,14 +5,14 @@ import { toWinAnsi } from "@/lib/printing/measure";
 import type { CoverLetterData, LetterOrganization, LetterSigner } from "./data";
 import { type LetterTemplate, type LetterValues, renderLetterText } from "./templates";
 
-const [WIDTH, HEIGHT, MARGIN] = [595.28, 841.89, 50];
-const INK = rgb(0.1, 0.1, 0.1);
-const MUTED = rgb(0.4, 0.4, 0.4);
+export const [WIDTH, HEIGHT, MARGIN] = [595.28, 841.89, 50];
+export const INK = rgb(0.1, 0.1, 0.1);
+export const MUTED = rgb(0.4, 0.4, 0.4);
 
 export type Column = { header: string; width: number; align?: "left" | "right" };
 
 /** Mise en page A4 simple : curseur vertical, retour à la ligne, tableaux, pagination. */
-class Writer {
+export class Writer {
   page: PDFPage;
   y = HEIGHT - MARGIN;
   constructor(
@@ -123,7 +123,7 @@ class Writer {
   }
 }
 
-async function embedLogo(pdf: PDFDocument, logo: LetterOrganization["logo"]) {
+export async function embedLogo(pdf: PDFDocument, logo: LetterOrganization["logo"]) {
   if (!logo) {
     return null;
   }
@@ -136,10 +136,10 @@ async function embedLogo(pdf: PDFDocument, logo: LetterOrganization["logo"]) {
 }
 
 type Recipient = { name: string; lines: string[] };
-type Heading = { organization: LetterOrganization; recipient: Recipient; place: string; date: string; reference: string };
+export type Heading = { organization: LetterOrganization; recipient: Recipient; place: string; date: string; reference: string };
 
 /** En-tête de l'entreprise (logo, identité, identifiants légaux) et bloc destinataire. */
-async function header(w: Writer, pdf: PDFDocument, data: Heading) {
+export async function header(w: Writer, pdf: PDFDocument, data: Heading) {
   const logo = await embedLogo(pdf, data.organization.logo);
   const top = w.y;
   let x = MARGIN;
