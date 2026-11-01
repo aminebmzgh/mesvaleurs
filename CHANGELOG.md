@@ -20,6 +20,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   « Relevés reçus par e-mail » de la page Rapprochement ; « Importer » ouvre l'écran d'import
   avec le fichier déjà chargé (choix du compte, vérification, rapprochement), « Ignorer » le
   retire. Webhook Resend signé, sans doublon si l'e-mail est relayé plusieurs fois.
+- Résumé mensuel par e-mail, le 1er de chaque mois : ce qui a été payé le mois écoulé (débité,
+  émis), ce qui reste à payer (factures, chèques et LCN en circulation) et les risques
+  (factures en retard et amendes indicatives, échéances des 30 prochains jours, LCN à
+  provisionner, chèques rejetés non régularisés, soldes bancaires après engagements). Avec
+  l'IA activée, un paragraphe « Points d'attention » de l'assistant, rédigé à partir des seuls
+  chiffres (aucun nom transmis), compté dans le quota d'IA. Préférence de chaque membre sur la
+  page Alertes, activée par défaut.
 
 ## [1.2.0] — Phase 3 : Conformité et intelligence
 

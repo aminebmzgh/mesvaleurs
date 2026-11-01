@@ -20,7 +20,7 @@ export async function getEmailAlertSettings() {
   const user = await requireUser();
   const supabase = await createClient();
   const [membership, digests] = await Promise.all([
-    supabase.from("memberships").select("email_alerts").eq("organization_id", organization.organizationId).eq("user_id", user.id).single(),
+    supabase.from("memberships").select("email_alerts, email_monthly_summary").eq("organization_id", organization.organizationId).eq("user_id", user.id).single(),
     supabase
       .from("alert_digests")
       .select("id, digest_date, status, alert_count, recipient_count")
@@ -34,6 +34,7 @@ export async function getEmailAlertSettings() {
   }
   return {
     enabled: membership.data?.email_alerts ?? false,
+    monthlySummary: membership.data?.email_monthly_summary ?? false,
     // Envoi configuré sur ce déploiement (clé Resend et expéditeur)
     sendingConfigured: emailConfig() !== null,
     // L'expert-comptable externe ne reçoit pas le récapitulatif
