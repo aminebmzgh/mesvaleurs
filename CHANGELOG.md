@@ -5,6 +5,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+## [1.3.0] — Phase 3 : remise des valeurs et e-mails
+
 ### Ajouté
 
 - Accusé de réception fournisseur : à la remise des chèques et LCN (bouton « Faire signer » d'un
