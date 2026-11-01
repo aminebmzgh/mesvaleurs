@@ -143,6 +143,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"inbound_statements": {
+                  Row: {
+                    "content_type": string | null,"created_at": string,"file_path": string,"filename": string,"id": string,"organization_id": string,"provider_attachment_id": string,"received_at": string,"sender": string,"size_bytes": number | null,"statement_import_id": string | null,"status": string,"subject": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content_type"?: string | null,"created_at"?: string,"file_path": string,"filename": string,"id"?: string,"organization_id": string,"provider_attachment_id": string,"received_at"?: string,"sender": string,"size_bytes"?: number | null,"statement_import_id"?: string | null,"status"?: string,"subject"?: string | null
+                  }
+                  Update: {
+                    "content_type"?: string | null,"created_at"?: string,"file_path"?: string,"filename"?: string,"id"?: string,"organization_id"?: string,"provider_attachment_id"?: string,"received_at"?: string,"sender"?: string,"size_bytes"?: number | null,"statement_import_id"?: string | null,"status"?: string,"subject"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "inbound_statements_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inbound_statements_statement_import_id_fkey"
+      columns: ["statement_import_id"]
+isOneToOne: false
+      referencedRelation: "statement_imports"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"invitations": {
                   Row: {
                     "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string,"id": string,"invited_by": string | null,"organization_id": string,"role": Database["public"]['Enums']["app_role"]
@@ -343,14 +369,14 @@ isOneToOne: false
                   ]
                 },"organizations": {
                   Row: {
-                    "address": string | null,"annual_revenue": number | null,"city": string | null,"cnss": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"logo_path": string | null,"name": string,"patente": string | null,"phone": string | null,"settings": NonNullable<Json>,"tax_id": string | null,"timezone": string,"trade_register": string | null,"updated_at": string
+                    "address": string | null,"annual_revenue": number | null,"city": string | null,"cnss": string | null,"created_at": string,"email": string | null,"ice": string | null,"id": string,"logo_path": string | null,"name": string,"patente": string | null,"phone": string | null,"settings": NonNullable<Json>,"statement_inbox_token": string | null,"tax_id": string | null,"timezone": string,"trade_register": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"statement_inbox_token"?: string | null,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
+                    "address"?: string | null,"annual_revenue"?: number | null,"city"?: string | null,"cnss"?: string | null,"created_at"?: string,"email"?: string | null,"ice"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"patente"?: string | null,"phone"?: string | null,"settings"?: NonNullable<Json>,"statement_inbox_token"?: string | null,"tax_id"?: string | null,"timezone"?: string,"trade_register"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -861,6 +887,9 @@ isOneToOne: false
 "reject_payment":
 { Args: { "p_kind": Database["public"]['Enums']["rejection_kind"],"p_payment_id": string,"p_reason": string,"p_rejected_on": string }; Returns: undefined
                            },
+"renew_statement_inbox":
+{ Args: { "p_organization_id": string }; Returns: string
+                           },
 "reserve_ai_usage":
 { Args: { "p_feature": string,"p_monthly_quota": number,"p_organization_id": string,"p_user_id": string }; Returns: string
                            },
@@ -869,6 +898,9 @@ isOneToOne: false
                            },
 "set_email_alerts":
 { Args: { "p_enabled": boolean,"p_organization_id": string }; Returns: undefined
+                           },
+"set_inbound_statement_status":
+{ Args: { "p_id": string,"p_import_id"?: string,"p_status": string }; Returns: undefined
                            },
 "set_statement_line_ignored":
 { Args: { "p_ignored": boolean,"p_line_id": string }; Returns: undefined
