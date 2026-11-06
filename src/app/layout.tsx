@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker";
 import { appConfig } from "@/lib/config";
+import { publicEnv } from "@/lib/env";
 import { defaultLocale, localeDirection } from "@/lib/i18n";
 import "./globals.css";
 
@@ -17,6 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(publicEnv.NEXT_PUBLIC_SITE_URL),
   title: {
     default: appConfig.name,
     template: `%s · ${appConfig.name}`,
