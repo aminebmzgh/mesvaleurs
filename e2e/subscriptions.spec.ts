@@ -32,6 +32,7 @@ test("abonnement : essai en cours, consommation et comparatif des offres", async
   await expect(page.getByText("Offre Business (essai)")).toBeVisible();
   await expect(page.getByText("Paiements créés ce mois-ci")).toBeVisible();
   await expect(page.getByText("1 490 DH")).toBeVisible();
+  await expect(page.getByRole("link", { name: "contact@mesvaleurs.ma" })).toHaveAttribute("href", "mailto:contact@mesvaleurs.ma");
   await expect(page.getByRole("row", { name: /Double signature et plafonds/ })).toBeVisible();
   // Pendant l'essai, aucun lien de la navigation n'est signalé comme réservé
   await expect(navItem(page, "Statistiques")).not.toContainText("Pro");

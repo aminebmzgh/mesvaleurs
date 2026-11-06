@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAiStatus } from "@/lib/ai/usage";
 import { requireActiveOrganization } from "@/lib/auth/dal";
-import { PLANS, TRIAL_PLAN, trialDaysLeft } from "@/lib/billing/plans";
+import { PLANS, SALES_EMAIL, TRIAL_PLAN, trialDaysLeft } from "@/lib/billing/plans";
 import { getPlanUsage } from "@/lib/billing/usage";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -92,7 +92,11 @@ async function Subscription() {
       <Alert className="max-w-3xl">
         <InfoIcon aria-hidden />
         <AlertDescription>
-          Le paiement en ligne des offres arrive bientôt. D&apos;ici là, pour passer à une offre supérieure, contactez l&apos;équipe MesValeurs.
+          Le paiement en ligne des offres arrive bientôt. D&apos;ici là, pour passer à une offre supérieure, écrivez-nous à{" "}
+          <a href={`mailto:${SALES_EMAIL}`} className="font-medium text-foreground underline underline-offset-4">
+            {SALES_EMAIL}
+          </a>
+          .
         </AlertDescription>
       </Alert>
 

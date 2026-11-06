@@ -76,6 +76,8 @@ export const ANNUAL_MONTHS_BILLED = 10;
 /** Essai offert à chaque nouvelle entreprise (cf. private.start_trial). */
 export const TRIAL_DAYS = 14;
 export const TRIAL_PLAN: PlanId = "business";
+/** Adresse commerciale, pour changer d'offre en attendant le paiement en ligne. */
+export const SALES_EMAIL = "contact@mesvaleurs.ma";
 
 /** Chaque offre comprend celles de rang inférieur. */
 const RANK: Record<PlanId, number> = { free: 0, pro: 1, business: 2, cabinet: 3 };
