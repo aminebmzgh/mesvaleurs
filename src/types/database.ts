@@ -759,6 +759,26 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     }
                   ]
+                },"subscriptions": {
+                  Row: {
+                    "created_at": string,"organization_id": string,"plan": string,"trial_ends_at": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"organization_id": string,"plan"?: string,"trial_ends_at"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"organization_id"?: string,"plan"?: string,"trial_ends_at"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "subscriptions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: true
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"suppliers": {
                   Row: {
                     "accounting_code": string | null,"address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"daily_ceiling": number | null,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"is_strategic": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string

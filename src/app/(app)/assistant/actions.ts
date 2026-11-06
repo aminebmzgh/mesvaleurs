@@ -1,5 +1,6 @@
 "use server";
 
+import { upgradeMessage } from "@/lib/billing/plans";
 import { z } from "zod";
 import { maskPersonalData } from "@/lib/ai/mask";
 import { aiConfig, AiServiceError, chat } from "@/lib/ai/openrouter";
@@ -36,6 +37,9 @@ export async function askAssistant(history: z.input<typeof historySchema>): Prom
   const config = aiConfig();
   if (!config) {
     return { error: "L'assistant IA n'est pas disponible sur ce serveur." };
+  }
+  if (!status.included) {
+    return { error: upgradeMessage("ai") };
   }
   if (!status.enabled) {
     return { error: "L'IA est désactivée pour votre entreprise. Un administrateur peut l'activer dans les paramètres." };

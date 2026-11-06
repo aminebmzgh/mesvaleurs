@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { getPostponementRequestData } from "@/lib/letters/courriers";
@@ -8,6 +9,10 @@ import { pdfResponse } from "@/lib/letters/response";
 
 /** Demande de prorogation d'une LCN au fournisseur : `?echeance=AAAA-MM-JJ&motif=…&modele=…`. */
 export async function GET(request: NextRequest, { params }: RouteContext<"/paiements/[id]/prorogation">) {
+  const refusal = await planRefusal("standard_letters");
+  if (refusal) {
+    return refusal;
+  }
   await requireActiveOrganization();
   const { id } = await params;
   const search = request.nextUrl.searchParams;

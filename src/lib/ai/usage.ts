@@ -1,4 +1,5 @@
 import "server-only";
+import { aiQuotaFor, effectivePlan, hasFeature } from "@/lib/billing/plans";
 import { parseOrganizationSettings } from "@/lib/organizations/settings";
 import type { createClient } from "@/lib/supabase/server";
 import { aiConfig } from "./openrouter";
@@ -8,8 +9,11 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 export type AiStatus = {
   /** Clé du service configurée sur le serveur. */
   configured: boolean;
-  /** Activée par un administrateur de l'entreprise. */
+  /** IA comprise dans l'offre de l'entreprise. */
+  included: boolean;
+  /** Comprise dans l'offre et activée par un administrateur de l'entreprise. */
   enabled: boolean;
+  /** Quota choisi par l'entreprise, dans la limite de son offre. */
   quota: number;
   /** Lectures du mois en cours (UTC, comme le quota en base). */
   used: number;
@@ -21,8 +25,9 @@ export function monthStartUtc(now = new Date()): string {
 }
 
 export async function getAiStatus(supabase: Supabase, organizationId: string): Promise<AiStatus> {
-  const [{ data: organization }, { count }] = await Promise.all([
+  const [{ data: organization }, { data: subscription }, { count }] = await Promise.all([
     supabase.from("organizations").select("settings").eq("id", organizationId).single(),
+    supabase.from("subscriptions").select("plan, trial_ends_at").eq("organization_id", organizationId).maybeSingle(),
     supabase
       .from("ai_usages")
       .select("id", { count: "exact", head: true })
@@ -30,5 +35,13 @@ export async function getAiStatus(supabase: Supabase, organizationId: string): P
       .gte("created_at", monthStartUtc()),
   ]);
   const settings = parseOrganizationSettings(organization?.settings);
-  return { configured: aiConfig() !== null, enabled: settings.ai_enabled, quota: settings.ai_monthly_quota, used: count ?? 0 };
+  const plan = effectivePlan(subscription);
+  const included = hasFeature(plan, "ai");
+  return {
+    configured: aiConfig() !== null,
+    included,
+    enabled: included && settings.ai_enabled,
+    quota: aiQuotaFor(plan, settings.ai_monthly_quota),
+    used: count ?? 0,
+  };
 }

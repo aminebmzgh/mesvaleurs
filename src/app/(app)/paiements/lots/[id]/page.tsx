@@ -1,3 +1,4 @@
+import { hasFeature } from "@/lib/billing/plans";
 import { ArrowLeftIcon, CircleCheckIcon, CircleXIcon, HourglassIcon, PenLineIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -113,7 +114,7 @@ async function BatchDetail({ params, searchParams }: PageProps<"/paiements/lots/
         </Alert>
       )}
 
-      {!awaiting && !refused && (
+      {!awaiting && !refused && hasFeature(organization.plan, "letters") && (
       <Card className={lettre === "1" ? "border-primary" : undefined}>
         <CardHeader>
           <CardTitle>Lettre d&apos;accompagnement et bordereau</CardTitle>
@@ -133,7 +134,7 @@ async function BatchDetail({ params, searchParams }: PageProps<"/paiements/lots/
       </Card>
       )}
 
-      {!awaiting && !refused && WRITER_ROLES.includes(organization.role) && batch.payments.some((p) => p.status === "issued" || p.status === "delivered") && (
+      {!awaiting && !refused && WRITER_ROLES.includes(organization.role) && hasFeature(organization.plan, "receipts") && batch.payments.some((p) => p.status === "issued" || p.status === "delivered") && (
         <Card>
           <CardHeader className="flex-row flex-wrap items-center justify-between gap-4">
             <div className="flex flex-col gap-1.5">

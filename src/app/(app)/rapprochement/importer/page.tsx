@@ -1,3 +1,4 @@
+import { hasFeature } from "@/lib/billing/plans";
 import { ArrowLeftIcon, LandmarkIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -59,6 +60,8 @@ async function Import({ searchParams }: Pick<PageProps<"/rapprochement/importer"
       organizationId={organization.organizationId}
       accounts={accounts.map((account) => ({ id: account.id, label: account.label, bankName: account.banks?.name ?? "" }))}
       inbound={inbound}
+      allowPdf={hasFeature(organization.plan, "statement_pdf")}
+      allowScan={hasFeature(organization.plan, "statement_ocr")}
     />
   );
 }

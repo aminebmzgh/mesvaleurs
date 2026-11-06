@@ -1,5 +1,6 @@
 "use server";
 
+import { upgradeMessage } from "@/lib/billing/plans";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { maskPersonalData } from "@/lib/ai/mask";
@@ -57,6 +58,9 @@ export async function readInvoiceWithAi(input: z.infer<typeof readingSchema>): P
   const config = aiConfig();
   if (!config || !status.configured) {
     return { error: "La lecture par IA n'est pas disponible sur ce serveur." };
+  }
+  if (!status.included) {
+    return { error: upgradeMessage("ai") };
   }
   if (!status.enabled) {
     return { error: "La lecture par IA est désactivée pour votre entreprise. Un administrateur peut l'activer dans les paramètres." };

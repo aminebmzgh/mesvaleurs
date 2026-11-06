@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiConfig, chat } from "@/lib/ai/openrouter";
 import { loadLegalParams } from "@/lib/compliance/data";
 import { type EmailMessage, emailConfig, sendEmails } from "@/lib/email/send";
+import { aiQuotaFor, effectivePlan, hasFeature } from "@/lib/billing/plans";
 import { parseOrganizationSettings } from "@/lib/organizations/settings";
 import type { Database } from "@/types/database";
 import { COMMENTARY_INSTRUCTIONS, commentaryFacts, summaryEmail } from "./email";
@@ -21,9 +22,14 @@ export type CommentaryWriter = (admin: Admin, organizationId: string, summary: M
 
 export const aiCommentary: CommentaryWriter = async (admin, organizationId, summary) => {
   const config = aiConfig();
-  const { data: organization } = await admin.from("organizations").select("settings").eq("id", organizationId).single();
+  const { data: organization } = await admin
+    .from("organizations")
+    .select("settings, subscriptions ( plan, trial_ends_at )")
+    .eq("id", organizationId)
+    .single();
   const settings = parseOrganizationSettings(organization?.settings);
-  if (!config || !settings.ai_enabled) {
+  const plan = effectivePlan(organization?.subscriptions ?? null);
+  if (!config || !settings.ai_enabled || !hasFeature(plan, "ai")) {
     return null;
   }
   const { data: usageId } = await admin.rpc("reserve_ai_usage", {
@@ -31,7 +37,7 @@ export const aiCommentary: CommentaryWriter = async (admin, organizationId, summ
     // Tâche planifiée : aucun utilisateur à l'origine de l'appel
     p_user_id: null as unknown as string,
     p_feature: "monthly_summary",
-    p_monthly_quota: settings.ai_monthly_quota,
+    p_monthly_quota: aiQuotaFor(plan, settings.ai_monthly_quota),
   });
   if (!usageId) {
     return null;
@@ -132,12 +138,13 @@ export async function runMonthlySummaries({
   emailEnabled?: boolean;
 }): Promise<SummaryOutcome[]> {
   const month = previousMonth(today).start;
-  const { data: organizations, error } = await admin.from("organizations").select("id, name").order("created_at");
+  const { data: organizations, error } = await admin.from("organizations").select("id, name, subscriptions ( plan, trial_ends_at )").order("created_at");
   if (error) {
     throw new Error("Impossible de lire les entreprises.", { cause: error });
   }
   const outcomes: SummaryOutcome[] = [];
-  for (const organization of organizations) {
+  // Résumé mensuel : offres Pro et supérieures
+  for (const organization of organizations.filter((row) => hasFeature(effectivePlan(row.subscriptions), "monthly_summary"))) {
     let outcome: SummaryOutcome;
     try {
       outcome = (await claim(admin, organization.id, month))

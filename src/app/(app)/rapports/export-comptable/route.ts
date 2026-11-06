@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { journalCsv } from "@/lib/accounting/journal";
 import { getJournal } from "@/lib/accounting/queries";
@@ -6,6 +7,10 @@ import { isMonth } from "@/lib/reports/period";
 
 /** Export comptable mensuel (journal des règlements fournisseurs) : `?mois=AAAA-MM`. */
 export async function GET(request: NextRequest) {
+  const refusal = await planRefusal("accounting_export");
+  if (refusal) {
+    return refusal;
+  }
   await requireActiveOrganization();
   const month = request.nextUrl.searchParams.get("mois");
   if (!isMonth(month)) {

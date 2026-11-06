@@ -12,10 +12,12 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { FEATURES, hasFeature, type PlanId, PLANS } from "@/lib/billing/plans";
 import type { AppRole } from "@/types/app";
 import { isActiveLink, navigation, navigationFor } from "./navigation";
 
@@ -23,18 +25,21 @@ const allHrefs = navigation.flatMap((section) => section.items.map((item) => ite
 
 /**
  * Barre latérale. L'en-tête (organisation) et le pied (utilisateur) dépendent de
- * la session : ils sont rendus côté serveur et passés en props. Le rôle (promesse
- * résolue derrière un Suspense) masque les liens réservés à certains rôles.
+ * la session : ils sont rendus côté serveur et passés en props. Le rôle et l'offre (promesse
+ * résolue derrière un Suspense) masquent les liens réservés à certains rôles et signalent
+ * l'offre requise par les autres.
  */
-export function AppSidebar({ header, footer, role }: { header: ReactNode; footer: ReactNode; role: Promise<AppRole> }) {
+export type SidebarAccess = { role: AppRole; plan: PlanId };
+
+export function AppSidebar({ header, footer, access }: { header: ReactNode; footer: ReactNode; access: Promise<SidebarAccess> }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>{header}</SidebarHeader>
       <SidebarContent>
         {/* Le chemin courant est une donnée de requête sur les routes dynamiques :
             la navigation est d'abord rendue sans lien actif, puis mise en évidence. */}
-        <Suspense fallback={<NavigationLinks pathname={null} role={null} />}>
-          <ActiveNavigationLinks role={role} />
+        <Suspense fallback={<NavigationLinks pathname={null} access={null} />}>
+          <ActiveNavigationLinks access={access} />
         </Suspense>
       </SidebarContent>
       <SidebarFooter>{footer}</SidebarFooter>
@@ -43,12 +48,12 @@ export function AppSidebar({ header, footer, role }: { header: ReactNode; footer
   );
 }
 
-function ActiveNavigationLinks({ role }: { role: Promise<AppRole> }) {
-  return <NavigationLinks pathname={usePathname()} role={use(role)} />;
+function ActiveNavigationLinks({ access }: { access: Promise<SidebarAccess> }) {
+  return <NavigationLinks pathname={usePathname()} access={use(access)} />;
 }
 
-function NavigationLinks({ pathname, role }: { pathname: string | null; role: AppRole | null }) {
-  return navigationFor(role).map((section, index) => (
+function NavigationLinks({ pathname, access }: { pathname: string | null; access: SidebarAccess | null }) {
+  return navigationFor(access?.role ?? null).map((section, index) => (
     <SidebarGroup key={section.label ?? index}>
       {section.label && <SidebarGroupLabel>{section.label}</SidebarGroupLabel>}
       <SidebarGroupContent>
@@ -63,6 +68,9 @@ function NavigationLinks({ pathname, role }: { pathname: string | null; role: Ap
                 <item.icon aria-hidden />
                 <span>{item.title}</span>
               </SidebarMenuButton>
+              {item.feature && access && !hasFeature(access.plan, item.feature) && (
+                <SidebarMenuBadge className="text-muted-foreground">{PLANS[FEATURES[item.feature].minPlan].label}</SidebarMenuBadge>
+              )}
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

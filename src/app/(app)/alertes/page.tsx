@@ -1,3 +1,5 @@
+import { requireActiveOrganization } from "@/lib/auth/dal";
+import { hasFeature } from "@/lib/billing/plans";
 import { CircleCheckIcon, CircleXIcon, InfoIcon, MailIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -82,7 +84,7 @@ async function AlertList() {
 }
 
 async function EmailDigest() {
-  const settings = await getEmailAlertSettings();
+  const [organization, settings] = await Promise.all([requireActiveOrganization(), getEmailAlertSettings()]);
   return (
     <Card className="max-w-3xl">
       <CardHeader>
@@ -102,7 +104,14 @@ async function EmailDigest() {
             </AlertDescription>
           </Alert>
         )}
-        {settings.eligible ? (
+        {!hasFeature(organization.plan, "alert_emails") ? (
+          <p className="text-sm text-muted-foreground">
+            Récapitulatif des alertes et résumé mensuel par e-mail : offre Pro et supérieures.{" "}
+            <Link href="/parametres/abonnement" className="underline">
+              Voir les offres
+            </Link>
+          </p>
+        ) : settings.eligible ? (
           <EmailAlertsForm enabled={settings.enabled} monthlySummary={settings.monthlySummary} />
         ) : (
           <p className="text-sm text-muted-foreground">Le récapitulatif n&apos;est pas envoyé aux experts-comptables externes.</p>

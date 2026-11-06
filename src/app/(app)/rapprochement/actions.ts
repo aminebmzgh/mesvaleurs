@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -36,6 +37,12 @@ export async function importStatement(request: ImportRequest): Promise<Result<Im
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Relevé invalide." };
   }
   const input = parsed.data;
+  // Relevés PDF et scannés : offres Pro et supérieures
+  const blocked =
+    input.format === "pdf_text" ? planError(organization, "statement_pdf") : input.format === "pdf_scan" ? planError(organization, "statement_ocr") : null;
+  if (blocked) {
+    return { ok: false, error: blocked };
+  }
   const orgId = organization.organizationId;
   if (input.filePath && !isStatementPathOf(input.filePath, orgId, input.bankAccountId)) {
     return { ok: false, error: "Fichier invalide." };

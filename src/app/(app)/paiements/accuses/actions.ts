@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
@@ -29,6 +30,10 @@ const recordSchema = z.object({
  */
 export async function recordReceipt(input: z.input<typeof recordSchema>): Promise<{ receiptId?: string; error?: string }> {
   const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "receipts");
+  if (blocked) {
+    return { error: blocked };
+  }
   const parsed = recordSchema.safeParse(input);
   const pattern = receiptPath(organization.organizationId);
   if (!parsed.success) {
@@ -61,6 +66,10 @@ export async function recordReceipt(input: z.input<typeof recordSchema>): Promis
 /** Reçu PDF envoyé par e-mail au fournisseur ; la date et l'adresse d'envoi sont conservées. */
 export async function emailReceipt(receiptId: string, email: string): Promise<{ success?: string; error?: string }> {
   const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "receipts");
+  if (blocked) {
+    return { error: blocked };
+  }
   const id = z.uuid().safeParse(receiptId);
   const to = emailSchema.safeParse(email);
   if (!id.success || !to.success) {

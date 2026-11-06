@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { fromCents } from "@/lib/amount";
 import { requireRole } from "@/lib/auth/dal";
@@ -12,6 +13,10 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 /** Émission d'un chèque de garantie : numéro attribué dans le chéquier, aucune facture réglée. */
 export async function issueGuarantee(request: GuaranteeRequest): Promise<Result<{ batchId: string; pendingApproval: boolean }>> {
   const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "guarantees");
+  if (blocked) {
+    return { ok: false, error: blocked };
+  }
   const parsed = guaranteeRequestSchema.safeParse(request);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Demande invalide." };

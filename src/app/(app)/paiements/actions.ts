@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
@@ -130,7 +131,11 @@ export async function regularizePayment(
 
 /** Report de l'échéance d'une LCN, avec l'accord du fournisseur. */
 export async function postponeLcn(paymentId: string, newDueDate: string, reason: string, agreedAt: string): Promise<ActionResult> {
-  await requireRole(WRITER_ROLES);
+  const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "lcn_postpone");
+  if (blocked) {
+    return { error: blocked };
+  }
   const input = z
     .object({ id: z.uuid(), due: isoDate, reason: z.string().trim().min(3).max(300), agreed: isoDate })
     .safeParse({ id: paymentId, due: newDueDate, reason, agreed: agreedAt });

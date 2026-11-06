@@ -38,16 +38,25 @@ type Inbound = { id: string; filename: string; contentType: string | null; url: 
 type Loaded = StatementFile & { file: File };
 
 const SELECT_CLASS = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30";
+/** Formats réservés aux offres Pro et supérieures. */
+const PLAN_FORMATS_MESSAGE =
+  "Relevés PDF, scannés et photos : offre Pro et supérieures (Paramètres › Abonnement). Votre offre importe les relevés Excel et CSV.";
 const cellText = (cell: Cell) => (cell === null || cell === undefined ? "" : cell instanceof Date ? cell.toLocaleDateString("fr-FR") : String(cell));
 
 export function StatementImport({
   organizationId,
   accounts,
   inbound = null,
+  allowPdf = true,
+  allowScan = true,
 }: {
   organizationId: string;
   accounts: Account[];
   inbound?: Inbound | null;
+  /** Relevés PDF (offre Pro et supérieures). */
+  allowPdf?: boolean;
+  /** Relevés scannés et photos (offre Pro et supérieures). */
+  allowScan?: boolean;
 }) {
   const router = useRouter();
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
@@ -92,9 +101,18 @@ export function StatementImport({
       setReadError("Fichier trop volumineux : 20 Mo maximum.");
       return;
     }
+    const name = file.name.toLowerCase();
+    if ((!allowPdf && name.endsWith(".pdf")) || (!allowScan && /\.(jpe?g|png)$/.test(name))) {
+      setReadError(PLAN_FORMATS_MESSAGE);
+      return;
+    }
     startTransition(async () => {
       try {
         const result = await readStatementFile(file, setOcrProgress);
+        if (result.format === "pdf_scan" && !allowScan) {
+          setReadError(PLAN_FORMATS_MESSAGE);
+          return;
+        }
         if (result.rows.length === 0) {
           setReadError("Le fichier est vide.");
           return;
@@ -220,7 +238,7 @@ export function StatementImport({
             <input
               id="statement-file"
               type="file"
-              accept=".pdf,.csv,.txt,.xls,.xlsx,.jpg,.jpeg,.png"
+              accept={[allowPdf && ".pdf", ".csv,.txt,.xls,.xlsx", allowScan && ".jpg,.jpeg,.png"].filter(Boolean).join(",")}
               className="text-sm file:me-3 file:rounded-md file:border file:bg-muted file:px-3 file:py-1"
               disabled={!accountId || pending}
               onChange={(event) => {
@@ -231,6 +249,7 @@ export function StatementImport({
               }}
             />
             {/* Sur téléphone : ouvre directement l'appareil photo */}
+            {allowScan && (
             <label
               className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-fit self-start", (!accountId || pending) && "pointer-events-none opacity-50")}
             >
@@ -250,6 +269,7 @@ export function StatementImport({
                 }}
               />
             </label>
+            )}
           </Field>
           {readError && (
             <Alert variant="destructive" className="sm:col-span-2">

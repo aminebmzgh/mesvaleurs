@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { hasFeature, PLANS } from "@/lib/billing/plans";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -62,10 +64,20 @@ async function OrganizationSettings() {
         key={organization.organizationId}
         organization={{ ...fields, ...settings }}
         readOnly={organization.role !== "admin"}
+        approvalsIncluded={hasFeature(organization.plan, "approvals")}
       />
       {/* Sans clé du service d'IA sur le serveur, rien à régler */}
-      {ai.configured && (
+      {ai.configured && !ai.included && (
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          Intelligence artificielle (lecture de factures, assistant) : offre Pro et supérieures.{" "}
+          <Link href="/parametres/abonnement" className="underline">
+            Voir les offres
+          </Link>
+        </p>
+      )}
+      {ai.configured && ai.included && (
         <AiSettingsForm
+          planQuota={PLANS[organization.plan].aiMonthlyQuota}
           key={`ai-${organization.organizationId}`}
           enabled={settings.ai_enabled}
           consent={settings.ai_consent}

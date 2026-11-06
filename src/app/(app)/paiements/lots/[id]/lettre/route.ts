@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { getCoverLetterData } from "@/lib/letters/data";
@@ -7,6 +8,10 @@ import { BUILTIN_LETTER_TEMPLATES, suggestedTemplateKey } from "@/lib/letters/te
 
 /** Lettre d'accompagnement d'un lot : `?modele=<clé intégrée ou identifiant>&exemplaires=1|2`. */
 export async function GET(request: NextRequest, { params }: RouteContext<"/paiements/lots/[id]/lettre">) {
+  const refusal = await planRefusal("letters");
+  if (refusal) {
+    return refusal;
+  }
   const organization = await requireActiveOrganization();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) {

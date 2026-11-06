@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireActiveOrganization } from "@/lib/auth/dal";
@@ -12,6 +13,10 @@ import { reminderSchema } from "@/lib/letters/schemas";
 
 /** Lettre de relance d'un client (saisie libre, en attendant le module clients) : paramètres du formulaire. */
 export async function GET(request: NextRequest) {
+  const refusal = await planRefusal("standard_letters");
+  if (refusal) {
+    return refusal;
+  }
   await requireActiveOrganization();
   const search = request.nextUrl.searchParams;
   const parsed = reminderSchema.safeParse(Object.fromEntries(search));

@@ -12,9 +12,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { error?: string };
 
-function bankAccountError(error: { code?: string }): FormState {
+function bankAccountError(error: { code?: string; message?: string }): FormState {
   if (error.code === "23505") {
     return { fieldErrors: { rib: ["Ce RIB est déjà enregistré sur un autre compte."] } };
+  }
+  // Limite de comptes actifs de l'offre
+  if (error.code === "P0001" && error.message) {
+    return { error: error.message };
   }
   return { error: "Impossible d'enregistrer le compte. Vérifiez les informations saisies." };
 }
@@ -80,7 +84,10 @@ export async function setBankAccountActive(accountId: string, isActive: boolean)
     .eq("id", z.uuid().parse(accountId))
     .eq("organization_id", organization.organizationId);
   revalidatePath("/comptes-bancaires", "layout");
-  return error ? { error: "Impossible de modifier le compte." } : {};
+  if (error) {
+    return { error: error.code === "P0001" ? error.message : "Impossible de modifier le compte." };
+  }
+  return {};
 }
 
 export async function createCheckbook(

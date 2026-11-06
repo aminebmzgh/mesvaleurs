@@ -53,9 +53,12 @@ const TEXT_FIELDS: { name: keyof OrganizationValues; label: string; description?
 export function OrganizationForm({
   organization,
   readOnly,
+  approvalsIncluded = true,
 }: {
   organization: OrganizationValues;
   readOnly: boolean;
+  /** Double signature et plafonds compris dans l'offre (Business et Cabinet). */
+  approvalsIncluded?: boolean;
 }) {
   const [state, action, pending] = useActionState(updateOrganization, initialFormState);
 
@@ -183,6 +186,11 @@ export function OrganizationForm({
                   <FieldDescription>Déclaration des délais de paiement : avant sa date limite, jusqu&apos;à ce qu&apos;elle soit marquée « déclarée ».</FieldDescription>
                 </Field>
               </div>
+              {!approvalsIncluded && (
+                <p className="text-sm text-muted-foreground">
+                  Double signature et plafonds : offre Business. Les montants saisis sont conservés, mais sans effet avec votre offre actuelle.
+                </p>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="approval_threshold">Double signature au-delà de (DH)</FieldLabel>

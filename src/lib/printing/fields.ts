@@ -64,6 +64,9 @@ export const PRINT_FIELD_LABELS: Record<PrintField, string> = {
 };
 
 /** Mention imprimée dans la zone « non endossable ». */
+/** Zones des talons et mention « non endossable » (offres Pro et supérieures). */
+export const PRINT_EXTRA_FIELDS: ReadonlySet<PrintField> = new Set<PrintField>(["stub_payee", "stub_amount", "stub_date", "stub_due_date", "stub_cause", "non_endorsable"]);
+
 export const NON_ENDORSABLE_TEXT = "NON ENDOSSABLE";
 
 export const zoneSchema = z.object({

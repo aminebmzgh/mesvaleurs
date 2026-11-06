@@ -14,7 +14,7 @@ import type { createInvoice } from "../actions";
 import { InvoiceForm, type InvoiceValues } from "../invoice-form";
 import { type AiReadingResult, createSupplierFromReading, readInvoiceWithAi } from "./actions";
 
-export type AiAvailability = { enabled: boolean; quota: number; used: number } | null;
+export type AiAvailability = { included: boolean; enabled: boolean; quota: number; used: number } | null;
 
 type Reading = AiReadingResult & {
   /** Pièce déposée dans le stockage, rattachée à la facture à l'enregistrement. */
@@ -132,7 +132,17 @@ export function AiInvoiceEntry({
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      {ai && !ai.enabled && (
+      {ai && !ai.included && (
+        <p className="text-sm text-muted-foreground">
+          <SparklesIcon className="me-1 inline size-4" aria-hidden />
+          Lecture des factures par IA : offre Pro et supérieures.{" "}
+          <Link href="/parametres/abonnement" className="underline">
+            Voir les offres
+          </Link>
+        </p>
+      )}
+
+      {ai?.included && !ai.enabled && (
         <p className="text-sm text-muted-foreground">
           <SparklesIcon className="me-1 inline size-4" aria-hidden />
           Lecture des factures par IA désactivée pour votre entreprise.{" "}
