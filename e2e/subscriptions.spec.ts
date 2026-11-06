@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { login } from "./helpers";
@@ -8,10 +8,10 @@ const SOUSS = "b0000000-0000-4000-8000-000000000002";
 /** Entrée de la navigation, avec le badge de l'offre requise. */
 const navItem = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByRole("link", { name, exact: true }) });
 
-/** Client service_role de la base locale (clés de `.env.local`, écrites aussi par la CI). */
+/** Client service_role de la base locale (variables d'environnement en CI, sinon `.env.local`). */
 function localAdmin() {
   const env = Object.fromEntries(
-    readFileSync(".env.local", "utf8")
+    (existsSync(".env.local") ? readFileSync(".env.local", "utf8") : "")
       .split(/\r?\n/)
       .filter((line) => /^[A-Z_]+=/.test(line))
       .map((line) => [line.slice(0, line.indexOf("=")), line.slice(line.indexOf("=") + 1).trim()]),
