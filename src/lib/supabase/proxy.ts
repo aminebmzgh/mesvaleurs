@@ -10,6 +10,9 @@ const PUBLIC_PATHS = [
   "/auth",
   "/mentions-legales",
   "/confidentialite",
+  // Référencement de la page d'accueil
+  "/robots.txt",
+  "/sitemap.xml",
   // Application installable : page « Pas de connexion » gardée par le service worker
   "/hors-ligne",
   // Tâches planifiées : protégées par CRON_SECRET dans la route
@@ -66,8 +69,9 @@ export async function updateSession(request: NextRequest) {
     return redirect;
   };
 
+  // Page d'accueil publique ; un utilisateur connecté va directement à son tableau de bord
   if (pathname === "/") {
-    return redirectTo(isAuthenticated ? "/tableau-de-bord" : "/connexion");
+    return isAuthenticated ? redirectTo("/tableau-de-bord") : response;
   }
 
   if (!isAuthenticated && !isPublicPath(pathname)) {
