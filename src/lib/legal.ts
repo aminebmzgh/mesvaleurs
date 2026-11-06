@@ -1,18 +1,9 @@
 import { SALES_EMAIL } from "@/lib/billing/plans";
 
-/**
- * Informations légales de l'éditeur, affichées dans les mentions légales et la
- * politique de confidentialité. Les champs entre crochets restent à compléter.
- */
+/** Informations légales de l'éditeur, affichées dans les mentions légales et la politique de confidentialité. */
 export const LEGAL = {
-  companyName: "[raison sociale]",
-  legalForm: "[forme juridique]",
-  capital: "[capital] DH",
-  address: "[adresse du siège]",
-  registry: "[ville et numéro du registre de commerce]",
-  ice: "[ICE]",
-  publicationManager: "[nom du directeur de la publication]",
-  cndpReceipt: "[numéro de récépissé de la déclaration CNDP]",
+  companyName: "MesValeurs",
+  city: "Casablanca",
   contactEmail: SALES_EMAIL,
   updatedAt: "6 novembre 2026",
 } as const;

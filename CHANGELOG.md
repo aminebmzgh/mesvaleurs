@@ -12,8 +12,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   utilisateur connecté va directement à son tableau de bord. robots.txt et sitemap.xml limités
   aux pages publiques.
 - Mentions légales et politique de confidentialité complétées (contact, sous-traitants,
-  transferts, IA, cookies, sécurité) ; informations de l'éditeur à renseigner dans
-  `src/lib/legal.ts`.
+  transferts, IA, cookies, sécurité) ; éditeur MesValeurs, Casablanca
+  (`src/lib/legal.ts`).
 - Adresse commerciale contact@mesvaleurs.ma sur la page Abonnement.
 - Offres Gratuit, Pro (290 DH HT/mois), Business (690 DH) et Cabinet (1 490 DH, 15 entreprises
   clientes puis 80 DH par entreprise) ; paiement annuel avec 2 mois offerts. Prix, limites et

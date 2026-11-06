@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>Responsable du traitement</h2>
       <p>
-        {LEGAL.companyName}, {LEGAL.address}. Contact : <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.
+        {LEGAL.companyName}, {LEGAL.city} (Maroc). Contact : <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.
       </p>
       <p>
         Pour les données de leurs fournisseurs et de leurs règlements, les entreprises clientes restent responsables du
@@ -59,8 +59,7 @@ export default function PrivacyPolicyPage() {
       <p>
         Les données sont hébergées dans l&apos;Union européenne ; certaines opérations techniques passent par les
         États-Unis (hébergement de l&apos;application et, si votre entreprise l&apos;active, intelligence artificielle).
-        Ces transferts font l&apos;objet d&apos;une déclaration auprès de la Commission nationale de contrôle de la
-        protection des données à caractère personnel (CNDP) : {LEGAL.cndpReceipt}.
+        Ces transferts sont réalisés dans le respect de la loi n° 09-08.
       </p>
 
       <h2>Intelligence artificielle</h2>

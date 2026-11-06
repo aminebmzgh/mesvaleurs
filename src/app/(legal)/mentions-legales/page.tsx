@@ -16,11 +16,8 @@ export default function LegalNoticePage() {
 
       <h2>Éditeur</h2>
       <p>
-        {appConfig.name} est un service en ligne édité par {LEGAL.companyName}, {LEGAL.legalForm} au capital de{" "}
-        {LEGAL.capital}, dont le siège est situé {LEGAL.address}, immatriculée au registre de commerce de{" "}
-        {LEGAL.registry}, ICE {LEGAL.ice}.
+        {appConfig.name} est un service en ligne édité par {LEGAL.companyName}, dont le siège est situé à {LEGAL.city} (Maroc).
       </p>
-      <p>Directeur de la publication : {LEGAL.publicationManager}.</p>
 
       <h2>Contact</h2>
       <p>
