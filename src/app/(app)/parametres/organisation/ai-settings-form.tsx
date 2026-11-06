@@ -16,12 +16,15 @@ export function AiSettingsForm({
   quota,
   used,
   readOnly,
+  planQuota,
 }: {
   enabled: boolean;
   consent: { at: string; email: string | null } | null;
   quota: number;
   used: number;
   readOnly: boolean;
+  /** Lectures et questions comprises dans l'offre, par mois. */
+  planQuota: number;
 }) {
   const [state, action, pending] = useActionState(updateAiSettings, initialFormState);
   const [checked, setChecked] = useState(enabled);
@@ -87,7 +90,9 @@ export function AiSettingsForm({
                   options={quotaChoices.map((count) => ({ value: String(count), label: `${count} factures` }))}
                   defaultValue={String(quota)}
                 />
-                <FieldDescription>Pour toute l&apos;entreprise, remis à zéro le 1er de chaque mois.</FieldDescription>
+                <FieldDescription>
+                  Pour toute l&apos;entreprise, remis à zéro le 1er de chaque mois. Votre offre en comprend {planQuota} au plus.
+                </FieldDescription>
               </Field>
             </FieldGroup>
           </fieldset>

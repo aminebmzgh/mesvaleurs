@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
@@ -21,6 +22,10 @@ const matchSchema = z
 /** Aperçu : fournisseur reconnu et doublon, pour l'écran de vérification. */
 export async function matchUbl(entries: z.infer<typeof matchSchema>): Promise<{ matches?: UblMatch[]; organizationIce?: string | null; error?: string }> {
   const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "ubl");
+  if (blocked) {
+    return { error: blocked };
+  }
   const parsed = matchSchema.safeParse(entries);
   if (!parsed.success) {
     return { error: "Fichiers invalides." };
@@ -43,6 +48,10 @@ const importSchema = z.object({ invoiceId: z.uuid(), path: z.string().max(300), 
  */
 export async function importUbl(input: z.infer<typeof importSchema>): Promise<{ invoiceId?: string; error?: string }> {
   const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "ubl");
+  if (blocked) {
+    return { error: blocked };
+  }
   const parsed = importSchema.safeParse(input);
   if (!parsed.success || !isAttachmentPathOf(parsed.data.path, organization.organizationId, parsed.data.invoiceId) || !parsed.data.path.endsWith(".xml")) {
     return { error: "Fichier invalide." };

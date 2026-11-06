@@ -1,3 +1,4 @@
+import { hasFeature } from "@/lib/billing/plans";
 import { ArrowLeftIcon, BookOpenIcon, FileTextIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -196,7 +197,7 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
               </Table>
             </div>
           )}
-          {canManage && account.is_active && <CheckbookForm accountId={account.id} accountRib={account.rib} />}
+          {canManage && account.is_active && <CheckbookForm accountId={account.id} accountRib={account.rib} allowScan={hasFeature(organization.plan, "cheque_scan")} />}
         </CardContent>
       </Card>
 
@@ -247,6 +248,7 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
                         <TableCell>{formatDate(stop.occurred_on)}</TableCell>
                         <TableCell>{formatDate(stop.declared_on)}</TableCell>
                         <TableCell className="text-end">
+                          {hasFeature(organization.plan, "standard_letters") && (
                           <a
                             href={`/paiements/oppositions/${stop.id}/lettre`}
                             target="_blank"
@@ -256,6 +258,7 @@ async function BankAccountDetail({ params }: Pick<PageProps<"/comptes-bancaires/
                             <FileTextIcon aria-hidden />
                             PDF
                           </a>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

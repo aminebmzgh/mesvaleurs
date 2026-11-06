@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { todayIso } from "@/lib/dates";
@@ -9,6 +10,10 @@ import { pdfResponse } from "@/lib/letters/response";
 
 /** Demande de relevé de compte au fournisseur : `?au=AAAA-MM-JJ&modele=…`. */
 export async function GET(request: NextRequest, { params }: RouteContext<"/fournisseurs/[id]/releve">) {
+  const refusal = await planRefusal("standard_letters");
+  if (refusal) {
+    return refusal;
+  }
   await requireActiveOrganization();
   const { id } = await params;
   const search = request.nextUrl.searchParams;

@@ -1,3 +1,4 @@
+import { hasFeature } from "@/lib/billing/plans";
 import { ArrowLeftIcon, BanknoteIcon, FileTextIcon, ScaleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -98,6 +99,7 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
         }
         actions={
           <>
+            {hasFeature(organization.plan, "standard_letters") && (
             <LetterDialog
               trigger="Demande de relevé"
               title="Demande de relevé de compte"
@@ -106,11 +108,14 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
               templates={statementTemplates}
               date={{ param: "au", label: "Relevé arrêté au", defaultValue: todayIso(), max: todayIso() }}
             />
+            )}
+            {hasFeature(organization.plan, "supplier_reconciliation") && (
             <Link href={`/fournisseurs/${supplier.id}/rapprochement`} className={buttonVariants({ variant: "outline" })}>
               <ScaleIcon aria-hidden />
               Rapprocher son relevé
             </Link>
-            <EnvelopeButton href={`/fournisseurs/${supplier.id}/enveloppe`} />
+            )}
+            {hasFeature(organization.plan, "print_extras") && <EnvelopeButton href={`/fournisseurs/${supplier.id}/enveloppe`} />}
             {canEdit && <SupplierActiveToggle supplierId={supplier.id} isActive={supplier.is_active} />}
           </>
         }

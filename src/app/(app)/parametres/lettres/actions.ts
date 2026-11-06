@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -18,6 +19,10 @@ function templateError(error: { code?: string }): FormState {
 
 export async function createLetterTemplate(_prev: FormState, formData: FormData): Promise<FormState> {
   const organization = await requireRole(ACCOUNT_MANAGER_ROLES);
+  const blocked = planError(organization, "letter_templates");
+  if (blocked) {
+    return { error: blocked };
+  }
   const kind = z.enum(LETTER_KINDS).safeParse(formData.get("kind"));
   const parsed = letterTemplateSchema.safeParse(Object.fromEntries(formData));
   if (!kind.success) {
@@ -39,6 +44,10 @@ export async function createLetterTemplate(_prev: FormState, formData: FormData)
 
 export async function updateLetterTemplate(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const organization = await requireRole(ACCOUNT_MANAGER_ROLES);
+  const blocked = planError(organization, "letter_templates");
+  if (blocked) {
+    return { error: blocked };
+  }
   const parsed = letterTemplateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { fieldErrors: toFieldErrors(parsed.error) };

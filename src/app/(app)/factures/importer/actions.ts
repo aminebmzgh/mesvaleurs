@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
@@ -32,6 +33,10 @@ type Result = { ok: true; data: InvoiceImportReport } | { ok: false; error: stri
  */
 export async function importInvoices(request: z.infer<typeof requestSchema>): Promise<Result> {
   const organization = await requireRole(WRITER_ROLES);
+  const blocked = planError(organization, "invoice_import");
+  if (blocked) {
+    return { ok: false, error: blocked };
+  }
   const parsed = requestSchema.safeParse(request);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Import invalide." };

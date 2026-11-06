@@ -1,3 +1,4 @@
+import { effectivePlan, hasFeature } from "@/lib/billing/plans";
 import { type NextRequest, NextResponse } from "next/server";
 import { DEFAULT_INBOUND_DOMAIN, storageFileName, verifyWebhookSignature } from "@/lib/inbound/inbox";
 import { InboundError, receiveStatements } from "@/lib/inbound/receive";
@@ -47,8 +48,13 @@ export async function POST(request: NextRequest) {
         baseUrl: process.env.RESEND_API_URL?.trim() || undefined,
       },
       findOrganization: async (token) => {
-        const { data } = await admin.from("organizations").select("id").eq("statement_inbox_token", token).maybeSingle();
-        return data?.id ?? null;
+        const { data } = await admin
+          .from("organizations")
+          .select("id, subscriptions ( plan, trial_ends_at )")
+          .eq("statement_inbox_token", token)
+          .maybeSingle();
+        // Relevés par e-mail : offres Pro et supérieures (hors offre : e-mail ignoré)
+        return data && hasFeature(effectivePlan(data.subscriptions), "statement_inbox") ? data.id : null;
       },
       saveAttachment: async (organizationId, email, file) => {
         const { data: existing } = await admin.from("inbound_statements").select("id").eq("provider_attachment_id", file.attachmentId).maybeSingle();

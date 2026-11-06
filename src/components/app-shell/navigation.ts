@@ -3,6 +3,7 @@ import {
   BellIcon,
   BookOpenCheckIcon,
   BuildingIcon,
+  CreditCardIcon,
   CalendarDaysIcon,
   ChartColumnIcon,
   ChartLineIcon,
@@ -26,10 +27,11 @@ import {
   TruckIcon,
   UsersIcon,
 } from "lucide-react";
+import type { FeatureKey } from "@/lib/billing/plans";
 import type { AppRole } from "@/types/app";
 
-/** `roles` : lien réservé à ces rôles (sinon visible de tous). */
-export type NavItem = { title: string; href: string; icon: LucideIcon; roles?: AppRole[] };
+/** `roles` : lien réservé à ces rôles (sinon visible de tous) ; `feature` : offre minimale signalée. */
+export type NavItem = { title: string; href: string; icon: LucideIcon; roles?: AppRole[]; feature?: FeatureKey };
 export type NavSection = { label?: string; items: NavItem[] };
 
 export const navigation: NavSection[] = [
@@ -37,7 +39,7 @@ export const navigation: NavSection[] = [
     items: [
       { title: "Tableau de bord", href: "/tableau-de-bord", icon: LayoutDashboardIcon },
       { title: "Alertes", href: "/alertes", icon: BellIcon },
-      { title: "Assistant IA", href: "/assistant", icon: SparklesIcon },
+      { title: "Assistant IA", href: "/assistant", icon: SparklesIcon, feature: "ai" },
     ],
   },
   {
@@ -46,24 +48,24 @@ export const navigation: NavSection[] = [
       { title: "Nouveau paiement", href: "/paiements/nouveau", icon: SquarePenIcon },
       { title: "Chèques et LCN", href: "/paiements", icon: BanknoteIcon },
       { title: "Lots à valider", href: "/paiements/a-valider", icon: HourglassIcon, roles: ["admin", "manager", "preparer"] },
-      { title: "Non encaissés", href: "/paiements/non-encaisses", icon: ClockAlertIcon },
-      { title: "Accusés de réception", href: "/paiements/accuses", icon: FileSignatureIcon },
-      { title: "Plan de paiement", href: "/paiements/optimiseur", icon: ListOrderedIcon },
+      { title: "Non encaissés", href: "/paiements/non-encaisses", icon: ClockAlertIcon, feature: "uncashed" },
+      { title: "Accusés de réception", href: "/paiements/accuses", icon: FileSignatureIcon, feature: "receipts" },
+      { title: "Plan de paiement", href: "/paiements/optimiseur", icon: ListOrderedIcon, feature: "optimizer" },
       { title: "Factures", href: "/factures", icon: FileTextIcon },
       { title: "Délais de paiement", href: "/conformite", icon: ScaleIcon },
       { title: "Fournisseurs", href: "/fournisseurs", icon: TruckIcon },
-      { title: "Courriers types", href: "/courriers", icon: LetterTextIcon },
+      { title: "Courriers types", href: "/courriers", icon: LetterTextIcon, feature: "standard_letters" },
     ],
   },
   {
     label: "Banque",
     items: [
       { title: "Comptes et chéquiers", href: "/comptes-bancaires", icon: LandmarkIcon },
-      { title: "Prévision de trésorerie", href: "/tresorerie", icon: ChartLineIcon },
-      { title: "Calendrier", href: "/calendrier", icon: CalendarDaysIcon },
+      { title: "Prévision de trésorerie", href: "/tresorerie", icon: ChartLineIcon, feature: "forecast" },
+      { title: "Calendrier", href: "/calendrier", icon: CalendarDaysIcon, feature: "calendar" },
       { title: "Rapprochement", href: "/rapprochement", icon: GitCompareArrowsIcon },
       { title: "Rapports", href: "/rapports", icon: FileBarChartIcon },
-      { title: "Statistiques", href: "/statistiques", icon: ChartColumnIcon },
+      { title: "Statistiques", href: "/statistiques", icon: ChartColumnIcon, feature: "statistics" },
     ],
   },
   {
@@ -72,17 +74,20 @@ export const navigation: NavSection[] = [
       { title: "Entreprise", href: "/parametres/organisation", icon: BuildingIcon },
       { title: "Membres", href: "/parametres/membres", icon: UsersIcon },
       { title: "Sécurité", href: "/parametres/securite", icon: ShieldCheckIcon },
-      { title: "Modèles de lettres", href: "/parametres/lettres", icon: MailIcon, roles: ["admin", "manager"] },
+      { title: "Abonnement", href: "/parametres/abonnement", icon: CreditCardIcon },
+      { title: "Modèles de lettres", href: "/parametres/lettres", icon: MailIcon, feature: "letter_templates", roles: ["admin", "manager"] },
       {
         title: "Comptabilité",
         href: "/parametres/comptabilite",
         icon: BookOpenCheckIcon,
+        feature: "accounting_export",
         roles: ["admin", "manager", "accountant", "external_accountant"],
       },
       {
         title: "Journal d'audit",
         href: "/journal",
         icon: ScrollTextIcon,
+        feature: "audit_journal",
         roles: ["admin", "manager", "accountant", "external_accountant"],
       },
     ],

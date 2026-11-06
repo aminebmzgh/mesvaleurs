@@ -25,7 +25,16 @@ const SOURCE_LABELS: Record<NonNullable<ChequeScan["source"]>, string> = {
   cmc7: "bande CMC7, à vérifier",
 };
 
-export function CheckbookForm({ accountId, accountRib }: { accountId: string; accountRib: string | null }) {
+export function CheckbookForm({
+  accountId,
+  accountRib,
+  allowScan = true,
+}: {
+  accountId: string;
+  accountRib: string | null;
+  /** Lecture du premier chèque par photo (offre Pro et supérieures). */
+  allowScan?: boolean;
+}) {
   const [state, action, pending] = useActionState(createCheckbook.bind(null, accountId), initialFormState);
   const formRef = useRef<HTMLFormElement>(null);
   const firstRef = useRef<HTMLInputElement>(null);
@@ -75,6 +84,7 @@ export function CheckbookForm({ accountId, accountRib }: { accountId: string; ac
       <FieldSet>
         <FieldLegend>Ajouter un carnet</FieldLegend>
         <FormMessage state={state} />
+        {allowScan && (
         <div className="flex flex-wrap items-center gap-3">
           <label
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), scan?.status === "reading" && "pointer-events-none opacity-50")}
@@ -102,6 +112,7 @@ export function CheckbookForm({ accountId, accountRib }: { accountId: string; ac
               : "Photo nette, à plat, bande magnétique du bas visible. Lue dans votre navigateur."}
           </span>
         </div>
+        )}
         {scan?.status === "done" && <ScanResult result={scan.result} />}
         {scan?.status === "error" && (
           <Alert variant="destructive">

@@ -1,3 +1,4 @@
+import { hasFeature } from "@/lib/billing/plans";
 import { GitCompareArrowsIcon, UploadIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -40,9 +41,12 @@ export default function ReconciliationPage() {
   );
 }
 
-/** Relevés reçus par e-mail, si la réception est configurée sur ce serveur. */
+/** Relevés reçus par e-mail, si la réception est configurée sur ce serveur et comprise dans l'offre. */
 async function Inbox() {
   const organization = await requireActiveOrganization();
+  if (!hasFeature(organization.plan, "statement_inbox")) {
+    return null;
+  }
   const inbox = await getInbox();
   if (!inbox.configured) {
     return null;

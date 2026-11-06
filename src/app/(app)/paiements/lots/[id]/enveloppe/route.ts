@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { pdfResponse } from "@/lib/letters/response";
@@ -6,6 +7,10 @@ import { getBatchSupplierId, getEnvelopeAddresses } from "@/lib/printing/queries
 
 /** Enveloppe pour le règlement d'un lot, adressée à son fournisseur : `?format=DL|C5|C6`. */
 export async function GET(request: NextRequest, { params }: RouteContext<"/paiements/lots/[id]/enveloppe">) {
+  const refusal = await planRefusal("print_extras");
+  if (refusal) {
+    return refusal;
+  }
   await requireActiveOrganization();
   const { id } = await params;
   const supplierId = /^[0-9a-f-]{36}$/i.test(id) ? await getBatchSupplierId(id) : null;

@@ -52,7 +52,7 @@ async function NewInvoice({ searchParams }: Pick<PageProps<"/factures/nouvelle">
       defaultSupplierId={supplierId}
       organizationId={organization.organizationId}
       // Sans clé du service sur le serveur : rien n'est proposé
-      ai={ai.configured ? { enabled: ai.enabled, quota: ai.quota, used: ai.used } : null}
+      ai={ai.configured ? { included: ai.included, enabled: ai.enabled, quota: ai.quota, used: ai.used } : null}
       isAdmin={organization.role === "admin"}
     />
   );

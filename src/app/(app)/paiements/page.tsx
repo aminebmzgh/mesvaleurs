@@ -239,6 +239,7 @@ async function PaymentList({ searchParams }: Pick<PageProps<"/paiements">, "sear
                             dueDate={payment.due_date}
                             issueDate={payment.issue_date}
                             stopOrderId={payment.stop_orders[0]?.id ?? null}
+                            plan={organization.plan}
                             today={today}
                           />
                         </TableCell>

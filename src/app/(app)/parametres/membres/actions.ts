@@ -44,9 +44,11 @@ export async function inviteMember(_prev: FormState, formData: FormData): Promis
     invited_by: currentUser?.claims.sub ?? null,
   });
   if (insertError) {
-    return insertError.code === "23505"
-      ? { fieldErrors: { email: ["Une invitation est déjà en attente pour cette adresse."] } }
-      : { error: "Impossible de créer l'invitation." };
+    if (insertError.code === "23505") {
+      return { fieldErrors: { email: ["Une invitation est déjà en attente pour cette adresse."] } };
+    }
+    // Limite d'utilisateurs de l'offre
+    return { error: insertError.code === "P0001" ? insertError.message : "Impossible de créer l'invitation." };
   }
 
   // Nouveau compte : Supabase envoie l'e-mail d'invitation (modèle « invite »).

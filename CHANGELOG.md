@@ -5,6 +5,25 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ## [Non publié]
 
+### Ajouté
+
+- Offres Gratuit, Pro (290 DH HT/mois), Business (690 DH) et Cabinet (1 490 DH, 15 entreprises
+  clientes puis 80 DH par entreprise) ; paiement annuel avec 2 mois offerts. Prix, limites et
+  fonctionnalités de chaque offre dans un seul fichier de réglages (`src/lib/billing/plans.ts`).
+- Essai de 14 jours de l'offre Business pour chaque nouvelle entreprise (et pour les entreprises
+  existantes à la mise en service), signalé dans l'en-tête, puis passage à l'offre Gratuit sans
+  perte de données.
+- Limites appliquées par la base : comptes bancaires actifs (1 / 2 / illimités), utilisateurs
+  invitations comprises (1 / 3 / illimités), paiements créés par mois (10 en offre Gratuit) ;
+  message clair à l'ajout de trop. Double signature et plafonds sans effet hors des offres
+  Business et Cabinet ; quota d'IA plafonné par l'offre (100 en Pro, 500 en Business).
+- Fonctionnalités réservées aux offres supérieures signalées dans la navigation (badge Pro ou
+  Business) ; leurs écrans, téléchargements et actions affichent l'offre requise et un lien
+  vers les offres. Relevés par e-mail, récapitulatif des alertes et résumé mensuel envoyés
+  aux seules entreprises dont l'offre les comprend.
+- Page Paramètres › Abonnement : offre en vigueur, jours d'essai restants, consommation du mois
+  au regard des limites, cartes des offres et comparatif détaillé des fonctionnalités.
+
 ## [1.3.0] — Phase 3 : remise des valeurs et e-mails
 
 ### Ajouté

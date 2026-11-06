@@ -1,5 +1,6 @@
 "use client";
 
+import { hasFeature, type PlanId } from "@/lib/billing/plans";
 import { BanIcon, CircleCheckIcon, FileTextIcon, HandshakeIcon, Loader2Icon, type LucideIcon, PenLineIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -45,6 +46,7 @@ export function PaymentRowActions({
   issueDate,
   stopOrderId = null,
   today,
+  plan,
 }: {
   paymentId: string;
   label: string;
@@ -58,15 +60,17 @@ export function PaymentRowActions({
   /** Opposition enregistrée (paiement en opposition) : lien vers la lettre à la banque. */
   stopOrderId?: string | null;
   today: string;
+  /** Offre en vigueur : actions réservées aux offres supérieures masquées. */
+  plan: PlanId;
 }) {
   const canDeliver = status === "issued" && type !== "transfer";
   const guaranteeOut = type === "guarantee_check" && (status === "issued" || status === "delivered");
   const canDebit = (status === "issued" && type === "transfer") || guaranteeOut;
   const canReject = (type === "check" || type === "lcn") && ["issued", "delivered", "paid"].includes(status);
   const canRegularize = status === "rejected" && !regularized;
-  const canPostpone = type === "lcn" && (status === "issued" || status === "delivered") && dueDate !== null;
+  const canPostpone = type === "lcn" && (status === "issued" || status === "delivered") && dueDate !== null && hasFeature(plan, "lcn_postpone");
   const canStop = type !== "transfer" && (status === "issued" || status === "delivered");
-  const stopLetter = status === "stopped" && stopOrderId ? `/paiements/oppositions/${stopOrderId}/lettre` : null;
+  const stopLetter = status === "stopped" && stopOrderId && hasFeature(plan, "standard_letters") ? `/paiements/oppositions/${stopOrderId}/lettre` : null;
   // Un chèque de garantie se clôt par restitution ou destruction, pas par annulation
   const canCancel = type !== "guarantee_check" && ["issued", "delivered", "rejected", "lost", "stopped"].includes(status);
   if (!canDeliver && !canDebit && !canReject && !canRegularize && !canPostpone && !canStop && !stopLetter && !canCancel) {
@@ -88,7 +92,7 @@ export function PaymentRowActions({
           action={markDelivered}
         />
       )}
-      {canDeliver && (
+      {canDeliver && hasFeature(plan, "receipts") && (
         // Remise signée à l'écran par le fournisseur ou son livreur (accusé de réception)
         <Link href={`/paiements/remise?paiement=${paymentId}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
           <PenLineIcon aria-hidden />

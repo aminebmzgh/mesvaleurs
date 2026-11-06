@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
@@ -11,6 +12,10 @@ export type InboxResult = { error?: string };
 /** Nouvelle adresse de réception des relevés (l'ancienne cesse de fonctionner). */
 export async function renewInbox(): Promise<InboxResult> {
   const organization = await requireRole(ACCOUNT_MANAGER_ROLES);
+  const blocked = planError(organization, "statement_inbox");
+  if (blocked) {
+    return { error: blocked };
+  }
   const supabase = await createClient();
   const { error } = await supabase.rpc("renew_statement_inbox", { p_organization_id: organization.organizationId });
   revalidatePath("/rapprochement");

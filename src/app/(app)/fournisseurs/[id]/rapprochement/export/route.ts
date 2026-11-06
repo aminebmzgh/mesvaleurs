@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { EXPORT_CONTENT_TYPES, toCsv, toPdf, toXlsx } from "@/lib/exports/table";
@@ -9,6 +10,10 @@ import { comparisonExportSchema, comparisonTable } from "@/lib/suppliers/stateme
  * est lu dans le navigateur : le rapport calculé est envoyé ici pour être mis en forme.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const refusal = await planRefusal("supplier_reconciliation");
+  if (refusal) {
+    return refusal;
+  }
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     return new NextResponse("Fournisseur introuvable.", { status: 404 });

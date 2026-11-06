@@ -1,5 +1,6 @@
 "use server";
 
+import { planError } from "@/lib/billing/guard";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
 import { type FormState, toFieldErrors } from "@/lib/forms";
@@ -26,6 +27,10 @@ const formSchema = z.object({
 /** Paramètres de l'export comptable mensuel (administrateur). */
 export async function updateAccountingExport(_prev: FormState, formData: FormData): Promise<FormState> {
   const organization = await requireRole(["admin"]);
+  const blocked = planError(organization, "accounting_export");
+  if (blocked) {
+    return { error: blocked };
+  }
   const parsed = formSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { fieldErrors: toFieldErrors(parsed.error) };

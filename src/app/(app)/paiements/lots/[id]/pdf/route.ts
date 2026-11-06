@@ -1,3 +1,5 @@
+import { hasFeature } from "@/lib/billing/plans";
+import { PRINT_EXTRA_FIELDS } from "@/lib/printing/fields";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/dal";
 import { WRITER_ROLES } from "@/lib/auth/roles";
@@ -11,7 +13,7 @@ import { createClient } from "@/lib/supabase/server";
  * le contour des zones (non comptée comme impression).
  */
 export async function GET(request: NextRequest, { params }: RouteContext<"/paiements/lots/[id]/pdf">) {
-  await requireRole(WRITER_ROLES);
+  const organization = await requireRole(WRITER_ROLES);
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     return new NextResponse("Lot introuvable.", { status: 404 });
@@ -28,8 +30,12 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/paiem
   }
 
   const isTest = request.nextUrl.searchParams.get("test") === "1";
+  // Talons et mention « non endossable » : offres Pro et supérieures
+  const template = hasFeature(organization.plan, "print_extras")
+    ? job.template
+    : { ...job.template, zones: job.template.zones.filter((zone) => !PRINT_EXTRA_FIELDS.has(zone.field)) };
   const { bytes } = await renderInstrumentsPdf({
-    template: job.template,
+    template,
     items: job.items,
     test: isTest ? { background: await loadBackground(job.backgroundPath), showZones: true } : undefined,
   });

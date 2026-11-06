@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/auth/dal";
 import { getCoverLetterData } from "@/lib/letters/data";
@@ -5,6 +6,10 @@ import { remittanceSlipPdf } from "@/lib/letters/pdf";
 
 /** Bordereau de remise des valeurs d'un lot (deux exemplaires sur la page). */
 export async function GET(_request: Request, { params }: RouteContext<"/paiements/lots/[id]/bordereau">) {
+  const refusal = await planRefusal("letters");
+  if (refusal) {
+    return refusal;
+  }
   await requireActiveOrganization();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) {

@@ -1,3 +1,4 @@
+import { effectivePlan, hasFeature } from "@/lib/billing/plans";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadDeclarationReminder } from "@/lib/compliance/data";
@@ -33,13 +34,14 @@ export async function runDailyDigests({
   siteUrl: string;
   send?: typeof sendEmails;
 }): Promise<DigestOutcome[]> {
-  const { data: organizations, error } = await admin.from("organizations").select("id, name, settings").order("created_at");
+  const { data: organizations, error } = await admin.from("organizations").select("id, name, settings, subscriptions ( plan, trial_ends_at )").order("created_at");
   if (error) {
     throw new Error("Impossible de lire les entreprises.", { cause: error });
   }
 
   const outcomes: DigestOutcome[] = [];
-  for (const organization of organizations) {
+  // Récapitulatif par e-mail : offres Pro et supérieures
+  for (const organization of organizations.filter((row) => hasFeature(effectivePlan(row.subscriptions), "alert_emails"))) {
     // Une entreprise en erreur n'empêche pas l'envoi aux suivantes
     let outcome: DigestOutcome;
     try {

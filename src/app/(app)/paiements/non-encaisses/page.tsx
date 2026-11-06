@@ -141,6 +141,7 @@ async function UncashedList({ searchParams }: Pick<PageProps<"/paiements/non-enc
                             status={check.status}
                             issueDate={check.issue_date}
                             today={today}
+                            plan={organization.plan}
                           />
                         </TableCell>
                       )}

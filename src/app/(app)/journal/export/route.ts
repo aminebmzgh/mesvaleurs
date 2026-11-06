@@ -1,3 +1,4 @@
+import { planRefusal } from "@/lib/billing/guard";
 import { type NextRequest, NextResponse } from "next/server";
 import { actionLabel, changedFields, describeRecord, fieldLabel, formatValue, tableLabel } from "@/lib/audit/entries";
 import { exportAuditEntries, parseAuditFilters } from "@/lib/audit/queries";
@@ -10,6 +11,10 @@ const cell = (value: string) => `"${(/^[=+\-@]/.test(value) ? `'${value}` : valu
 
 /** Export CSV du journal d'audit, mêmes filtres que l'écran (`?du=&au=&auteur=&objet=&action=`). */
 export async function GET(request: NextRequest) {
+  const refusal = await planRefusal("audit_journal");
+  if (refusal) {
+    return refusal;
+  }
   const filters = parseAuditFilters(Object.fromEntries(request.nextUrl.searchParams));
   const { entries } = await exportAuditEntries(filters);
 

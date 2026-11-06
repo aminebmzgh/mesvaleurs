@@ -5,6 +5,7 @@ import { cache } from "react";
 import { ACTIVE_ORGANIZATION_COOKIE } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole } from "@/types/app";
+import { effectivePlan, isPlanId, type PlanId } from "@/lib/billing/plans";
 import { parseOrganizationSettings } from "@/lib/organizations/settings";
 import { MFA_ELIGIBLE_ROLES } from "./roles";
 
@@ -46,6 +47,10 @@ export type ActiveOrganization = OrganizationMembership & {
   declarationReminderDays: number;
   /** Optimiseur de paiements : réserve de trésorerie à préserver (DH). */
   paymentReserve: number;
+  /** Offre en vigueur (Business pendant l'essai). */
+  plan: PlanId;
+  /** Offre souscrite et fin de l'essai éventuel. */
+  subscription: { plan: PlanId; trialEndsAt: string | null };
 };
 
 /** Claims du jeton de session, signature vérifiée. Mis en cache pour la durée de la requête. */
@@ -160,11 +165,10 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
       memberships[0];
   }
 
-  const { data: organization } = await supabase
-    .from("organizations")
-    .select("settings")
-    .eq("id", active.organizationId)
-    .single();
+  const [{ data: organization }, { data: subscription }] = await Promise.all([
+    supabase.from("organizations").select("settings").eq("id", active.organizationId).single(),
+    supabase.from("subscriptions").select("plan, trial_ends_at").eq("organization_id", active.organizationId).maybeSingle(),
+  ]);
   const settings = parseOrganizationSettings(organization?.settings);
 
   return {
@@ -179,6 +183,11 @@ const loadActiveOrganization = cache(async (): Promise<ActiveOrganization> => {
     latePaymentBasis: settings.late_payment_basis,
     declarationReminderDays: settings.declaration_reminder_days,
     paymentReserve: settings.payment_reserve,
+    plan: effectivePlan(subscription),
+    subscription: {
+      plan: isPlanId(subscription?.plan) ? subscription.plan : "free",
+      trialEndsAt: subscription?.trial_ends_at ?? null,
+    },
   };
 });
 
