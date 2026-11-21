@@ -41,6 +41,12 @@ describe("coverLetterPdf", () => {
     expect(await pages(await coverLetterPdf(base, BUILTIN_LETTER_TEMPLATES[1], { copies: 2 }))).toBe(2);
   });
 
+  it("QR code du portail sur l'exemplaire fournisseur, toujours sur une page", async () => {
+    const portalUrl = `https://mesvaleurs.ma/suivi/${"Ab_-".repeat(8)}`;
+    expect(await pages(await coverLetterPdf({ ...base, portalUrl }, BUILTIN_LETTER_TEMPLATES[1]))).toBe(1);
+    expect(await pages(await coverLetterPdf({ ...base, portalUrl }, BUILTIN_LETTER_TEMPLATES[1], { copies: 2 }))).toBe(2);
+  });
+
   it("pagine une longue liste de factures", async () => {
     const invoices = Array.from({ length: 60 }, (_, i) => ({ number: `F-${i}`, issueDate: "2026-07-01", amountInclTax: 100, settled: 100, remaining: 0 }));
     expect(await pages(await coverLetterPdf({ ...base, invoices }, BUILTIN_LETTER_TEMPLATES[0]))).toBeGreaterThan(1);

@@ -98,6 +98,8 @@ export const FEATURES = {
   standard_letters: { label: "Courriers types", group: "printing", minPlan: "pro" },
   letter_templates: { label: "Modèles de lettres personnalisés", group: "printing", minPlan: "business" },
   receipts: { label: "Accusé de réception signé à l'écran", group: "printing", minPlan: "pro" },
+  // Aussi vérifié par la base : private.has_supplier_portal
+  supplier_portal: { label: "Portail fournisseur : suivi des règlements en ligne", group: "payments", minPlan: "pro" },
   cheque_scan: { label: "Lecture du premier chèque par photo", group: "checkbooks", minPlan: "pro" },
   statement_pdf: { label: "Import des relevés PDF", group: "reconciliation", minPlan: "pro" },
   statement_ocr: { label: "Relevés scannés et photos", group: "reconciliation", minPlan: "pro" },

@@ -25,11 +25,14 @@ import {
 } from "@/lib/labels";
 import { templateOptions } from "@/lib/letters/queries";
 import { paymentNumber } from "@/lib/payments/label";
+import { getSupplierPortalLink } from "@/lib/suppliers/portal-queries";
 import { getSupplier } from "@/lib/suppliers/queries";
+import { UpgradeNotice } from "@/components/plan-gate";
 import { EnvelopeButton } from "@/components/envelope-button";
 import { LetterDialog } from "../../courriers/letter-dialog";
 import { setSupplierCeiling, updateSupplier } from "../actions";
 import { SupplierForm } from "../supplier-form";
+import { PortalCard } from "./portail/portal-card";
 import { SupplierActiveToggle } from "./supplier-actions";
 
 export const metadata: Metadata = { title: "Fournisseur" };
@@ -53,10 +56,11 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();
   }
-  const [organization, supplier, statementTemplates] = await Promise.all([
+  const [organization, supplier, statementTemplates, portalLink] = await Promise.all([
     requireActiveOrganization(),
     getSupplier(id),
     templateOptions("statement_request"),
+    getSupplierPortalLink(id),
   ]);
   if (!supplier) {
     notFound();
@@ -220,6 +224,26 @@ async function SupplierDetail({ params }: Pick<PageProps<"/fournisseurs/[id]">, 
                 </TableBody>
               </Table>
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card id="portail">
+        <CardHeader>
+          <CardTitle>Portail fournisseur</CardTitle>
+          <CardDescription>Un lien secret où le fournisseur suit ses règlements et ses factures en attente, en lecture seule.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {hasFeature(organization.plan, "supplier_portal") ? (
+            <PortalCard
+              supplierId={supplier.id}
+              supplierName={supplier.name}
+              supplierEmail={supplier.email}
+              link={portalLink}
+              canManage={ACCOUNT_MANAGER_ROLES.includes(organization.role)}
+            />
+          ) : (
+            <UpgradeNotice feature="supplier_portal" />
           )}
         </CardContent>
       </Card>

@@ -7,6 +7,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 
 ### Ajouté
 
+- Portail fournisseur (offre Pro et plus) : un lien secret par fournisseur, sans compte ni mot
+  de passe, où il suit en lecture seule les règlements émis à son nom (prêt, remis, encaissé,
+  rejeté ou régularisé, avec les factures réglées par chacun) et ses factures en attente de
+  règlement. Lien valable jusqu'à sa désactivation ou son remplacement, géré par la direction
+  et la gestion depuis la fiche fournisseur : copier, envoyer par e-mail, voir comme le
+  fournisseur, nouveau lien, désactiver ; nombre et date des consultations. Le lien actif est
+  ajouté aux e-mails d'accusé de réception et imprimé en QR code sur l'exemplaire fournisseur
+  de la lettre d'accompagnement. Page jamais référencée ni gardée en cache ; ni RIB ni notes
+  internes ; création et désactivation inscrites au journal d'audit.
 - Page d'accueil publique sur mesvaleurs.ma : présentation, fonctionnalités clés, tarifs et
   comparatif détaillé (mêmes composants que la page Abonnement), questions fréquentes ; un
   utilisateur connecté va directement à son tableau de bord. robots.txt et sitemap.xml limités

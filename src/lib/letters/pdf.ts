@@ -1,4 +1,5 @@
 import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf-lib";
+import { encode as encodeQr } from "uqr";
 import { amountInWords } from "@/lib/amount-in-words";
 import { formatDate, formatMAD } from "@/lib/format";
 import { toWinAnsi } from "@/lib/printing/measure";
@@ -261,10 +262,55 @@ export async function coverLetterPdf(
     w.y -= 8;
     w.paragraph(renderLetterText(template.closing, values));
 
+    // Lien du portail fournisseur (QR code), sur l'exemplaire du fournisseur
+    if (data.portalUrl && label !== "Exemplaire à conserver") {
+      portalBlock(w, data.portalUrl);
+    }
+
     // « Reçu par » (accusé de réception papier), à gauche
     signatures(w, data.signer, "Reçu par (nom, date et signature)");
   }
   return pdf.save();
+}
+
+const QR_SIZE = 62;
+
+/** QR code du portail fournisseur et son lien en clair, pour suivre ses règlements depuis un téléphone. */
+export function portalBlock(w: Writer, url: string) {
+  const qr = encodeQr(url, { ecc: "M", border: 0 });
+  const textX = MARGIN + QR_SIZE + 14;
+  const textWidth = WIDTH - MARGIN - textX;
+  w.ensure(QR_SIZE + 24);
+  w.y -= 14;
+  const top = w.y;
+  const cell = QR_SIZE / qr.size;
+  qr.data.forEach((row, r) =>
+    row.forEach((dark, c) => {
+      if (dark) {
+        // Légère surépaisseur : pas de fines lignes blanches entre modules à l'impression
+        w.page.drawRectangle({ x: MARGIN + c * cell, y: top - (r + 1) * cell, width: cell + 0.05, height: cell + 0.05, color: INK });
+      }
+    }),
+  );
+  w.y = top - 12;
+  w.text("Suivez vos règlements en ligne", textX, 10, w.bold);
+  w.y -= 14;
+  for (const line of w.wrap("Scannez ce code ou ouvrez le lien ci-dessous : vos chèques, LCN et virements, leur état et vos factures en attente.", textWidth, 8.5)) {
+    w.text(line, textX, 8.5, w.font, MUTED);
+    w.y -= 11;
+  }
+  // Lien coupé sans espace s'il ne tient pas sur une ligne
+  let rest = url;
+  while (rest) {
+    let cut = rest.length;
+    while (cut > 1 && w.width(rest.slice(0, cut), 8.5) > textWidth) {
+      cut -= 1;
+    }
+    w.text(rest.slice(0, cut), textX, 8.5);
+    w.y -= 11;
+    rest = rest.slice(cut);
+  }
+  w.y = Math.min(w.y, top - QR_SIZE) - 4;
 }
 
 /** Signature et cachet du signataire, à droite ; zone d'accusé ou d'accord du destinataire, à gauche. */

@@ -10,6 +10,8 @@ import { sendEmail } from "@/lib/email/send";
 import { formatDate, formatMAD } from "@/lib/format";
 import { getReceiptPdfData } from "@/lib/receipts/queries";
 import { receiptPdf } from "@/lib/receipts/pdf";
+import { linesToHtml, portalLinkLines } from "@/lib/suppliers/portal-email";
+import { portalUrlForDocuments } from "@/lib/suppliers/portal-queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { emailSchema } from "@/lib/validation";
@@ -79,11 +81,16 @@ export async function emailReceipt(receiptId: string, email: string): Promise<{ 
   if (!data) {
     return { error: "Accusé de réception introuvable." };
   }
-  const pdf = await receiptPdf(data);
+  const [pdf, portal] = await Promise.all([
+    receiptPdf(data),
+    data.supplier.id ? portalUrlForDocuments(organization.plan, data.supplier.id) : null,
+  ]);
   const lines = [
     `Bonjour,`,
     ``,
     `Veuillez trouver ci-joint l'accusé de réception ${data.reference} : ${data.payments.length} valeur(s) pour un total de ${formatMAD(data.total)}, remises le ${formatDate(data.deliveredOn)} et reçues par ${data.signerName}.`,
+    // Lien du portail fournisseur, s'il est actif
+    ...portalLinkLines(portal),
     ``,
     `Cordialement,`,
     data.organization.name,
@@ -93,7 +100,7 @@ export async function emailReceipt(receiptId: string, email: string): Promise<{ 
       to: to.data,
       subject: `Accusé de réception de règlement ${data.reference} — ${data.organization.name}`,
       text: lines.join("\n"),
-      html: lines.map((line) => (line ? `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>` : "")).join(""),
+      html: linesToHtml(lines, portal),
       replyTo: data.organization.email ?? undefined,
       attachments: [{ filename: `accuse-${data.reference}.pdf`, content: pdf }],
     },
