@@ -1,9 +1,17 @@
 name: CI
 
+# Compte GitHub gratuit (dépôt privé, 2 000 min/mois) : on évite les runs en double.
+# - push sur develop : déjà testé par la PR, pas de nouveau run ;
+# - E2E (le job le plus long) : seulement pour les PR vers main (release),
+#   les push sur main et à la demande (onglet Actions → Run workflow).
+#   Pour les PR vers develop, les E2E se lancent en local (pnpm test:e2e).
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -16,6 +24,7 @@ jobs:
   app:
     name: Lint, types, tests unitaires, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -36,6 +45,7 @@ jobs:
   database:
     name: Migrations, RLS et isolation multi-tenant
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -69,7 +79,9 @@ jobs:
 
   e2e:
     name: Tests de bout en bout (Playwright)
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
