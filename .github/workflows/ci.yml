@@ -1,9 +1,14 @@
 name: CI
 
+# Dépôt public : minutes Actions gratuites. Pas de run sur push develop
+# (le code a déjà été testé par sa PR) ; lancement manuel possible (Actions → Run workflow).
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -16,10 +21,11 @@ jobs:
   app:
     name: Lint, types, tests unitaires, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -36,16 +42,26 @@ jobs:
   database:
     name: Migrations, RLS et isolation multi-tenant
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Démarrer Supabase en local (migrations + seed)
-        run: pnpm exec supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit
+        # Jusqu'à 3 essais : le registre d'images limite parfois le débit (« toomanyrequests »)
+        # et un premier démarrage raté peut laisser un port occupé.
+        run: |
+          for attempt in 1 2 3; do
+            pnpm exec supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit && exit 0
+            echo "::warning::supabase start a échoué (essai $attempt/3), nouvel essai…"
+            pnpm exec supabase stop --no-backup || true
+            sleep $((attempt * 30))
+          done
+          exit 1
       - name: Lint SQL
         run: pnpm db:lint
       - name: Tests pgTAP (RLS, rôles, isolation)
@@ -61,16 +77,26 @@ jobs:
   e2e:
     name: Tests de bout en bout (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Démarrer Supabase en local (migrations + seed)
-        run: pnpm exec supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit
+        # Jusqu'à 3 essais : le registre d'images limite parfois le débit (« toomanyrequests »)
+        # et un premier démarrage raté peut laisser un port occupé.
+        run: |
+          for attempt in 1 2 3; do
+            pnpm exec supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit && exit 0
+            echo "::warning::supabase start a échoué (essai $attempt/3), nouvel essai…"
+            pnpm exec supabase stop --no-backup || true
+            sleep $((attempt * 30))
+          done
+          exit 1
       - name: Variables d'environnement de la base locale
         run: |
           eval "$(pnpm exec supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=')"
@@ -81,7 +107,7 @@ jobs:
           } >> "$GITHUB_ENV"
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: rapport-playwright
