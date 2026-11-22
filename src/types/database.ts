@@ -779,6 +779,38 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"supplier_portal_links": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"last_viewed_at": string | null,"organization_id": string,"supplier_id": string,"token": string,"view_count": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"last_viewed_at"?: string | null,"organization_id": string,"supplier_id": string,"token": string,"view_count"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"last_viewed_at"?: string | null,"organization_id"?: string,"supplier_id"?: string,"token"?: string,"view_count"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_portal_links_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "supplier_portal_links_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: true
+      referencedRelation: "supplier_summaries"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "supplier_portal_links_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: true
+      referencedRelation: "suppliers"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"suppliers": {
                   Row: {
                     "accounting_code": string | null,"address": string | null,"city": string | null,"contact_name": string | null,"created_at": string,"daily_ceiling": number | null,"email": string | null,"ice": string | null,"id": string,"is_active": boolean,"is_strategic": boolean,"name": string,"notes": string | null,"organization_id": string,"payee_name": string | null,"payment_terms_days": number | null,"phone": string | null,"print_cover_letter": boolean,"rib": string | null,"tax_id": string | null,"trade_register": string | null,"updated_at": string
@@ -886,6 +918,9 @@ isOneToOne: false
 "create_organization":
 { Args: { "p_city"?: string,"p_name": string }; Returns: string
                            },
+"get_supplier_portal":
+{ Args: { "p_token": string }; Returns: Json
+                           },
 "issue_payments":
 { Args: { "p_allocations"?: Json,"p_checkbook_id": string,"p_guarantee"?: Json,"p_instruments": Json,"p_issue_date": string,"p_issue_place": string,"p_organization_id": string,"p_payee_name": string,"p_supplier_id": string }; Returns: string
                            },
@@ -930,8 +965,14 @@ isOneToOne: false
 "renew_statement_inbox":
 { Args: { "p_organization_id": string }; Returns: string
                            },
+"renew_supplier_portal":
+{ Args: { "p_supplier_id": string }; Returns: string
+                           },
 "reserve_ai_usage":
 { Args: { "p_feature": string,"p_monthly_quota": number,"p_organization_id": string,"p_user_id": string }; Returns: string
+                           },
+"revoke_supplier_portal":
+{ Args: { "p_supplier_id": string }; Returns: undefined
                            },
 "seal_invoice_archive":
 { Args: { "p_id": string,"p_sha256": string,"p_size": number }; Returns: undefined

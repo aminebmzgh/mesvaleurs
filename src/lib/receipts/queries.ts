@@ -135,7 +135,7 @@ export async function getReceiptPdfData(id: string): Promise<ReceiptPdfData | nu
   const { data: signature } = await supabase.storage.from("cheques-scans").download(receipt.signature_path);
   return {
     organization: letterhead.organization,
-    supplier: { name: supplier.name, address: supplier.address, city: supplier.city, ice: supplier.ice },
+    supplier: { id: supplier.id, name: supplier.name, address: supplier.address, city: supplier.city, ice: supplier.ice },
     reference: receipt.reference,
     signedAt: receipt.signed_at,
     deliveredOn: receipt.delivered_on,

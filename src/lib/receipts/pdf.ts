@@ -6,7 +6,7 @@ import { header, MARGIN, MUTED, WIDTH, Writer } from "@/lib/letters/pdf";
 
 export type ReceiptPdfData = {
   organization: LetterOrganization;
-  supplier: { name: string; address: string | null; city: string | null; ice: string | null };
+  supplier: { id?: string; name: string; address: string | null; city: string | null; ice: string | null };
   reference: string;
   signedAt: string;
   deliveredOn: string;

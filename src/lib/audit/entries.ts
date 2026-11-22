@@ -60,6 +60,7 @@ export const TABLE_LABELS: Record<string, string> = {
   letter_templates: "Modèle de lettre",
   stop_orders: "Opposition",
   late_payment_declarations: "Déclaration des délais de paiement",
+  supplier_portal_links: "Lien du portail fournisseur",
 };
 
 export function actionLabel(action: string): string {

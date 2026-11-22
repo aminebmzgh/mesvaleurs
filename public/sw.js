@@ -15,7 +15,8 @@ const MAX_PAGES = 60;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_STATIC = 400;
 
-const NEVER_CACHED = /^\/(api|auth|icons)(\/|$)|^\/(connexion|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe|verification-mfa|onboarding|hors-ligne)(\/|$)/;
+// Portail fournisseur (suivi) : données d'un tiers, jamais gardées en cache
+const NEVER_CACHED = /^\/(api|auth|icons|suivi)(\/|$)|^\/(connexion|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe|verification-mfa|onboarding|hors-ligne)(\/|$)/;
 const SIGN_IN_PAGES = /^\/(connexion|verification-mfa)(\/|$)/;
 
 self.addEventListener("install", (event) => {

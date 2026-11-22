@@ -19,6 +19,8 @@ const PUBLIC_PATHS = [
   "/api/cron",
   // Webhook Resend (relevés reçus par e-mail) : authentifié par sa signature
   "/api/inbound",
+  // Portail fournisseur : lien secret, vérifié par la base
+  "/suivi",
 ];
 
 function isPublicPath(pathname: string) {

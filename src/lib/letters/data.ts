@@ -2,6 +2,7 @@ import "server-only";
 import { toCents } from "@/lib/amount";
 import { requireActiveOrganization, requireUser } from "@/lib/auth/dal";
 import { paymentLabel } from "@/lib/payments/label";
+import { portalUrlForDocuments } from "@/lib/suppliers/portal-queries";
 import { createClient } from "@/lib/supabase/server";
 import { settlementReference } from "./reference";
 
@@ -34,6 +35,8 @@ export type CoverLetterData = {
   remaining: number;
   hasLcn: boolean;
   printCoverLetter: boolean;
+  /** Lien du portail fournisseur, imprimé en QR code s'il est actif. */
+  portalUrl?: string | null;
 };
 
 /** En-tête des courriers : identité de l'entreprise active (avec son logo) et signataire (l'utilisateur). */
@@ -89,7 +92,7 @@ export async function getCoverLetterData(batchId: string): Promise<CoverLetterDa
       .select(
         `id, type, status, number, reference, amount, issue_date, issue_place, due_date,
          checkbooks ( number_width ), bank_accounts ( banks ( name ) ),
-         suppliers ( name, address, city, ice, print_cover_letter ),
+         suppliers ( id, name, address, city, ice, print_cover_letter ),
          payment_allocations ( amount, invoices ( id, number, issue_date, amount_incl_tax, amount_paid ) )`,
       )
       .eq("organization_id", orgId)
@@ -126,6 +129,7 @@ export async function getCoverLetterData(batchId: string): Promise<CoverLetterDa
   }
 
   const first = rows[0];
+  const portalUrl = await portalUrlForDocuments(organization.plan, first.suppliers!.id);
   const sortedInvoices = [...invoices.values()].sort((a, b) => a.issueDate.localeCompare(b.issueDate) || a.number.localeCompare(b.number));
   return {
     organization: letterhead.organization,
@@ -145,5 +149,6 @@ export async function getCoverLetterData(batchId: string): Promise<CoverLetterDa
     remaining: sortedInvoices.reduce((sum, invoice) => sum + toCents(invoice.remaining), 0) / 100,
     hasLcn: rows.some((payment) => payment.type === "lcn"),
     printCoverLetter: first.suppliers!.print_cover_letter,
+    portalUrl,
   };
 }
