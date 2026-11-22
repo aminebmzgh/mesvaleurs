@@ -32,6 +32,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
 - Page Paramètres › Abonnement : offre en vigueur, jours d'essai restants, consommation du mois
   au regard des limites, cartes des offres et comparatif détaillé des fonctionnalités.
 
+### Sécurité
+
+- Next.js 16.4.6 (au lieu de 16.4.3) : corrige sept failles de gravité moyenne publiées du 16 au
+  19 novembre 2026 (fuites et empoisonnement de cache avec Cache Components et `use cache`,
+  exposition de cookies HttpOnly sur le runtime Edge, contournement du refus des SVG par
+  l'optimisation d’images, injection de réponses entre clients).
+
 ## [1.3.0] — Phase 3 : remise des valeurs et e-mails
 
 ### Ajouté
